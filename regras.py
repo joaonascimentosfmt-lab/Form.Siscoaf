@@ -152,14 +152,17 @@ def _regra_docs_partes(dados: Dict) -> Tuple[bool, str, int]:
     """
     Regra 8: Documentação das partes incompleta -> COMUNICAR
     Se todas as partes têm toda a documentação, é fator para não comunicação.
+    Verifica por tipo (PF/PJ) de cada parte.
     """
     partes = dados.get("partes", [])
     if not partes:
         return False, "", 0
+    chaves_map = {
+        "PF": ["doc_oficial", "cpf_regular", "estado_civil", "regime_bens", "endereco", "profissao", "contato"],
+        "PJ": ["pj_cnpj", "pj_contrato_social", "pj_alteracoes", "pj_representante", "pj_poderes", "pj_objeto_social"],
+    }
     todas_completas = all(
-        all(p.get("docs", {}).get(chave, False) for chave in
-            ["doc_oficial", "cpf_regular", "estado_civil", "regime_bens",
-             "endereco", "profissao", "contato"])
+        all(p.get("docs", {}).get(chave, False) for chave in chaves_map.get(p.get("tipo", "PF"), chaves_map["PF"]))
         for p in partes
     )
     if todas_completas:

@@ -94,7 +94,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         linha = 0
         linha = self._secao_cabecalho(scroll, linha)
         linha = self._secao_dados_ato(scroll, linha)
-        linha = self._secao_participantes(scroll, linha)
+        linha = self._secao_pep(scroll, linha)
         linha = self._secao_partes(scroll, linha)
         linha = self._secao_origem_recursos(scroll, linha)
         linha = self._secao_pagamento(scroll, linha)
@@ -233,24 +233,13 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         return linha + 1
 
-    def _secao_participantes(self, parent, linha: int) -> int:
-        card = self._card(parent, "Participantes", linha)
+    def _secao_pep(self, parent, linha: int) -> int:
+        card = self._card(parent, "Pessoa Exposta Politicamente (PEP)", linha)
         r = 1
 
-        frm_qtd = ctk.CTkFrame(card, fg_color="transparent")
-        frm_qtd.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
-        frm_qtd.grid_columnconfigure((0, 1), weight=1)
-
-        ctk.CTkLabel(frm_qtd, text="Qtd. compradores:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
-        self._qtd_compradores = ctk.CTkEntry(frm_qtd, placeholder_text="0", width=100)
-        self._qtd_compradores.grid(row=1, column=0, sticky="w")
-        ctk.CTkLabel(frm_qtd, text="Qtd. vendedores:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=1, sticky="w")
-        self._qtd_vendedores = ctk.CTkEntry(frm_qtd, placeholder_text="0", width=100)
-        self._qtd_vendedores.grid(row=1, column=1, sticky="w")
+        ctk.CTkLabel(card, text="Declare aqui se alguma parte conhecida é PEP (além da consulta automática na base oficial).", font=("Segoe UI", 11), text_color=COR_SUBTEXTO).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
         r += 1
 
-        ctk.CTkLabel(card, text="Pessoa Politicamente Exposta (PEP)?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        r += 1
         self._pep_var = ctk.StringVar(value="Não")
         frm_pep = ctk.CTkFrame(card, fg_color="transparent")
         frm_pep.grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
@@ -272,77 +261,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_frame.grid_remove()
         r += 1
 
-        # Pessoa Jurídica
-        ctk.CTkLabel(card, text="Pessoa Jurídica?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        r += 1
-        self._pj_var = ctk.StringVar(value="Não")
-        frm_pj = ctk.CTkFrame(card, fg_color="transparent")
-        frm_pj.grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
-        ctk.CTkRadioButton(frm_pj, text="Sim", variable=self._pj_var, value="Sim", command=self._toggle_pj).pack(side="left", padx=(0, 20))
-        ctk.CTkRadioButton(frm_pj, text="Não", variable=self._pj_var, value="Não", command=self._toggle_pj).pack(side="left")
-        r += 1
-
-        self._pj_frame = ctk.CTkFrame(card, fg_color="#f5faf5", corner_radius=8)
-        self._pj_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
-        ctk.CTkLabel(self._pj_frame, text="Documentação da Pessoa Jurídica:", font=("Segoe UI", 11, "bold"), text_color="#2E7D32").grid(row=0, column=0, columnspan=3, sticky="w", padx=8, pady=(4, 2))
-        pj_itens = [
-            ("pj_cnpj", "CNPJ Ativo"),
-            ("pj_contrato_social", "Contrato Social Atualizado"),
-            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
-            ("pj_representante", "Representante Legal Identificado"),
-            ("pj_poderes", "Poderes de Representação Conferidos"),
-            ("pj_objeto_social", "Objeto Social compatível com a Operação"),
-        ]
-        self._pj_vars = {}
-        for i, (chave, label) in enumerate(pj_itens):
-            var = ctk.StringVar(value="")
-            cb = ctk.CTkCheckBox(self._pj_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
-            cb.grid(row=i+1, column=0, sticky="w", padx=8, pady=1)
-            self._pj_vars[chave] = var
-        self._pj_frame.grid_remove()
-        r += 1
-
         return linha + 1
-
-    def _toggle_pj(self):
-        is_pj = self._pj_var.get() == "Sim"
-        if is_pj:
-            self._pj_frame.grid()
-        else:
-            self._pj_frame.grid_remove()
-        validacoes = [
-            ("pj_cnpj", "CNPJ Ativo"),
-            ("pj_contrato_social", "Contrato Social Atualizado"),
-            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
-            ("pj_representante", "Representante Legal Identificado"),
-            ("pj_poderes", "Poderes de Representação Conferidos"),
-            ("pj_objeto_social", "Objeto Social compatível"),
-        ] if is_pj else [
-            ("doc_oficial", "Doc. Oficial Válido"),
-            ("cpf_regular", "CPF Regular"),
-            ("estado_civil", "Estado Civil Comprovado"),
-            ("regime_bens", "Regime de Bens Verificado"),
-            ("endereco", "Endereço Atualizado"),
-            ("profissao", "Profissão Informada"),
-            ("contato", "Contato Atualizado"),
-        ]
-        for p in self._partes:
-            p["cpf"].configure(placeholder_text="CNPJ" if is_pj else "CPF")
-            # Recriar checkboxes de documentação
-            old_frame = p.get("docs_frame")
-            if old_frame:
-                old_frame.destroy()
-            frm = p["frame"]
-            docs_frame = ctk.CTkFrame(frm, fg_color="#f9faf9", corner_radius=6)
-            docs_frame.grid(row=1, column=0, columnspan=5, sticky="ew", padx=8, pady=(0, 6))
-            docs_vars = {}
-            for i, (chave, label) in enumerate(validacoes):
-                var = ctk.StringVar(value="")
-                cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
-                cb.grid(row=0, column=i, sticky="w", padx=(0, 8), pady=4)
-                docs_vars[chave] = var
-            p["docs_frame"] = docs_frame
-            p["docs_vars"] = docs_vars
 
     def _toggle_pep(self):
         if self._pep_var.get() == "Sim":
@@ -389,64 +308,54 @@ class AnalisadorSISCOAF(ctk.CTk):
         idx = len(self._partes)
         frm = ctk.CTkFrame(self._partes_frame, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
         frm.grid(row=idx, column=0, sticky="ew", padx=8, pady=3)
-        frm.grid_columnconfigure((0, 1), weight=1)
-        frm.grid_columnconfigure(2, weight=0)
+        for c in range(7):
+            frm.grid_columnconfigure(c, weight=1 if c < 2 else 0)
 
-        entry_nome = ctk.CTkEntry(frm, placeholder_text="Nome completo", width=200)
-        entry_nome.grid(row=0, column=0, sticky="ew", padx=(8, 4), pady=6)
+        entry_nome = ctk.CTkEntry(frm, placeholder_text="Nome", width=180)
+        entry_nome.grid(row=0, column=0, sticky="ew", padx=(6, 2), pady=6)
         if dados:
             entry_nome.insert(0, dados.get("nome", ""))
 
-        is_pj = self._pj_var.get() == "Sim"
-        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CNPJ" if is_pj else "CPF", width=130)
-        entry_cpf.grid(row=0, column=1, sticky="ew", padx=4, pady=6)
+        is_pj = (dados or {}).get("tipo") == "PJ"
+        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CNPJ" if is_pj else "CPF", width=100)
+        entry_cpf.grid(row=0, column=1, sticky="ew", padx=2, pady=6)
         if dados:
             entry_cpf.insert(0, dados.get("cpf", ""))
 
+        tipo_var = ctk.StringVar(value=dados.get("tipo", "PF") if dados else "PF")
+        frm_tipo = ctk.CTkFrame(frm, fg_color="transparent")
+        frm_tipo.grid(row=0, column=2, sticky="w", padx=2, pady=6)
+        ctk.CTkRadioButton(frm_tipo, text="PF", variable=tipo_var, value="PF", font=("Segoe UI", 9), command=lambda f=frm, e=entry_cpf, t=tipo_var: self._recriar_docs_parte(f, e, t)).pack(side="left", padx=(0, 2))
+        ctk.CTkRadioButton(frm_tipo, text="PJ", variable=tipo_var, value="PJ", font=("Segoe UI", 9), command=lambda f=frm, e=entry_cpf, t=tipo_var: self._recriar_docs_parte(f, e, t)).pack(side="left")
+
         papel_var = ctk.StringVar(value=dados.get("papel", "Outorgante") if dados else "Outorgante")
         frm_papel = ctk.CTkFrame(frm, fg_color="transparent")
-        frm_papel.grid(row=0, column=2, sticky="ew", padx=4, pady=6)
-        ctk.CTkRadioButton(frm_papel, text="Outorgante", variable=papel_var, value="Outorgante", font=("Segoe UI", 10)).pack(side="left", padx=(0, 4))
-        ctk.CTkRadioButton(frm_papel, text="Outorgado", variable=papel_var, value="Outorgado", font=("Segoe UI", 10)).pack(side="left")
+        frm_papel.grid(row=0, column=3, sticky="w", padx=2, pady=6)
+        ctk.CTkRadioButton(frm_papel, text="Outorgante", variable=papel_var, value="Outorgante", font=("Segoe UI", 9)).pack(side="left", padx=(0, 2))
+        ctk.CTkRadioButton(frm_papel, text="Outorgado", variable=papel_var, value="Outorgado", font=("Segoe UI", 9)).pack(side="left")
 
-        lbl_pep = ctk.CTkLabel(frm, text="", font=("Segoe UI", 10), text_color="#CC0000", width=160, anchor="w")
-        lbl_pep.grid(row=0, column=3, sticky="w", padx=4, pady=6)
+        lbl_pep = ctk.CTkLabel(frm, text="", font=("Segoe UI", 9), text_color="#CC0000", width=110, anchor="w")
+        lbl_pep.grid(row=0, column=4, sticky="w", padx=2, pady=6)
 
         btn_rm = ctk.CTkButton(
             frm, text="X",
-            font=("Segoe UI", 10, "bold"),
+            font=("Segoe UI", 9, "bold"),
             fg_color="#CC0000", hover_color="#990000",
-            width=28, height=26, corner_radius=6,
+            width=22, height=24, corner_radius=6,
             command=lambda f=frm: self._remover_parte(f),
         )
-        btn_rm.grid(row=0, column=4, padx=(2, 8), pady=6)
+        btn_rm.grid(row=0, column=5, padx=(2, 6), pady=6)
 
-        # Documentação (row 1, col 0-4)
-        is_pj = self._pj_var.get() == "Sim"
-        validacoes = [
-            ("pj_cnpj", "CNPJ Ativo"),
-            ("pj_contrato_social", "Contrato Social Atualizado"),
-            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
-            ("pj_representante", "Representante Legal Identificado"),
-            ("pj_poderes", "Poderes de Representação Conferidos"),
-            ("pj_objeto_social", "Objeto Social compatível"),
-        ] if is_pj else [
-            ("doc_oficial", "Doc. Oficial Válido"),
-            ("cpf_regular", "CPF Regular"),
-            ("estado_civil", "Estado Civil Comprovado"),
-            ("regime_bens", "Regime de Bens Verificado"),
-            ("endereco", "Endereço Atualizado"),
-            ("profissao", "Profissão Informada"),
-            ("contato", "Contato Atualizado"),
-        ]
+        # Documentação (row 1, col 0-6)
+        validacoes = self._validacoes_por_tipo(is_pj)
         docs_frame = ctk.CTkFrame(frm, fg_color="#f9faf9", corner_radius=6)
-        docs_frame.grid(row=1, column=0, columnspan=5, sticky="ew", padx=8, pady=(0, 6))
+        docs_frame.grid(row=1, column=0, columnspan=6, sticky="ew", padx=6, pady=(0, 6))
         docs_vars = {}
         docs_dados = dados.get("docs", {}) if dados else {}
         for i, (chave, label) in enumerate(validacoes):
             var = ctk.StringVar(value="1" if docs_dados.get(chave) else "")
-            cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
-            cb.grid(row=0, column=i, sticky="w", padx=(0, 8), pady=4)
+            cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 9))
+            cb.grid(row=0, column=i, sticky="w", padx=(0, 6), pady=3)
             docs_vars[chave] = var
 
         # Timers para consulta automática
@@ -477,6 +386,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "frame": frm,
             "nome": entry_nome,
             "cpf": entry_cpf,
+            "tipo_var": tipo_var,
             "papel_var": papel_var,
             "lbl_pep": lbl_pep,
             "timer_key": timer_key,
@@ -486,6 +396,48 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         if (entry_nome.get().strip() or entry_cpf.get().strip()):
             self.after(100, _auto_consultar)
+
+    def _validacoes_por_tipo(self, is_pj: bool) -> List[Tuple[str, str]]:
+        if is_pj:
+            return [
+                ("pj_cnpj", "CNPJ Ativo"),
+                ("pj_contrato_social", "Contrato Social Atualizado"),
+                ("pj_alteracoes", "Alterações Contratuais Conferidas"),
+                ("pj_representante", "Representante Legal Identificado"),
+                ("pj_poderes", "Poderes de Representação Conferidos"),
+                ("pj_objeto_social", "Objeto Social compatível"),
+            ]
+        return [
+            ("doc_oficial", "Doc. Oficial Válido"),
+            ("cpf_regular", "CPF Regular"),
+            ("estado_civil", "Estado Civil Comprovado"),
+            ("regime_bens", "Regime de Bens Verificado"),
+            ("endereco", "Endereço Atualizado"),
+            ("profissao", "Profissão Informada"),
+            ("contato", "Contato Atualizado"),
+        ]
+
+    def _recriar_docs_parte(self, frm, entry_cpf, tipo_var):
+        is_pj = tipo_var.get() == "PJ"
+        entry_cpf.configure(placeholder_text="CNPJ" if is_pj else "CPF")
+        # Encontrar o dict da parte
+        parte = next((p for p in self._partes if p["frame"] == frm), None)
+        if not parte:
+            return
+        old_frame = parte.get("docs_frame")
+        if old_frame:
+            old_frame.destroy()
+        validacoes = self._validacoes_por_tipo(is_pj)
+        docs_frame = ctk.CTkFrame(frm, fg_color="#f9faf9", corner_radius=6)
+        docs_frame.grid(row=1, column=0, columnspan=6, sticky="ew", padx=6, pady=(0, 6))
+        docs_vars = {}
+        for i, (chave, label) in enumerate(validacoes):
+            var = ctk.StringVar(value="")
+            cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 9))
+            cb.grid(row=0, column=i, sticky="w", padx=(0, 6), pady=3)
+            docs_vars[chave] = var
+        parte["docs_frame"] = docs_frame
+        parte["docs_vars"] = docs_vars
 
     def _remover_parte(self, frame):
         for i, p in enumerate(self._partes):
@@ -505,6 +457,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             item = {
                 "nome": p["nome"].get().strip(),
                 "cpf": p["cpf"].get().strip(),
+                "tipo": p.get("tipo_var", ctk.StringVar(value="PF")).get(),
                 "papel": p["papel"].get(),
             }
             if item["nome"] or item["cpf"]:
@@ -644,19 +597,10 @@ class AnalisadorSISCOAF(ctk.CTk):
             "cidade": self._cidade.get(),
             "estado": self._estado.get(),
             "data": self._data.get(),
-            "qtd_compradores": int(self._qtd_compradores.get()) if self._qtd_compradores.get().isdigit() else 0,
-            "qtd_vendedores": int(self._qtd_vendedores.get()) if self._qtd_vendedores.get().isdigit() else 0,
             "pep": self._pep_var.get() == "Sim",
             "pep_nome": self._pep_nome.get(),
             "pep_cargo": self._pep_cargo.get(),
             "pep_cidade": self._pep_cidade.get(),
-            "pj": self._pj_var.get() == "Sim",
-            "pj_cnpj": self._pj_vars["pj_cnpj"].get() == "1",
-            "pj_contrato_social": self._pj_vars["pj_contrato_social"].get() == "1",
-            "pj_alteracoes": self._pj_vars["pj_alteracoes"].get() == "1",
-            "pj_representante": self._pj_vars["pj_representante"].get() == "1",
-            "pj_poderes": self._pj_vars["pj_poderes"].get() == "1",
-            "pj_objeto_social": self._pj_vars["pj_objeto_social"].get() == "1",
             "origem_identificada": self._origem_var.get() == "Sim",
             "doc_comprobatoria": self._doc_var.get() == "Sim",
             "forma_declarada": self._forma_declarada.get(),
@@ -707,12 +651,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "data" in dados:
             self._data.delete(0, "end")
             self._data.insert(0, dados["data"])
-        if "qtd_compradores" in dados:
-            self._qtd_compradores.delete(0, "end")
-            self._qtd_compradores.insert(0, str(dados["qtd_compradores"]))
-        if "qtd_vendedores" in dados:
-            self._qtd_vendedores.delete(0, "end")
-            self._qtd_vendedores.insert(0, str(dados["qtd_vendedores"]))
         if "pep" in dados:
             self._pep_var.set("Sim" if dados["pep"] else "Não")
             self._toggle_pep()
@@ -725,12 +663,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "pep_cidade" in dados:
             self._pep_cidade.delete(0, "end")
             self._pep_cidade.insert(0, dados["pep_cidade"])
-        if "pj" in dados:
-            self._pj_var.set("Sim" if dados["pj"] else "Não")
-            self._toggle_pj()
-            if dados["pj"]:
-                for chave in ["pj_cnpj", "pj_contrato_social", "pj_alteracoes", "pj_representante", "pj_poderes", "pj_objeto_social"]:
-                    self._pj_vars[chave].set("1" if dados.get(chave) else "")
         if "origem_identificada" in dados:
             self._origem_var.set("Sim" if dados["origem_identificada"] else "Não")
         if "doc_comprobatoria" in dados:
@@ -811,17 +743,11 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._cidade.delete(0, "end")
         self._estado.set("SP")
         self._data.delete(0, "end")
-        self._qtd_compradores.delete(0, "end")
-        self._qtd_vendedores.delete(0, "end")
         self._pep_var.set("Não")
         self._toggle_pep()
         self._pep_nome.delete(0, "end")
         self._pep_cargo.delete(0, "end")
         self._pep_cidade.delete(0, "end")
-        self._pj_var.set("Não")
-        self._toggle_pj()
-        for v in self._pj_vars.values():
-            v.set("")
         self._origem_var.set("Sim")
         self._doc_var.set("Sim")
         self._forma_declarada.set("")

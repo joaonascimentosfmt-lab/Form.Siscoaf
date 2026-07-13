@@ -81,25 +81,23 @@ def gerar_relatorio(
         if dados.get("poderes_outros"):
             _adicionar_campo(elementos, "Outros poderes", dados["poderes_outros"], estilo_normal)
 
-    elementos.append(Paragraph("Participantes", estilo_subtitulo))
-    _adicionar_campo(elementos, "Quantidade de compradores", str(dados.get("qtd_compradores", 0)), estilo_normal)
-    _adicionar_campo(elementos, "Quantidade de vendedores", str(dados.get("qtd_vendedores", 0)), estilo_normal)
-
     partes = dados.get("partes", [])
     if partes:
-        elementos.append(Paragraph("Partes do ato:", estilo_normal))
+        elementos.append(Paragraph("Partes do ato:", estilo_subtitulo))
         for i, p in enumerate(partes):
             nome = p.get("nome", "")
             cpf = p.get("cpf", "")
             papel = p.get("papel", "")
+            tipo = p.get("tipo", "PF")
             pep_info = "✔ PEP" if p.get("pep") else ""
-            texto = f"{i+1}. {papel}: {nome} (CPF: {cpf}) {pep_info}"
+            doc_label = "CNPJ" if tipo == "PJ" else "CPF"
+            texto = f"{i+1}. {papel}: {nome} ({doc_label}: {cpf}) [{tipo}] {pep_info}"
             elementos.append(Paragraph(texto, estilo_normal))
             if p.get("pep_detalhe"):
                 elementos.append(Paragraph(f"   PEP: {p['pep_detalhe']}", estilo_normal))
             docs = p.get("docs", {})
             if docs:
-                if "pj_cnpj" in docs:
+                if tipo == "PJ":
                     docs_itens = [
                         ("pj_cnpj", "CNPJ Ativo"), ("pj_contrato_social", "Contrato Social Atualizado"),
                         ("pj_alteracoes", "Alterações Contratuais Conferidas"), ("pj_representante", "Representante Legal Identificado"),
@@ -118,19 +116,6 @@ def gerar_relatorio(
                     elementos.append(Paragraph(f"   OK: {', '.join(docs_ok)}", estilo_normal))
                 if docs_nok:
                     elementos.append(Paragraph(f"   Pendente: {', '.join(docs_nok)}", estilo_normal))
-
-    if dados.get("pj"):
-        elementos.append(Paragraph("Pessoa Jurídica", estilo_subtitulo))
-        pj_itens = [
-            ("pj_cnpj", "CNPJ Ativo"),
-            ("pj_contrato_social", "Contrato Social Atualizado"),
-            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
-            ("pj_representante", "Representante Legal Identificado"),
-            ("pj_poderes", "Poderes de Representação Conferidos"),
-            ("pj_objeto_social", "Objeto Social compatível"),
-        ]
-        for chave, label in pj_itens:
-            _adicionar_campo(elementos, label, "✔" if dados.get(chave) else "✘", estilo_normal)
 
     pep_texto = "Sim" if dados.get("pep", False) else "Não"
     _adicionar_campo(elementos, "Pessoa Exposta Politicamente (PEP)", pep_texto, estilo_normal)

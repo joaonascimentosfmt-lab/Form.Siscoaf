@@ -248,15 +248,11 @@
     </div>
   </div>
 
-  <!-- Participantes -->
+  <!-- PEP (declaração manual) -->
   <div class="card">
-    <h2>Participantes</h2>
-    <div class="row">
-      <div class="field"><label>Qtd. compradores</label><input type="number" id="qtd_compradores" min="0" value="0"></div>
-      <div class="field"><label>Qtd. vendedores</label><input type="number" id="qtd_vendedores" min="0" value="0"></div>
-    </div>
+    <h2>Pessoa Exposta Politicamente (PEP)</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Declare aqui se alguma parte conhecida é PEP (além da consulta automática na base oficial).</p>
     <div class="field">
-      <label>Pessoa Politicamente Exposta (PEP)?</label>
       <div class="radio-group">
         <label><input type="radio" name="pep" value="Sim" onchange="togglePep()"> Sim</label>
         <label><input type="radio" name="pep" value="Não" checked onchange="togglePep()"> Não</label>
@@ -269,28 +265,12 @@
         <div class="field"><label>Cidade</label><input type="text" id="pep_cidade" placeholder="Cidade"></div>
       </div>
     </div>
-    <div class="field">
-      <label>Pessoa Jurídica?</label>
-      <div class="radio-group">
-        <label><input type="radio" name="pj" value="Sim" onchange="togglePJ()"> Sim</label>
-        <label><input type="radio" name="pj" value="Não" checked onchange="togglePJ()"> Não</label>
-      </div>
-    </div>
-    <div class="pj-details" id="pjDetails" style="display:none;margin-top:8px;padding:10px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
-      <label style="font-weight:600;font-size:13px;color:#2E7D32;display:block;margin-bottom:4px;">Documentação da Pessoa Jurídica:</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_cnpj"> CNPJ Ativo</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_contrato_social"> Contrato Social Atualizado</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_alteracoes"> Alterações Contratuais Conferidas</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_representante"> Representante Legal Identificado</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_poderes"> Poderes de Representação Conferidos</label>
-      <label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" id="pj_objeto_social"> Objeto Social compatível com a Operação</label>
-    </div>
   </div>
 
   <!-- Partes do ato -->
   <div class="card">
     <h2>Partes do ato</h2>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione as partes e consulte se são PEP na base oficial.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione as partes (PF ou PJ) e consulte se são PEP na base oficial.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
       <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#5C6BC0;color:#fff;" onclick="document.getElementById('filePEP').click()">📂 Carregar base PEP</button>
       <span id="pepStatusDB" style="font-size:12px;color:var(--muted);align-self:center;"></span>
@@ -503,19 +483,30 @@ const VALIDACOES_DOCS_PJ = [
   { chave: 'pj_objeto_social', label: 'Objeto Social compatível com a Operação' },
 ];
 
-function getDocsConfig() {
-  return document.querySelector('input[name="pj"]:checked').value === 'Sim' ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
+function getDocsConfig(isPJ) {
+  return isPJ ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
 }
 
 function toggleDocsParte(radio) {
   const div = radio.closest('.parte-row');
   const docsDiv = div.querySelector('.parte-docs');
   if (!docsDiv) return;
-  const papel = radio.value;
   docsDiv.style.display = 'block';
-  // Atualiza o label do papel
   const header = docsDiv.querySelector('div:first-child');
-  if (header) header.textContent = 'Documentação do ' + papel + ':';
+  if (header) header.textContent = 'Documentação do ' + radio.value + ':';
+}
+
+function toggleTipoParte(radio) {
+  const div = radio.closest('.parte-row');
+  const isPJ = radio.value === 'PJ';
+  const cpfInput = div.querySelector('.parte-cpf');
+  if (cpfInput) cpfInput.placeholder = isPJ ? 'CNPJ' : 'CPF';
+  const docsDiv = div.querySelector('.parte-docs');
+  if (!docsDiv) return;
+  const papel = div.querySelector('input[name^="papel_"]:checked')?.value || 'Outorgante';
+  const docs = getDocsConfig(isPJ);
+  docsDiv.innerHTML = '<div style="font-size:12px;font-weight:600;color:#2E7D32;margin-bottom:4px;">Documentação do ' + papel + ':</div>' +
+    docs.map(d => '<label style="font-size:12px;display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="' + d.chave + '"> ' + d.label + '</label>').join('');
 }
 const partesData = [];
 
@@ -655,22 +646,26 @@ function adicionarParte(dados) {
   const div = document.createElement('div');
   div.className = 'parte-row';
   div.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
+  const isPJ = dados?.tipo === 'PJ';
+  const docs = getDocsConfig(isPJ);
   div.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;">
-      <input type="text" placeholder="Nome" class="parte-nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
-      <input type="text" placeholder="${document.querySelector('input[name=\"pj\"]:checked').value === 'Sim' ? 'CNPJ' : 'CPF'}" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
-      <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%;">
+      <input type="text" placeholder="Nome" class="parte-nome" style="flex:1.5;min-width:120px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
+      <input type="text" placeholder="${isPJ ? 'CNPJ' : 'CPF'}" class="parte-cpf" style="flex:1;min-width:90px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
+      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;"><input type="radio" name="tipo_${idx}" value="PF" ${!isPJ?'checked':''} onchange="toggleTipoParte(this)"> PF</label>
+      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;"><input type="radio" name="tipo_${idx}" value="PJ" ${isPJ?'checked':''} onchange="toggleTipoParte(this)"> PJ</label>
+      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;">
         <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgante
       </label>
-      <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;">
         <input type="radio" name="papel_${idx}" value="Outorgado" ${dados?.papel==='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgado
       </label>
-      <span class="pep-status" style="font-size:11px;min-width:140px;"></span>
-      <button onclick="this.parentElement.parentElement.remove();" style="padding:4px 10px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
+      <span class="pep-status" style="font-size:10px;min-width:100px;"></span>
+      <button onclick="this.parentElement.parentElement.remove();" style="padding:3px 8px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
     </div>
-    <div class="parte-docs" style="display:none;margin-top:6px;padding:8px 10px;background:#f9faf9;border-radius:6px;border:1px solid #e0e0e0;width:100%;">
-      <div style="font-size:12px;font-weight:600;color:#2E7D32;margin-bottom:4px;">Documentação do ${dados?.papel||'Outorgante'}:</div>
-      ${getDocsConfig().map(d => `<label style="font-size:12px;display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="${d.chave}" ${dados?.docs && dados.docs[d.chave]?'checked':''}> ${d.label}</label>`).join('')}
+    <div class="parte-docs" style="display:block;margin-top:4px;padding:6px 8px;background:#f9faf9;border-radius:6px;border:1px solid #e0e0e0;width:100%;">
+      <div style="font-size:11px;font-weight:600;color:#2E7D32;margin-bottom:3px;">Documentação do ${dados?.papel||'Outorgante'} (${isPJ ? 'PJ' : 'PF'}):</div>
+      ${docs.map(d => `<label style="font-size:11px;display:inline-flex;align-items:center;gap:3px;margin:1px 6px 1px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="${d.chave}" ${dados?.docs && dados.docs[d.chave]?'checked':''}> ${d.label}</label>`).join('')}
     </div>
   `;
   container.appendChild(div);
@@ -690,9 +685,6 @@ function adicionarParte(dados) {
 
   partesData.push(div);
   if (dados?.nome || dados?.cpf) setTimeout(() => consultarParteUI(div), 200);
-  // Mostrar docs se já tem papel definido
-  const radioChecked = div.querySelector('input[type="radio"]:checked');
-  if (radioChecked) toggleDocsParte(radioChecked);
 }
 
 function coletarPartes() {
@@ -700,13 +692,14 @@ function coletarPartes() {
   $('partesContainer').querySelectorAll('.parte-row').forEach(div => {
     const nome = div.querySelector('.parte-nome').value.trim();
     const cpf = div.querySelector('.parte-cpf').value.trim();
-    const papel = div.querySelector('input[type="radio"]:checked')?.value || 'Outorgante';
+    const tipo = div.querySelector('input[name^="tipo_"]:checked')?.value || 'PF';
+    const papel = div.querySelector('input[name^="papel_"]:checked')?.value || 'Outorgante';
     const statusEl = div.querySelector('.pep-status');
     const isPep = statusEl && statusEl.textContent.includes('PEP:');
     const docs = {};
     div.querySelectorAll('.doc-item').forEach(cb => { docs[cb.dataset.chave] = cb.checked; });
     if (nome || cpf) {
-      result.push({ nome, cpf, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '', docs });
+      result.push({ nome, cpf, tipo, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '', docs });
     }
   });
   return result;
@@ -717,23 +710,7 @@ function togglePep() {
   $('pepDetails').classList.toggle('show', sim);
 }
 
-function togglePJ() {
-  const sim = document.querySelector('input[name="pj"]:checked').value === 'Sim';
-  $('pjDetails').style.display = sim ? 'block' : 'none';
-  const docs = getDocsConfig();
-  // Alterar placeholder CPF/CNPJ e checkboxes em todas as partes existentes
-  document.querySelectorAll('.parte-row').forEach(div => {
-    const cpfInput = div.querySelector('.parte-cpf');
-    if (cpfInput) cpfInput.placeholder = sim ? 'CNPJ' : 'CPF';
-    const docsDiv = div.querySelector('.parte-docs');
-    if (docsDiv) {
-      const header = docsDiv.querySelector('div:first-child');
-      const papel = header ? header.textContent.replace('Documentação do ','').replace(':','') : 'Outorgante';
-      docsDiv.innerHTML = '<div style="font-size:12px;font-weight:600;color:#2E7D32;margin-bottom:4px;">Documentação do ' + papel + ':</div>' +
-        docs.map(d => '<label style="font-size:12px;display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="' + d.chave + '"> ' + d.label + '</label>').join('');
-    }
-  });
-}
+// togglePJ removido — PF/PJ agora é por parte
 
 function toggleEspecie() {
   const sim = document.querySelector('input[name="especie"]:checked').value === 'Sim';
@@ -758,19 +735,10 @@ function coletarDados() {
     cidade: $('cidade').value,
     estado: $('estado').value,
     data: $('data').value,
-    qtd_compradores: parseInt($('qtd_compradores').value) || 0,
-    qtd_vendedores: parseInt($('qtd_vendedores').value) || 0,
     pep: document.querySelector('input[name="pep"]:checked').value === 'Sim',
     pep_nome: $('pep_nome').value,
     pep_cargo: $('pep_cargo').value,
     pep_cidade: $('pep_cidade').value,
-    pj: document.querySelector('input[name="pj"]:checked').value === 'Sim',
-    pj_cnpj: $('pj_cnpj').checked,
-    pj_contrato_social: $('pj_contrato_social').checked,
-    pj_alteracoes: $('pj_alteracoes').checked,
-    pj_representante: $('pj_representante').checked,
-    pj_poderes: $('pj_poderes').checked,
-    pj_objeto_social: $('pj_objeto_social').checked,
     origem_identificada: document.querySelector('input[name="origem"]:checked').value === 'Sim',
     doc_comprobatoria: document.querySelector('input[name="doc"]:checked').value === 'Sim',
     forma_declarada: $('forma_declarada').value,
@@ -843,13 +811,14 @@ function aplicarRegras(d) {
     motivos.push('Operações relacionadas identificadas');
   }
 
-  // Regra 8 — Documentação das partes
+  // Regra 8 — Documentação das partes (verifica por tipo PF/PJ de cada parte)
   const partes = d.partes || [];
-  const chavesDocs = d.pj
-    ? ['pj_cnpj','pj_contrato_social','pj_alteracoes','pj_representante','pj_poderes','pj_objeto_social']
-    : ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'];
+  const chavesMap = {
+    PF: ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'],
+    PJ: ['pj_cnpj','pj_contrato_social','pj_alteracoes','pj_representante','pj_poderes','pj_objeto_social'],
+  };
   const todasDocsCompletas = partes.length > 0 && partes.every(p =>
-    chavesDocs.every(ch => p.docs && p.docs[ch])
+    (chavesMap[p.tipo] || chavesMap.PF).every(ch => p.docs && p.docs[ch])
   );
   if (partes.length > 0 && !todasDocsCompletas) {
     pts += SCORING.docs_incompletas || 2;
@@ -943,18 +912,11 @@ function gerarPDF() {
 
   ${dadosCorrentes.tipo_ato === 'Procuração' ? `<h2>Poderes da Procuração</h2><table><tr><td class="label">Poderes:</td><td>${(dadosCorrentes.poderes||[]).join(', ') || 'Nenhum selecionado'}</td></tr>${dadosCorrentes.poderes_outros ? `<tr><td class="label">Outros poderes:</td><td>${dadosCorrentes.poderes_outros}</td></tr>` : ''}</table>` : ''}
 
-  <h2>Participantes</h2>
-  <table><tr><td class="label">Compradores:</td><td>${dadosCorrentes.qtd_compradores}</td></tr>
-  <tr><td class="label">Vendedores:</td><td>${dadosCorrentes.qtd_vendedores}</td></tr>
-  ${dadosCorrentes.pj ? '<tr><td class="label">Pessoa Jurídica:</td><td>Sim</td></tr>' : ''}</table>
-
-  ${dadosCorrentes.pj ? `<h2>Documentação da Pessoa Jurídica</h2><table>${['pj_cnpj','pj_contrato_social','pj_alteracoes','pj_representante','pj_poderes','pj_objeto_social'].map(ch => '<tr><td class="label">' + ({pj_cnpj:'CNPJ Ativo',pj_contrato_social:'Contrato Social Atualizado',pj_alteracoes:'Alterações Contratuais Conferidas',pj_representante:'Representante Legal Identificado',pj_poderes:'Poderes de Representação Conferidos',pj_objeto_social:'Objeto Social compatível'}[ch]) + ':</td><td>' + (dadosCorrentes[ch] ? '✔' : '✘') + '</td></tr>').join('')}</table>` : ''}
-
   <h2>Partes do ato</h2>
   <table>${(dadosCorrentes.partes||[]).map((p,i) => {
-    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (CPF: ' + p.cpf + ')' : '') + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
+    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (' + (p.tipo==='PJ'?'CNPJ':'CPF') + ': ' + p.cpf + ')' : '') + ' <span style="font-size:10px;color:#888;">[' + (p.tipo||'PF') + ']</span>' + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
     if (p.docs) {
-      const docsCfg = p.docs.pj_cnpj !== undefined ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
+      const docsCfg = p.tipo === 'PJ' ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
       const docsHtml = docsCfg.map(d => '<span style="font-size:10px;color:' + (p.docs[d.chave] ? '#2E7D32' : '#CC0000') + ';">' + (p.docs[d.chave] ? '✔' : '✘') + ' ' + d.label + '</span>').join(' &nbsp;| ');
       linha += '<tr><td></td><td style="font-size:10px;padding:0 6px 4px;">' + docsHtml + '</td></tr>';
     }
@@ -1046,21 +1008,11 @@ function preencherFormulario(d) {
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
   $('data').value = d.data || '';
-  $('qtd_compradores').value = d.qtd_compradores || 0;
-  $('qtd_vendedores').value = d.qtd_vendedores || 0;
   document.querySelector(`input[name="pep"][value="${d.pep ? 'Sim' : 'Não'}"]`).checked = true;
   togglePep();
   $('pep_nome').value = d.pep_nome || '';
   $('pep_cargo').value = d.pep_cargo || '';
   $('pep_cidade').value = d.pep_cidade || '';
-  document.querySelector(`input[name="pj"][value="${d.pj ? 'Sim' : 'Não'}"]`).checked = true;
-  togglePJ();
-  $('pj_cnpj').checked = d.pj_cnpj || false;
-  $('pj_contrato_social').checked = d.pj_contrato_social || false;
-  $('pj_alteracoes').checked = d.pj_alteracoes || false;
-  $('pj_representante').checked = d.pj_representante || false;
-  $('pj_poderes').checked = d.pj_poderes || false;
-  $('pj_objeto_social').checked = d.pj_objeto_social || false;
   document.querySelector(`input[name="origem"][value="${d.origem_identificada ? 'Sim' : 'Não'}"]`).checked = true;
   document.querySelector(`input[name="doc"][value="${d.doc_comprobatoria ? 'Sim' : 'Não'}"]`).checked = true;
   $('forma_declarada').value = d.forma_declarada || '';
@@ -1099,21 +1051,11 @@ function limparFormulario() {
   $('cidade').value = '';
   $('estado').value = 'SP';
   $('data').value = '';
-  $('qtd_compradores').value = '0';
-  $('qtd_vendedores').value = '0';
   document.querySelector('input[name="pep"][value="Não"]').checked = true;
   togglePep();
   $('pep_nome').value = '';
   $('pep_cargo').value = '';
   $('pep_cidade').value = '';
-  document.querySelector('input[name="pj"][value="Não"]').checked = true;
-  togglePJ();
-  $('pj_cnpj').checked = false;
-  $('pj_contrato_social').checked = false;
-  $('pj_alteracoes').checked = false;
-  $('pj_representante').checked = false;
-  $('pj_poderes').checked = false;
-  $('pj_objeto_social').checked = false;
   document.querySelector('input[name="origem"][value="Sim"]').checked = true;
   document.querySelector('input[name="doc"][value="Sim"]').checked = true;
   $('forma_declarada').value = '';
