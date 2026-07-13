@@ -364,8 +364,30 @@
 
 <script>
 // Config
-const LIMITE_ESPECIE = 50000;
-const SCORING = { pep: 3, especie: 2, sem_origem: 3, fraude: 5, fracionamento: 3, lavagem: 5, ocultacao: 4, terceiros: 2, valor_incompativel: 2, operacoes_relacionadas: 3, limite_comunicacao: 8 };
+// Carrega config do localStorage (definida em configuracoes.html) ou usa padrao
+function _carregarConfig() {
+  try {
+    const saved = localStorage.getItem('siscoaf_config');
+    if (saved) {
+      const c = JSON.parse(saved);
+      return {
+        limite_especie: c.limites?.limite_especie || 50000,
+        limite_comunicacao: c.limites?.limite_comunicacao || 8,
+        scoring: c.scoring || {},
+      };
+    }
+  } catch (e) {}
+  return { limite_especie: 50000, limite_comunicacao: 8, scoring: {} };
+}
+const _cfg = _carregarConfig();
+const LIMITE_ESPECIE = _cfg.limite_especie;
+const SCORING = Object.assign({
+  pep: 3, especie: 2, sem_origem: 3, fraude: 5,
+  fracionamento: 3, lavagem: 5, ocultacao: 4,
+  terceiros: 2, valor_incompativel: 2, operacoes_relacionadas: 3,
+  limite_comunicacao: _cfg.limite_comunicacao,
+}, _cfg.scoring);
+SCORING.limite_comunicacao = _cfg.limite_comunicacao;
 
 const SITUACOES = [
   { chave: 'sem_origem', texto: 'Cliente não soube explicar origem do dinheiro', pts: 3 },

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações - Analisador SISCOAF</title>
+<link rel="icon" type="image/x-icon" href="assets/icon.ico">
+<style>
+  :root {
+    --primary: #2E7D32;
+    --primary-hover: #1B5E20;
+    --bg: #F5F7F5;
+    --card: #FFFFFF;
+    --text: #1B1B1B;
+    --muted: #666;
+    --border: #E0E0E0;
+    --danger: #CC0000;
+    --success: #006600;
+    --sidebar: #1B3A1B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: flex; min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 240px; background: var(--sidebar); color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-header { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .sidebar-header h1 { font-size: 17px; font-weight: 700; }
+  .sidebar-header small { font-size: 11px; opacity: .7; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; color: rgba(255,255,255,.75); text-decoration: none;
+    font-size: 13px; transition: .15s; border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar-nav a.active { border-left-color: var(--primary); }
+  .sidebar-nav a .icon { font-size: 16px; width: 22px; text-align: center; }
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); font-size: 11px; opacity: .6; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    gap: 16px; border-bottom: 1px solid var(--border);
+  }
+  .topbar h2 { font-size: 18px; flex: 1; }
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+
+  .card {
+    background: var(--card); border-radius: 12px; padding: 20px 24px;
+    border: 1px solid var(--border); margin-bottom: 18px;
+  }
+  .card h3 { font-size: 15px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .card p.desc { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+  .config-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;
+  }
+  .config-item {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .config-item label { font-size: 12px; font-weight: 600; color: var(--text); }
+  .config-item input {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; width: 100%;
+  }
+  .config-item input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,50,.12); }
+  .config-item .hint { font-size: 11px; color: var(--muted); }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px;
+    font-weight: 700; cursor: pointer; transition: .15s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #990000; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; padding: 14px 24px;
+    border-radius: 10px; color: #fff; font-weight: 600; font-size: 14px;
+    transform: translateY(100px); opacity: 0; transition: .3s; z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.info { background: #1565C0; }
+
+  .regra-card {
+    background: var(--bg); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
+    border-left: 3px solid var(--primary);
+  }
+  .regra-card .regra-nome { font-weight: 700; font-size: 13px; }
+  .regra-card .regra-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  @media (max-width: 860px) {
+    .sidebar { width: 60px; }
+    .sidebar-header h1, .sidebar-header small, .sidebar-nav a span, .sidebar-footer { display: none; }
+    .sidebar-nav a { justify-content: center; padding: 12px; }
+    .sidebar-nav a .icon { font-size: 18px; }
+  }
+  @media (max-width: 600px) { .content { padding: 16px; } }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>SISCOAF</h1>
+    <small>Configurações</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin.html"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="index.html"><span class="icon">📋</span><span>Nova Análise</span></a>
+    <a href="configuracoes.html" class="active"><span class="icon">⚙️</span><span>Configurações</span></a>
+  </nav>
+  <div class="sidebar-footer">v2.0 &middot; 2026</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2>Configurações do Sistema</h2>
+  </div>
+  <div class="content">
+
+    <!-- Pontuações -->
+    <div class="card">
+      <h3>🎯 Pontuação por critério</h3>
+      <p class="desc">Define quantos pontos cada critério soma. Quando a pontuação total atinge o <strong>limite de comunicação</strong>, o sistema recomenda comunicar ao SISCOAF mesmo que nenhuma regra isolada tenha sido suficiente.</p>
+      <div class="config-grid" id="gridScoring"></div>
+    </div>
+
+    <!-- Limites -->
+    <div class="card">
+      <h3>📐 Limites</h3>
+      <p class="desc">Configure os valores limites utilizados pelas regras de decisão.</p>
+      <div class="config-grid" id="gridLimites"></div>
+    </div>
+
+    <!-- Regras -->
+    <div class="card">
+      <h3>📋 Regras de decisão</h3>
+      <p class="desc">Lista das regras aplicadas na análise. As regras não podem ser desabilitadas nesta versão, mas suas pontuações são ajustáveis acima.</p>
+      <div id="listaRegras"></div>
+    </div>
+
+    <!-- Reset / Salvar -->
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="salvarConfig()">💾 Salvar configurações</button>
+        <button class="btn btn-outline" onclick="restaurarPadrao()">↩ Restaurar padrão</button>
+        <button class="btn btn-outline" onclick="exportarConfig()">📤 Exportar</button>
+        <button class="btn btn-outline" onclick="importarConfig()">📥 Importar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="processarImport(event)">
+
+<script>
+// ===== CONFIGURAÇÃO PADRÃO =====
+const CONFIG_PADRAO = {
+  scoring: {
+    pep: 3,
+    especie: 2,
+    sem_origem: 3,
+    fraude: 5,
+    fracionamento: 3,
+    lavagem: 5,
+    ocultacao: 4,
+    terceiros_sem_justificativa: 2,
+    valor_incompativel: 2,
+    operacoes_relacionadas: 3,
+    outro_indicio: 2,
+    movimentacao_especie: 2,
+    sem_finalidade: 2,
+    resistencia_documentos: 3,
+    documentacao_inconsistente: 3,
+    operacoes_curto_periodo: 2,
+    interpostas_pessoas: 3,
+  },
+  limites: {
+    limite_especie: 50000,
+    limite_comunicacao: 8,
+    limite_situacoes_suspeitas: 3,
+  },
+};
+
+const DESCRICOES_SCORING = {
+  pep: { label: 'PEP identificado', hint: 'Por pessoa exposta politicamente' },
+  especie: { label: 'Pagamento em espécie', hint: 'Acima do limite configurado' },
+  sem_origem: { label: 'Origem não comprovada', hint: 'Recursos sem origem identificada' },
+  fraude: { label: 'Indícios de fraude', hint: 'Situação suspeita de fraude' },
+  fracionamento: { label: 'Pagamento fracionado', hint: 'Operação rateada em parcelas' },
+  lavagem: { label: 'Indícios de lavagem', hint: 'Suspeita de lavagem de dinheiro' },
+  ocultacao: { label: 'Indícios de ocultação', hint: 'Suspeita de ocultação patrimonial' },
+  terceiros_sem_justificativa: { label: 'Terceiros sem justificativa', hint: 'Uso de interpostas pessoas' },
+  valor_incompativel: { label: 'Valor incompatível', hint: 'Incompatível com o patrimônio' },
+  operacoes_relacionadas: { label: 'Operações relacionadas', hint: 'Múltiplas operações vinculadas' },
+  outro_indicio: { label: 'Outro indício relevante', hint: 'Demais situações suspeitas' },
+  movimentacao_especie: { label: 'Grande mov. em espécie', hint: 'Movimentação atípica em espécie' },
+  sem_finalidade: { label: 'Sem finalidade econômica', hint: 'Operação sem propósito aparente' },
+  resistencia_documentos: { label: 'Resistência a documentos', hint: 'Dificuldade em fornecer docs' },
+  documentacao_inconsistente: { label: 'Documentação inconsistente', hint: 'Documentos com divergências' },
+  operacoes_curto_periodo: { label: 'Múltiplas ops. curto prazo', hint: 'Diversas operações recentes' },
+  interpostas_pessoas: { label: 'Interpostas pessoas', hint: 'Uso de laranjas / testas de ferro' },
+};
+
+const DESCRICOES_LIMITES = {
+  limite_especie: { label: 'Limite pagamento em espécie (R$)', hint: 'Valor máximo em espécie sem comunicação automática' },
+  limite_comunicacao: { label: 'Limite de pontuação para comunicação', hint: 'Ao atingir esta pontuação, comunica automaticamente' },
+  limite_situacoes_suspeitas: { label: 'Qtd. mínima de situações suspeitas', hint: 'Número mínimo para acionar a regra 4' },
+};
+
+const REGRAS = [
+  { nome: 'Regra 1', desc: 'Indícios de lavagem de dinheiro → COMUNICAR', cor: '#CC0000' },
+  { nome: 'Regra 2', desc: 'Pagamento em espécie acima do limite interno → COMUNICAR', cor: '#E65100' },
+  { nome: 'Regra 3', desc: 'PEP + inconsistência documental → COMUNICAR', cor: '#E65100' },
+  { nome: 'Regra 4', desc: '3 ou mais situações suspeitas → COMUNICAR', cor: '#1565C0' },
+  { nome: 'Regra 5', desc: 'Origem dos recursos não comprovada → COMUNICAR', cor: '#1565C0' },
+  { nome: 'Regra 6', desc: 'Operações fracionadas → COMUNICAR', cor: '#6A1B9A' },
+  { nome: 'Regra 7', desc: 'Operações relacionadas → COMUNICAR', cor: '#6A1B9A' },
+  { nome: 'Pontuação', desc: 'Pontuação total atinge limite configurado → COMUNICAR', cor: var('--primary') },
+];
+
+// ===== GERENCIAMENTO =====
+function carregarConfig() {
+  try {
+    const saved = localStorage.getItem('siscoaf_config');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge com padrao para garantir campos novos
+      const config = JSON.parse(JSON.stringify(CONFIG_PADRAO));
+      if (parsed.scoring) Object.assign(config.scoring, parsed.scoring);
+      if (parsed.limites) Object.assign(config.limites, parsed.limites);
+      return config;
+    }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(CONFIG_PADRAO));
+}
+
+function salvarConfig() {
+  const config = lerFormulario();
+  localStorage.setItem('siscoaf_config', JSON.stringify(config));
+  mostrarToast('Configurações salvas com sucesso!', 'success');
+}
+
+function lerFormulario() {
+  const config = { scoring: {}, limites: {} };
+  Object.keys(CONFIG_PADRAO.scoring).forEach(key => {
+    const el = $(key);
+    config.scoring[key] = el ? parseInt(el.value) || 0 : CONFIG_PADRAO.scoring[key];
+  });
+  Object.keys(CONFIG_PADRAO.limites).forEach(key => {
+    const el = $(key);
+    config.limites[key] = el ? parseFloat(el.value) || 0 : CONFIG_PADRAO.limites[key];
+  });
+  return config;
+}
+
+function restaurarPadrao() {
+  if (!confirm('Restaurar configurações padrão? Todas as alterações serão perdidas.')) return;
+  localStorage.setItem('siscoaf_config', JSON.stringify(CONFIG_PADRAO));
+  renderizar();
+  mostrarToast('Configurações restauradas para o padrão.', 'info');
+}
+
+function exportarConfig() {
+  const config = lerFormulario();
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'siscoaf_config.json'; a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('Arquivo exportado!', 'success');
+}
+
+function importarConfig() {
+  document.getElementById('fileInput').click();
+}
+
+function processarImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.scoring && data.limites) {
+        localStorage.setItem('siscoaf_config', JSON.stringify(data));
+        renderizar();
+        mostrarToast('Configurações importadas com sucesso!', 'success');
+      } else {
+        mostrarToast('Arquivo inválido. Formatado incorreto.', 'error');
+      }
+    } catch (err) {
+      mostrarToast('Erro ao ler arquivo: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function renderizar() {
+  const config = carregarConfig();
+
+  // Scoring
+  const gridScoring = document.getElementById('gridScoring');
+  gridScoring.innerHTML = '';
+  Object.keys(CONFIG_PADRAO.scoring).forEach(key => {
+    const info = DESCRICOES_SCORING[key] || { label: key, hint: '' };
+    const div = document.createElement('div');
+    div.className = 'config-item';
+    div.innerHTML = `
+      <label for="${key}">${info.label}</label>
+      <input type="number" id="${key}" value="${config.scoring[key]}" min="0" max="20">
+      <span class="hint">${info.hint}</span>
+    `;
+    gridScoring.appendChild(div);
+  });
+
+  // Limites
+  const gridLimites = document.getElementById('gridLimites');
+  gridLimites.innerHTML = '';
+  Object.keys(CONFIG_PADRAO.limites).forEach(key => {
+    const info = DESCRICOES_LIMITES[key] || { label: key, hint: '' };
+    const div = document.createElement('div');
+    div.className = 'config-item';
+    const step = key.includes('limite_especie') ? '1000' : '1';
+    div.innerHTML = `
+      <label for="${key}">${info.label}</label>
+      <input type="number" id="${key}" value="${config.limites[key]}" min="0" step="${step}">
+      <span class="hint">${info.hint}</span>
+    `;
+    gridLimites.appendChild(div);
+  });
+
+  // Regras
+  const listaRegras = document.getElementById('listaRegras');
+  listaRegras.innerHTML = REGRAS.map(r => `
+    <div class="regra-card" style="border-left-color:${r.cor}">
+      <div class="regra-nome">${r.nome}</div>
+      <div class="regra-desc">${r.desc}</div>
+    </div>
+  `).join('');
+}
+
+function $(id) { return document.getElementById(id); }
+
+function mostrarToast(msg, tipo) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast ' + tipo + ' show';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+renderizar();
+</script>
+</body>
+</html>
