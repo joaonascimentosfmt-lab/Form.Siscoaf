@@ -746,6 +746,7 @@ function consultarParteUI(div) {
     pepStatus.textContent = 'Não é PEP';
     pepStatus.style.color = 'var(--success)';
   } else {
+    const primeiro = res[0];
     const detalhes = res.map(r => {
       let d = r.nome;
       if (r.funcao) d += ' (' + r.funcao;
@@ -756,6 +757,14 @@ function consultarParteUI(div) {
     }).join('; ');
     pepStatus.textContent = '⚠️ PEP: ' + detalhes;
     pepStatus.style.color = 'var(--danger)';
+
+    // Auto-preenche seção PEP
+    document.querySelector('input[name="pep"][value="Sim"]').checked = true;
+    togglePep();
+    $('pep_nome').value = primeiro.nome;
+    $('pep_cargo').value = primeiro.funcao || '';
+    const cidadeUF = primeiro.cidade && primeiro.uf ? primeiro.cidade + '-' + primeiro.uf : primeiro.orgao || '';
+    $('pep_cidade').value = cidadeUF;
   }
 }
 
@@ -834,6 +843,16 @@ function togglePep() {
 function toggleEspecie() {
   const sim = document.querySelector('input[name="especie"]:checked').value === 'Sim';
   $('especieDetails').classList.toggle('show', sim);
+}
+
+function formatarMoeda(input) {
+  let val = input.value.replace(/\D/g, '');
+  if (!val) { input.value = ''; return; }
+  val = val.padStart(3, '0');
+  const intPart = val.slice(0, -2).replace(/^0+/, '') || '0';
+  const decPart = val.slice(-2);
+  const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  input.value = intFormatted + ',' + decPart;
 }
 
 function parseValor(v) {
@@ -1314,6 +1333,20 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 });
 
 function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
+
+// Formatação automática de valores monetários
+['valor', 'valor_especie'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', function() {
+    const sel = this.selectionStart;
+    const lenBefore = this.value.length;
+    formatarMoeda(this);
+    const lenAfter = this.value.length;
+    const diff = lenAfter - lenBefore;
+    this.setSelectionRange(sel + diff, sel + diff);
+  });
+});
 
 // Tecla Enter no campo valor
 document.addEventListener('DOMContentLoaded', () => {
