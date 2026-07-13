@@ -323,7 +323,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 resumo = obter_resumo_pep(resultados)
                 lbl_pep.configure(text=f"PEP: {resumo[:90]}", text_color="#CC0000")
             else:
-                lbl_pep.configure(text="Nao consta como PEP", text_color=COR_PRIMARIA)
+                lbl_pep.configure(text="Nao e PEP", text_color=COR_PRIMARIA)
 
         def _agendar_consulta(*args):
             if timer_key["after_id"]:

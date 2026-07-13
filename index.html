@@ -441,6 +441,48 @@ const partesData = [];
 let pepDB = null;
 let pepDBCarregando = false;
 
+// Tenta carregar automaticamente via HTTP (funciona se servido por qualquer servidor web)
+(function autoCarregarPEP() {
+  fetch('pep_db/202605_PEP.csv').then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }).then(csv => {
+    const fakeEvent = { target: { files: [{ name: '202605_PEP.csv' }] } };
+    pepDBCarregando = true;
+    const reader = new FileReader();
+    reader.onload = (e) => processarPEPCSV(e.target.result);
+    reader.readAsText(new Blob([csv]), 'latin-1');
+  }).catch(() => {
+    // Fallback: usuário clica no botão para selecionar o arquivo manualmente
+  });
+})();
+
+function processarPEPCSV(csv) {
+  const lines = csv.split('\n');
+  pepDB = [];
+  const start = lines[0].includes('CPF') || lines[0].includes('Nome_PEP') ? 1 : 0;
+  for (let i = start; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cols = line.split(';').map(c => c.replace(/^"|"$/g, ''));
+    if (cols.length < 2) continue;
+    const cpfRaw = cols[0] || '';
+    const partes = cpfRaw.split('.');
+    let cpfDig = '';
+    if (partes.length >= 3) {
+      cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
+    }
+    pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
+  }
+  pepDBCarregando = false;
+  atualizarStatusPEP('Base PEP carregada: ' + pepDB.length.toLocaleString() + ' registros');
+  document.querySelectorAll('.parte-row').forEach(div => {
+    const nome = div.querySelector('.parte-nome').value.trim();
+    const cpf = div.querySelector('.parte-cpf').value.trim();
+    if (nome || cpf) consultarParteUI(div);
+  });
+}
+
 function carregarPEPDB(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -448,38 +490,8 @@ function carregarPEPDB(event) {
   atualizarStatusPEP('Carregando base PEP...');
   const reader = new FileReader();
   reader.onload = (e) => {
-    try {
-      const csv = e.target.result;
-      const lines = csv.split('\n');
-      pepDB = [];
-      const header = lines[0];
-      const hasHeader = header.includes('CPF') || header.includes('Nome_PEP');
-      const start = hasHeader ? 1 : 0;
-      for (let i = start; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const cols = line.split(';').map(c => c.replace(/^"|"$/g, ''));
-        if (cols.length < 2) continue;
-        const cpfRaw = cols[0] || '';
-        const partes = cpfRaw.split('.');
-        let cpfDig = '';
-        if (partes.length >= 3) {
-          cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
-        }
-        pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
-      }
-      pepDBCarregando = false;
-      atualizarStatusPEP('Base PEP carregada: ' + pepDB.length.toLocaleString() + ' registros');
-      // Re-consultar todas as partes existentes
-      document.querySelectorAll('.parte-row').forEach(div => {
-        const nome = div.querySelector('.parte-nome').value.trim();
-        const cpf = div.querySelector('.parte-cpf').value.trim();
-        if (nome || cpf) consultarParteUI(div);
-      });
-    } catch (err) {
-      pepDBCarregando = false;
-      atualizarStatusPEP('Erro ao carregar: ' + err.message);
-    }
+    try { processarPEPCSV(e.target.result); }
+    catch (err) { pepDBCarregando = false; atualizarStatusPEP('Erro ao carregar: ' + err.message); }
   };
   reader.readAsText(file, 'latin-1');
   event.target.value = '';
@@ -511,7 +523,7 @@ function consultarParteUI(div) {
     pepStatus.textContent = pepDBCarregando ? 'Carregando...' : 'Clique em "Carregar base PEP"';
     pepStatus.style.color = 'var(--muted)';
   } else if (res.length === 0) {
-    pepStatus.textContent = 'Não consta como PEP';
+    pepStatus.textContent = 'Não é PEP';
     pepStatus.style.color = 'var(--success)';
   } else {
     const cargos = res.map(r => r.nome.substring(0,40)).join('; ');
