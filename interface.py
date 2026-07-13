@@ -92,6 +92,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         scroll.grid_columnconfigure(0, weight=1)
 
         linha = 0
+        linha = self._secao_cabecalho(scroll, linha)
         linha = self._secao_dados_ato(scroll, linha)
         linha = self._secao_participantes(scroll, linha)
         linha = self._secao_partes(scroll, linha)
@@ -154,6 +155,23 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._poderes_frame.grid()
         else:
             self._poderes_frame.grid_remove()
+
+    def _secao_cabecalho(self, parent, linha: int) -> int:
+        card = self._card(parent, "Identificação do atendimento", linha)
+        r = 1
+        frm = ctk.CTkFrame(card, fg_color="transparent")
+        frm.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 10))
+        frm.grid_columnconfigure((0, 1, 2), weight=1)
+        ctk.CTkLabel(frm, text="Funcionário:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(frm, text="Protocolo do serviço:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=1, sticky="w")
+        ctk.CTkLabel(frm, text="Ordem de serviço:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=2, sticky="w")
+        self._funcionario = ctk.CTkEntry(frm, placeholder_text="Nome do funcionário", width=180)
+        self._funcionario.grid(row=1, column=0, sticky="ew", padx=(0, 4))
+        self._protocolo = ctk.CTkEntry(frm, placeholder_text="Nº protocolo", width=150)
+        self._protocolo.grid(row=1, column=1, sticky="ew", padx=4)
+        self._ordem_servico = ctk.CTkEntry(frm, placeholder_text="Nº OS", width=150)
+        self._ordem_servico.grid(row=1, column=2, sticky="ew", padx=4)
+        return linha + 1
 
     def _secao_dados_ato(self, parent, linha: int) -> int:
         card = self._card(parent, "Dados do ato", linha)
@@ -254,7 +272,43 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_frame.grid_remove()
         r += 1
 
+        # Pessoa Jurídica
+        ctk.CTkLabel(card, text="Pessoa Jurídica?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
+        r += 1
+        self._pj_var = ctk.StringVar(value="Não")
+        frm_pj = ctk.CTkFrame(card, fg_color="transparent")
+        frm_pj.grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
+        ctk.CTkRadioButton(frm_pj, text="Sim", variable=self._pj_var, value="Sim", command=self._toggle_pj).pack(side="left", padx=(0, 20))
+        ctk.CTkRadioButton(frm_pj, text="Não", variable=self._pj_var, value="Não", command=self._toggle_pj).pack(side="left")
+        r += 1
+
+        self._pj_frame = ctk.CTkFrame(card, fg_color="#f5faf5", corner_radius=8)
+        self._pj_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
+        ctk.CTkLabel(self._pj_frame, text="Documentação da Pessoa Jurídica:", font=("Segoe UI", 11, "bold"), text_color="#2E7D32").grid(row=0, column=0, columnspan=3, sticky="w", padx=8, pady=(4, 2))
+        pj_itens = [
+            ("pj_cnpj", "CNPJ Ativo"),
+            ("pj_contrato_social", "Contrato Social Atualizado"),
+            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
+            ("pj_representante", "Representante Legal Identificado"),
+            ("pj_poderes", "Poderes de Representação Conferidos"),
+            ("pj_objeto_social", "Objeto Social compatível com a Operação"),
+        ]
+        self._pj_vars = {}
+        for i, (chave, label) in enumerate(pj_itens):
+            var = ctk.StringVar(value="")
+            cb = ctk.CTkCheckBox(self._pj_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
+            cb.grid(row=i+1, column=0, sticky="w", padx=8, pady=1)
+            self._pj_vars[chave] = var
+        self._pj_frame.grid_remove()
+        r += 1
+
         return linha + 1
+
+    def _toggle_pj(self):
+        if self._pj_var.get() == "Sim":
+            self._pj_frame.grid()
+        else:
+            self._pj_frame.grid_remove()
 
     def _toggle_pep(self):
         if self._pep_var.get() == "Sim":
@@ -440,6 +494,13 @@ class AnalisadorSISCOAF(ctk.CTk):
         ctk.CTkRadioButton(frm_r2, text="Não", variable=self._doc_var, value="Não").pack(side="left")
         r += 1
 
+        ctk.CTkLabel(card, text="Forma de pagamento declarada:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
+        r += 1
+        self._forma_declarada = ctk.CTkComboBox(card, values=["", "TED", "PIX", "Transferência Bancária", "Financiamento", "Consórcio", "Recursos Próprios"], state="readonly", width=250)
+        self._forma_declarada.set("")
+        self._forma_declarada.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 10))
+        r += 1
+
         return linha + 1
 
     def _secao_pagamento(self, parent, linha: int) -> int:
@@ -530,6 +591,9 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _coletar_dados(self) -> Dict:
         result = {
+            "funcionario": self._funcionario.get().strip(),
+            "protocolo": self._protocolo.get().strip(),
+            "ordem_servico": self._ordem_servico.get().strip(),
             "tipo_ato": self._tipo_ato.get(),
             "valor": validar_valor(self._valor.get()) or 0.0,
             "forma_pagamento": self._forma_pagamento.get(),
@@ -542,8 +606,16 @@ class AnalisadorSISCOAF(ctk.CTk):
             "pep_nome": self._pep_nome.get(),
             "pep_cargo": self._pep_cargo.get(),
             "pep_cidade": self._pep_cidade.get(),
+            "pj": self._pj_var.get() == "Sim",
+            "pj_cnpj": self._pj_vars["pj_cnpj"].get() == "1",
+            "pj_contrato_social": self._pj_vars["pj_contrato_social"].get() == "1",
+            "pj_alteracoes": self._pj_vars["pj_alteracoes"].get() == "1",
+            "pj_representante": self._pj_vars["pj_representante"].get() == "1",
+            "pj_poderes": self._pj_vars["pj_poderes"].get() == "1",
+            "pj_objeto_social": self._pj_vars["pj_objeto_social"].get() == "1",
             "origem_identificada": self._origem_var.get() == "Sim",
             "doc_comprobatoria": self._doc_var.get() == "Sim",
+            "forma_declarada": self._forma_declarada.get(),
             "pagamento_especie": self._especie_var.get() == "Sim",
             "valor_especie": validar_valor(self._valor_especie.get()) if self._especie_var.get() == "Sim" else 0.0,
             "pagamento_fracionado": self._fracionado_var.get() == "Sim",
@@ -560,6 +632,15 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _preencher_formulario(self, dados: Dict):
         self._carregando = True
+        if "funcionario" in dados:
+            self._funcionario.delete(0, "end")
+            self._funcionario.insert(0, dados["funcionario"])
+        if "protocolo" in dados:
+            self._protocolo.delete(0, "end")
+            self._protocolo.insert(0, dados["protocolo"])
+        if "ordem_servico" in dados:
+            self._ordem_servico.delete(0, "end")
+            self._ordem_servico.insert(0, dados["ordem_servico"])
         if "tipo_ato" in dados:
             self._tipo_ato.set(dados["tipo_ato"])
             self._ao_tipo_ato(dados["tipo_ato"])
@@ -600,10 +681,18 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "pep_cidade" in dados:
             self._pep_cidade.delete(0, "end")
             self._pep_cidade.insert(0, dados["pep_cidade"])
+        if "pj" in dados:
+            self._pj_var.set("Sim" if dados["pj"] else "Não")
+            self._toggle_pj()
+            if dados["pj"]:
+                for chave in ["pj_cnpj", "pj_contrato_social", "pj_alteracoes", "pj_representante", "pj_poderes", "pj_objeto_social"]:
+                    self._pj_vars[chave].set("1" if dados.get(chave) else "")
         if "origem_identificada" in dados:
             self._origem_var.set("Sim" if dados["origem_identificada"] else "Não")
         if "doc_comprobatoria" in dados:
             self._doc_var.set("Sim" if dados["doc_comprobatoria"] else "Não")
+        if "forma_declarada" in dados:
+            self._forma_declarada.set(dados["forma_declarada"])
         if "pagamento_especie" in dados:
             self._especie_var.set("Sim" if dados["pagamento_especie"] else "Não")
             self._toggle_especie()
@@ -668,7 +757,11 @@ class AnalisadorSISCOAF(ctk.CTk):
         ResultadoWindow(self, dados, resultado, motivos, pontuacao)
 
     def _limpar_formulario(self):
+        self._funcionario.delete(0, "end")
+        self._protocolo.delete(0, "end")
+        self._ordem_servico.delete(0, "end")
         self._tipo_ato.set("Compra e venda")
+        self._ao_tipo_ato("Compra e venda")
         self._valor.delete(0, "end")
         self._forma_pagamento.set("TED")
         self._cidade.delete(0, "end")
@@ -681,8 +774,13 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_nome.delete(0, "end")
         self._pep_cargo.delete(0, "end")
         self._pep_cidade.delete(0, "end")
+        self._pj_var.set("Não")
+        self._toggle_pj()
+        for v in self._pj_vars.values():
+            v.set("")
         self._origem_var.set("Sim")
         self._doc_var.set("Sim")
+        self._forma_declarada.set("")
         self._especie_var.set("Não")
         self._toggle_especie()
         self._valor_especie.delete(0, "end")

@@ -60,6 +60,12 @@ def gerar_relatorio(
     elementos.append(Paragraph(f"Pontuação total: {pontuacao}", estilo_normal))
     elementos.append(Spacer(1, 10 * mm))
 
+    if any(dados.get(k) for k in ["funcionario", "protocolo", "ordem_servico"]):
+        elementos.append(Paragraph("Identificação do Atendimento", estilo_subtitulo))
+        _adicionar_campo(elementos, "Funcionário", dados.get("funcionario", ""), estilo_normal)
+        _adicionar_campo(elementos, "Protocolo", dados.get("protocolo", ""), estilo_normal)
+        _adicionar_campo(elementos, "Ordem de serviço", dados.get("ordem_servico", ""), estilo_normal)
+
     elementos.append(Paragraph("Dados do Ato", estilo_subtitulo))
     _adicionar_campo(elementos, "Tipo do ato", dados.get("tipo_ato", ""), estilo_normal)
     _adicionar_campo(elementos, "Valor da operação", formatar_moeda(dados.get("valor", 0.0)), estilo_normal)
@@ -110,6 +116,19 @@ def gerar_relatorio(
                 if docs_nok:
                     elementos.append(Paragraph(f"   Pendente: {', '.join(docs_nok)}", estilo_normal))
 
+    if dados.get("pj"):
+        elementos.append(Paragraph("Pessoa Jurídica", estilo_subtitulo))
+        pj_itens = [
+            ("pj_cnpj", "CNPJ Ativo"),
+            ("pj_contrato_social", "Contrato Social Atualizado"),
+            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
+            ("pj_representante", "Representante Legal Identificado"),
+            ("pj_poderes", "Poderes de Representação Conferidos"),
+            ("pj_objeto_social", "Objeto Social compatível"),
+        ]
+        for chave, label in pj_itens:
+            _adicionar_campo(elementos, label, "✔" if dados.get(chave) else "✘", estilo_normal)
+
     pep_texto = "Sim" if dados.get("pep", False) else "Não"
     _adicionar_campo(elementos, "Pessoa Exposta Politicamente (PEP)", pep_texto, estilo_normal)
     if dados.get("pep", False):
@@ -120,6 +139,7 @@ def gerar_relatorio(
     elementos.append(Paragraph("Origem dos Recursos", estilo_subtitulo))
     _adicionar_campo(elementos, "Origem identificada", "Sim" if dados.get("origem_identificada", False) else "Não", estilo_normal)
     _adicionar_campo(elementos, "Documentação comprobatória", "Sim" if dados.get("doc_comprobatoria", False) else "Não", estilo_normal)
+    _adicionar_campo(elementos, "Forma de pagamento declarada", dados.get("forma_declarada", "Não informada"), estilo_normal)
 
     elementos.append(Paragraph("Forma de Pagamento", estilo_subtitulo))
     _adicionar_campo(elementos, "Pagamento em espécie", "Sim" if dados.get("pagamento_especie", False) else "Não", estilo_normal)
