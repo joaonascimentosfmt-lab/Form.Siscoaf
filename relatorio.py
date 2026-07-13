@@ -99,18 +99,21 @@ def gerar_relatorio(
                 elementos.append(Paragraph(f"   PEP: {p['pep_detalhe']}", estilo_normal))
             docs = p.get("docs", {})
             if docs:
-                docs_ok = [nome for chave, nome in [
-                    ("doc_oficial", "Doc. Oficial Válido"), ("cpf_regular", "CPF Regular"),
-                    ("estado_civil", "Estado Civil Comprovado"), ("regime_bens", "Regime de Bens Verificado"),
-                    ("endereco", "Endereço Atualizado"), ("profissao", "Profissão Informada"),
-                    ("contato", "Contato Atualizado"),
-                ] if docs.get(chave)]
-                docs_nok = [nome for chave, nome in [
-                    ("doc_oficial", "Doc. Oficial Válido"), ("cpf_regular", "CPF Regular"),
-                    ("estado_civil", "Estado Civil Comprovado"), ("regime_bens", "Regime de Bens Verificado"),
-                    ("endereco", "Endereço Atualizado"), ("profissao", "Profissão Informada"),
-                    ("contato", "Contato Atualizado"),
-                ] if not docs.get(chave)]
+                if "pj_cnpj" in docs:
+                    docs_itens = [
+                        ("pj_cnpj", "CNPJ Ativo"), ("pj_contrato_social", "Contrato Social Atualizado"),
+                        ("pj_alteracoes", "Alterações Contratuais Conferidas"), ("pj_representante", "Representante Legal Identificado"),
+                        ("pj_poderes", "Poderes de Representação Conferidos"), ("pj_objeto_social", "Objeto Social compatível"),
+                    ]
+                else:
+                    docs_itens = [
+                        ("doc_oficial", "Doc. Oficial Válido"), ("cpf_regular", "CPF Regular"),
+                        ("estado_civil", "Estado Civil Comprovado"), ("regime_bens", "Regime de Bens Verificado"),
+                        ("endereco", "Endereço Atualizado"), ("profissao", "Profissão Informada"),
+                        ("contato", "Contato Atualizado"),
+                    ]
+                docs_ok = [nome for chave, nome in docs_itens if docs.get(chave)]
+                docs_nok = [nome for chave, nome in docs_itens if not docs.get(chave)]
                 if docs_ok:
                     elementos.append(Paragraph(f"   OK: {', '.join(docs_ok)}", estilo_normal))
                 if docs_nok:

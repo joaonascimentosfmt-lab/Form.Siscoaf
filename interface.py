@@ -310,8 +310,39 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._pj_frame.grid()
         else:
             self._pj_frame.grid_remove()
+        validacoes = [
+            ("pj_cnpj", "CNPJ Ativo"),
+            ("pj_contrato_social", "Contrato Social Atualizado"),
+            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
+            ("pj_representante", "Representante Legal Identificado"),
+            ("pj_poderes", "Poderes de Representação Conferidos"),
+            ("pj_objeto_social", "Objeto Social compatível"),
+        ] if is_pj else [
+            ("doc_oficial", "Doc. Oficial Válido"),
+            ("cpf_regular", "CPF Regular"),
+            ("estado_civil", "Estado Civil Comprovado"),
+            ("regime_bens", "Regime de Bens Verificado"),
+            ("endereco", "Endereço Atualizado"),
+            ("profissao", "Profissão Informada"),
+            ("contato", "Contato Atualizado"),
+        ]
         for p in self._partes:
             p["cpf"].configure(placeholder_text="CNPJ" if is_pj else "CPF")
+            # Recriar checkboxes de documentação
+            old_frame = p.get("docs_frame")
+            if old_frame:
+                old_frame.destroy()
+            frm = p["frame"]
+            docs_frame = ctk.CTkFrame(frm, fg_color="#f9faf9", corner_radius=6)
+            docs_frame.grid(row=1, column=0, columnspan=5, sticky="ew", padx=8, pady=(0, 6))
+            docs_vars = {}
+            for i, (chave, label) in enumerate(validacoes):
+                var = ctk.StringVar(value="")
+                cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
+                cb.grid(row=0, column=i, sticky="w", padx=(0, 8), pady=4)
+                docs_vars[chave] = var
+            p["docs_frame"] = docs_frame
+            p["docs_vars"] = docs_vars
 
     def _toggle_pep(self):
         if self._pep_var.get() == "Sim":
@@ -391,7 +422,15 @@ class AnalisadorSISCOAF(ctk.CTk):
         btn_rm.grid(row=0, column=4, padx=(2, 8), pady=6)
 
         # Documentação (row 1, col 0-4)
+        is_pj = self._pj_var.get() == "Sim"
         validacoes = [
+            ("pj_cnpj", "CNPJ Ativo"),
+            ("pj_contrato_social", "Contrato Social Atualizado"),
+            ("pj_alteracoes", "Alterações Contratuais Conferidas"),
+            ("pj_representante", "Representante Legal Identificado"),
+            ("pj_poderes", "Poderes de Representação Conferidos"),
+            ("pj_objeto_social", "Objeto Social compatível"),
+        ] if is_pj else [
             ("doc_oficial", "Doc. Oficial Válido"),
             ("cpf_regular", "CPF Regular"),
             ("estado_civil", "Estado Civil Comprovado"),
@@ -442,6 +481,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "lbl_pep": lbl_pep,
             "timer_key": timer_key,
             "docs_vars": docs_vars,
+            "docs_frame": docs_frame,
         })
 
         if (entry_nome.get().strip() or entry_cpf.get().strip()):
