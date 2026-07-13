@@ -197,11 +197,51 @@
     </div>
   </div>
 
-  <!-- Dados do ato -->
+  <!-- 1. Identificação dos envolvidos -->
   <div class="card">
-    <h2>Dados do ato</h2>
+    <h2>1. Identificação dos envolvidos</h2>
+
+    <h3 style="font-size:14px;margin:6px 0 8px;color:var(--text);">Partes do ato</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione compradores, vendedores, procuradores ou representantes legais (PF ou PJ).</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#5C6BC0;color:#fff;" onclick="document.getElementById('filePEP').click()">📂 Carregar base PEP</button>
+      <span id="pepStatusDB" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+    </div>
+    <input type="file" id="filePEP" accept=".csv" style="display:none" onchange="carregarPEPDB(event)">
+    <div id="partesContainer"></div>
+    <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;margin-top:4px;" onclick="adicionarParte()">+ Adicionar parte</button>
+
+    <h3 style="font-size:14px;margin:12px 0 8px;color:var(--text);">Pessoa Exposta Politicamente (PEP)</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Declare aqui se alguma parte conhecida é PEP (além da consulta automática na base oficial).</p>
     <div class="field">
-      <label>Tipo do ato</label>
+      <div class="radio-group">
+        <label><input type="radio" name="pep" value="Sim" onchange="togglePep()"> Sim</label>
+        <label><input type="radio" name="pep" value="Não" checked onchange="togglePep()"> Não</label>
+      </div>
+    </div>
+    <div class="pep-details" id="pepDetails">
+      <div class="row">
+        <div class="field"><label>Nome</label><input type="text" id="pep_nome" placeholder="Nome do PEP"></div>
+        <div class="field"><label>Cargo</label><input type="text" id="pep_cargo" placeholder="Cargo"></div>
+        <div class="field"><label>Cidade</label><input type="text" id="pep_cidade" placeholder="Cidade"></div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;margin:12px 0 8px;color:var(--text);">Beneficiário final</h3>
+    <div class="field">
+      <label>O beneficiário final da operação foi identificado?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="beneficiario_final" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="beneficiario_final" value="Não"> Não</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Características do negócio -->
+  <div class="card">
+    <h2>2. Características do negócio</h2>
+    <div class="field">
+      <label>Qual é o tipo do ato?</label>
       <select id="tipo_ato" onchange="togglePoderes()">
         <option>Compra e venda</option><option>Doação</option><option>Permuta</option>
         <option>Constituição de garantia</option><option>Alienação fiduciária</option>
@@ -221,15 +261,8 @@
       </div>
     </div>
     <div class="field">
-      <label>Valor do negócio (R$)</label>
+      <label>Qual é o valor da operação? (R$)</label>
       <input type="text" id="valor" placeholder="0,00" inputmode="decimal">
-    </div>
-    <div class="field">
-      <label>Forma de pagamento</label>
-      <select id="forma_pagamento">
-        <option>PIX</option><option>TED</option><option>Dinheiro</option>
-        <option>Cheque</option><option>Espécie</option><option>Mista</option><option>Outro</option>
-      </select>
     </div>
     <div class="row">
       <div class="field"><label>Cidade</label><input type="text" id="cidade" placeholder="Cidade"></div>
@@ -246,113 +279,162 @@
       </div>
       <div class="field"><label>Data</label><input type="text" id="data" placeholder="dd/mm/aaaa"></div>
     </div>
-  </div>
-
-  <!-- PEP (declaração manual) -->
-  <div class="card">
-    <h2>Pessoa Exposta Politicamente (PEP)</h2>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Declare aqui se alguma parte conhecida é PEP (além da consulta automática na base oficial).</p>
     <div class="field">
+      <label>O valor é compatível com o patrimônio ou a renda informada pelos envolvidos?</label>
       <div class="radio-group">
-        <label><input type="radio" name="pep" value="Sim" onchange="togglePep()"> Sim</label>
-        <label><input type="radio" name="pep" value="Não" checked onchange="togglePep()"> Não</label>
+        <label><input type="radio" name="valor_compativel" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="valor_compativel" value="Não"> Não</label>
       </div>
     </div>
-    <div class="pep-details" id="pepDetails">
-      <div class="row">
-        <div class="field"><label>Nome</label><input type="text" id="pep_nome" placeholder="Nome do PEP"></div>
-        <div class="field"><label>Cargo</label><input type="text" id="pep_cargo" placeholder="Cargo"></div>
-        <div class="field"><label>Cidade</label><input type="text" id="pep_cidade" placeholder="Cidade"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Partes do ato -->
-  <div class="card">
-    <h2>Partes do ato</h2>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione as partes (PF ou PJ) e consulte se são PEP na base oficial.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-      <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#5C6BC0;color:#fff;" onclick="document.getElementById('filePEP').click()">📂 Carregar base PEP</button>
-      <span id="pepStatusDB" style="font-size:12px;color:var(--muted);align-self:center;"></span>
-    </div>
-    <input type="file" id="filePEP" accept=".csv" style="display:none" onchange="carregarPEPDB(event)">
-    <div id="partesContainer"></div>
-    <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;margin-top:4px;" onclick="adicionarParte()">+ Adicionar parte</button>
-  </div>
-
-  <!-- Origem dos recursos -->
-  <div class="card">
-    <h2>Origem dos recursos</h2>
-    <div class="row">
-      <div class="field">
-        <label>Origem identificada?</label>
-        <div class="radio-group">
-          <label><input type="radio" name="origem" value="Sim" checked> Sim</label>
-          <label><input type="radio" name="origem" value="Não"> Não</label>
-        </div>
-      </div>
-      <div class="field">
-        <label>Documentação comprobatória?</label>
-        <div class="radio-group">
-          <label><input type="radio" name="doc" value="Sim" checked> Sim</label>
-          <label><input type="radio" name="doc" value="Não"> Não</label>
-        </div>
-      <div class="field">
-        <label>Forma de pagamento declarada</label>
-        <select id="forma_declarada">
-          <option value="">Selecione</option>
-          <option>TED</option><option>PIX</option><option>Transferência Bancária</option>
-          <option>Financiamento</option><option>Consórcio</option><option>Recursos Próprios</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Forma de pagamento -->
-  <div class="card">
-    <h2>Forma de pagamento</h2>
     <div class="field">
-      <label>Pagamento em espécie?</label>
+      <label>O negócio possui finalidade econômica aparente?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="finalidade_economica" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="finalidade_economica" value="Não"> Não</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Forma de pagamento -->
+  <div class="card">
+    <h2>3. Forma de pagamento</h2>
+    <div class="field">
+      <label>Como será realizado o pagamento?</label>
+      <select id="forma_pagamento">
+        <option>PIX</option><option>TED</option><option>Dinheiro</option>
+        <option>Cheque</option><option>Espécie</option><option>Mista</option><option>Outro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Existe pagamento em espécie?</label>
       <div class="radio-group">
         <label><input type="radio" name="especie" value="Sim" onchange="toggleEspecie()"> Sim</label>
         <label><input type="radio" name="especie" value="Não" checked onchange="toggleEspecie()"> Não</label>
       </div>
     </div>
     <div class="especie-details" id="especieDetails">
-      <div class="field"><label>Valor pago em espécie (R$)</label><input type="text" id="valor_especie" placeholder="0,00"></div>
+      <div class="field"><label>Qual o valor pago em espécie? (R$)</label><input type="text" id="valor_especie" placeholder="0,00"></div>
     </div>
     <div class="field">
-      <label>Pagamento fracionado?</label>
+      <label>O pagamento foi dividido em várias parcelas ou operações?</label>
       <div class="radio-group">
         <label><input type="radio" name="fracionado" value="Sim"> Sim</label>
         <label><input type="radio" name="fracionado" value="Não" checked> Não</label>
       </div>
     </div>
     <div class="field">
-      <label>Várias operações relacionadas?</label>
+      <label>Há utilização de terceiros para efetuar o pagamento?</label>
       <div class="radio-group">
-        <label><input type="radio" name="relacionadas" value="Sim"> Sim</label>
-        <label><input type="radio" name="relacionadas" value="Não" checked> Não</label>
+        <label><input type="radio" name="terceiros_pagamento" value="Sim"> Sim</label>
+        <label><input type="radio" name="terceiros_pagamento" value="Não" checked> Não</label>
       </div>
     </div>
   </div>
 
-  <!-- Situações suspeitas -->
+  <!-- 4. Origem dos recursos -->
   <div class="card">
-    <h2>Situações suspeitas</h2>
-    <p style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">Marque todas as situações identificadas:</p>
-    <div id="suspeitasContainer"></div>
-  </div>
-
-  <!-- Observações -->
-  <div class="card">
-    <h2>Observações</h2>
+    <h2>4. Origem dos recursos</h2>
     <div class="field">
-      <textarea id="observacoes" rows="3" style="resize:vertical"></textarea>
+      <label>A origem dos recursos foi informada?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="origem" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="origem" value="Não"> Não</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Foram apresentados documentos que comprovem essa origem?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="doc" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="doc" value="Não"> Não</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Forma de pagamento declarada</label>
+      <select id="forma_declarada">
+        <option value="">Selecione</option>
+        <option>TED</option><option>PIX</option><option>Transferência Bancária</option>
+        <option>Financiamento</option><option>Consórcio</option><option>Recursos Próprios</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>A explicação fornecida é compatível com a operação?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="explicacao_compativel" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="explicacao_compativel" value="Não"> Não</label>
+      </div>
     </div>
   </div>
 
-  <button class="btn-analyze" onclick="analisar()">ANALISAR</button>
+  <!-- 5. Documentação -->
+  <div class="card">
+    <h2>5. Documentação</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">A documentação de cada parte é verificada individualmente na seção "Identificação dos envolvidos".</p>
+    <div class="field">
+      <label>Há documentos com indícios de fraude ou adulteração?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="indicios_fraude_docs" value="Sim"> Sim</label>
+        <label><input type="radio" name="indicios_fraude_docs" value="Não" checked> Não</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Existem divergências entre as informações fornecidas?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="divergencias_info" value="Sim"> Sim</label>
+        <label><input type="radio" name="divergencias_info" value="Não" checked> Não</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Perfil dos envolvidos -->
+  <div class="card">
+    <h2>6. Perfil dos envolvidos</h2>
+    <div class="field">
+      <label>A operação é compatível com a atividade econômica dos participantes?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="compativel_atividade" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="compativel_atividade" value="Não"> Não</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>O cliente já realizou operações semelhantes?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="operacoes_semelhantes" value="Sim" checked> Sim</label>
+        <label><input type="radio" name="operacoes_semelhantes" value="Não"> Não</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Existe comportamento incomum durante o atendimento?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="comportamento_incomum" value="Sim"> Sim</label>
+        <label><input type="radio" name="comportamento_incomum" value="Não" checked> Não</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Indícios de suspeita -->
+  <div class="card">
+    <h2>7. Indícios de suspeita</h2>
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">Marque todas as situações observadas:</p>
+    <div id="suspeitasContainer"></div>
+    <div id="outroIndicioContainer" style="display:none;margin-top:8px;">
+      <div class="field">
+        <label>Descreva o fato relevante:</label>
+        <textarea id="outroIndicioTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Resultado da análise -->
+  <div class="card">
+    <h2>8. Resultado da análise</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Após preencher todas as seções, clique em ANALISAR para obter a decisão.</p>
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="observacoes" rows="2" style="resize:vertical"></textarea>
+    </div>
+    <button class="btn-analyze" onclick="analisar()">ANALISAR</button>
+  </div>
+
   <div style="height: 20px"></div>
 </div>
 
@@ -422,19 +504,18 @@ const SCORING = Object.assign({
 SCORING.limite_comunicacao = _cfg.limite_comunicacao;
 
 const SITUACOES = [
-  { chave: 'sem_origem', texto: 'Cliente não soube explicar origem do dinheiro', pts: 3 },
-  { chave: 'valor_incompativel', texto: 'Valor incompatível com patrimônio', pts: 2 },
-  { chave: 'terceiros_sem_justificativa', texto: 'Uso de terceiros sem justificativa', pts: 2 },
-  { chave: 'interpostas_pessoas', texto: 'Uso de interpostas pessoas', pts: 3 },
-  { chave: 'movimentacao_especie', texto: 'Grande movimentação em espécie', pts: 2 },
-  { chave: 'sem_finalidade', texto: 'Operação sem finalidade econômica aparente', pts: 2 },
-  { chave: 'resistencia_documentos', texto: 'Resistência em fornecer documentos', pts: 3 },
-  { chave: 'documentacao_inconsistente', texto: 'Documentação inconsistente', pts: 3 },
-  { chave: 'operacoes_curto_periodo', texto: 'Diversas operações em curto período', pts: 2 },
-  { chave: 'indicios_lavagem', texto: 'Indícios de lavagem de dinheiro', pts: 5 },
+  { chave: 'resistencia_info', texto: 'Cliente demonstrou resistência em fornecer informações', pts: 3 },
+  { chave: 'ocultar_identidade', texto: 'Cliente tentou ocultar a identidade do verdadeiro interessado', pts: 4 },
+  { chave: 'interpostas_pessoas', texto: 'Utilização de interpostas pessoas ("laranjas")', pts: 3 },
+  { chave: 'sem_justificativa', texto: 'Operação sem justificativa econômica', pts: 2 },
+  { chave: 'valor_incompativel', texto: 'Valor incompatível com a capacidade financeira', pts: 2 },
+  { chave: 'operacoes_curto_periodo', texto: 'Diversas operações relacionadas em curto período', pts: 2 },
+  { chave: 'origem_nao_comprovada', texto: 'Recursos de origem não comprovada', pts: 3 },
+  { chave: 'especie_alto_valor', texto: 'Pagamento em espécie de alto valor', pts: 2 },
   { chave: 'indicios_ocultacao', texto: 'Indícios de ocultação patrimonial', pts: 4 },
-  { chave: 'indicios_fraude', texto: 'Indícios de fraude', pts: 5 },
-  { chave: 'outro_indicio', texto: 'Outro indício relevante', pts: 2 },
+  { chave: 'indicios_lavagem', texto: 'Indícios de lavagem de dinheiro', pts: 5 },
+  { chave: 'indicios_terrorismo', texto: 'Indícios de financiamento do terrorismo', pts: 5 },
+  { chave: 'outro_fato_relevante', texto: 'Outro fato relevante', pts: 2 },
 ];
 
 let dadosCorrentes = null;
@@ -451,6 +532,10 @@ function init() {
     lbl.className = 'checkbox-item';
     lbl.innerHTML = `<input type="checkbox" id="suspeita_${s.chave}"> ${s.texto}`;
     container.appendChild(lbl);
+  });
+  // Toggle campo "Outro fato relevante"
+  $('suspeita_outro_fato_relevante').addEventListener('change', function() {
+    $('outroIndicioContainer').style.display = this.checked ? 'block' : 'none';
   });
   $('estado').value = 'SP';
   adicionarParte();
@@ -563,6 +648,16 @@ carregarDoDB().then(csv => {
   atualizarStatusPEP('Clique em "Carregar base PEP" para ativar a consulta');
 });
 
+function _extrairUF(orgao) {
+  const m = orgao.match(/[-\s]+([A-Z]{2})$/);
+  return m ? m[1] : '';
+}
+
+function _extrairCidade(orgao) {
+  const idx = orgao.search(/[-\s]+[A-Z]{2}$/);
+  return idx > 0 ? orgao.substring(0, idx).trim() : '';
+}
+
 function processarPEPCSV(csv) {
   const lines = csv.split('\n');
   pepDB = [];
@@ -578,7 +673,15 @@ function processarPEPCSV(csv) {
     if (partes.length >= 3) {
       cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
     }
-    pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
+    const orgao = (cols[5]||'').trim();
+    pepDB.push({
+      cpfDig,
+      nome: (cols[1]||'').toUpperCase(),
+      funcao: (cols[3]||'').trim(),
+      orgao: orgao,
+      cidade: _extrairCidade(orgao),
+      uf: _extrairUF(orgao),
+    });
   }
   pepDBCarregando = false;
   atualizarStatusPEP('Base PEP carregada: ' + pepDB.length.toLocaleString() + ' registros');
@@ -618,7 +721,16 @@ function consultarPEPLocal(nome, cpf) {
   const results = pepDB.filter(r =>
     (cpfDig && r.cpfDig === cpfDig) || (nomeUp && r.nome.includes(nomeUp))
   );
-  return results.length > 0 ? results.slice(0,3) : null;
+  if (results.length === 0) return [];
+  // Consolidar por campos únicos
+  const seen = new Set();
+  const unicos = [];
+  for (const r of results) {
+    const key = r.nome + '|' + (r.funcao || '') + '|' + (r.orgao || '');
+    if (!seen.has(key)) { seen.add(key); unicos.push(r); }
+    if (unicos.length >= 3) break;
+  }
+  return unicos;
 }
 
 function consultarParteUI(div) {
@@ -634,8 +746,15 @@ function consultarParteUI(div) {
     pepStatus.textContent = 'Não é PEP';
     pepStatus.style.color = 'var(--success)';
   } else {
-    const cargos = res.map(r => r.nome.substring(0,40)).join('; ');
-    pepStatus.textContent = '⚠️ PEP: ' + cargos;
+    const detalhes = res.map(r => {
+      let d = r.nome;
+      if (r.funcao) d += ' (' + r.funcao;
+      if (r.cidade && r.uf) d += ', ' + r.cidade + '-' + r.uf;
+      else if (r.orgao) d += ', ' + r.orgao;
+      if (r.funcao) d += ')';
+      return d;
+    }).join('; ');
+    pepStatus.textContent = '⚠️ PEP: ' + detalhes;
     pepStatus.style.color = 'var(--danger)';
   }
 }
@@ -725,28 +844,37 @@ function parseValor(v) {
 }
 
 function coletarDados() {
+  function r(name) { return document.querySelector(`input[name="${name}"]:checked`).value === 'Sim'; }
   const d = {
     funcionario: $('funcionario').value.trim(),
     protocolo: $('protocolo').value.trim(),
     ordem_servico: $('ordem_servico').value.trim(),
+    beneficiario_final: r('beneficiario_final'),
     tipo_ato: $('tipo_ato').value,
     valor: parseValor($('valor').value),
-    forma_pagamento: $('forma_pagamento').value,
     cidade: $('cidade').value,
     estado: $('estado').value,
     data: $('data').value,
-    pep: document.querySelector('input[name="pep"]:checked').value === 'Sim',
+    valor_compativel: r('valor_compativel'),
+    finalidade_economica: r('finalidade_economica'),
+    forma_pagamento: $('forma_pagamento').value,
+    pagamento_especie: r('especie'),
+    valor_especie: parseValor($('valor_especie').value),
+    pagamento_fracionado: r('fracionado'),
+    terceiros_pagamento: r('terceiros_pagamento'),
+    origem_identificada: r('origem'),
+    doc_comprobatoria: r('doc'),
+    forma_declarada: $('forma_declarada').value,
+    explicacao_compativel: r('explicacao_compativel'),
+    indicios_fraude_docs: r('indicios_fraude_docs'),
+    divergencias_info: r('divergencias_info'),
+    compativel_atividade: r('compativel_atividade'),
+    operacoes_semelhantes: r('operacoes_semelhantes'),
+    comportamento_incomum: r('comportamento_incomum'),
+    pep: r('pep'),
     pep_nome: $('pep_nome').value,
     pep_cargo: $('pep_cargo').value,
     pep_cidade: $('pep_cidade').value,
-    origem_identificada: document.querySelector('input[name="origem"]:checked').value === 'Sim',
-    doc_comprobatoria: document.querySelector('input[name="doc"]:checked').value === 'Sim',
-    forma_declarada: $('forma_declarada').value,
-    doc_comprobatoria: document.querySelector('input[name="doc"]:checked').value === 'Sim',
-    pagamento_especie: document.querySelector('input[name="especie"]:checked').value === 'Sim',
-    valor_especie: parseValor($('valor_especie').value),
-    pagamento_fracionado: document.querySelector('input[name="fracionado"]:checked').value === 'Sim',
-    operacoes_relacionadas: document.querySelector('input[name="relacionadas"]:checked').value === 'Sim',
     observacoes: $('observacoes').value,
   };
   if (d.tipo_ato === 'Procuração') {
@@ -755,6 +883,7 @@ function coletarDados() {
     d.poderes_outros = $('poderesOutros').value.trim();
   }
   SITUACOES.forEach(s => { d['suspeita_' + s.chave] = $(`suspeita_${s.chave}`).checked; });
+  d.outro_fato_texto = $('outroIndicioTexto').value.trim();
   d.partes = coletarPartes();
   return d;
 }
@@ -775,43 +904,43 @@ function aplicarRegras(d) {
   SITUACOES.forEach(s => { if (d['suspeita_' + s.chave]) pts += s.pts; });
   if (d.pep) pts += SCORING.pep;
 
-  // Regra 1
+  // Regra 1: Lavagem
   if (d.suspeita_indicios_lavagem) { motivos.push('Indícios de lavagem de dinheiro identificados'); }
 
-  // Regra 2
+  // Regra 2: Espécie acima do limite
   if (d.pagamento_especie && d.valor_especie > LIMITE_ESPECIE) {
     pts += SCORING.especie;
     motivos.push(`Pagamento em espécie de R$ ${d.valor_especie.toFixed(2)} acima do limite de R$ ${LIMITE_ESPECIE.toFixed(2)}`);
   }
 
-  // Regra 3
-  if (d.pep && (d.suspeita_documentacao_inconsistente || d.suspeita_resistencia_documentos)) {
-    motivos.push('PEP identificado com inconsistência documental');
+  // Regra 3: PEP com inconsistência
+  if (d.pep && d.divergencias_info) {
+    motivos.push('PEP identificado com divergências nas informações');
   }
 
-  // Regra 4
+  // Regra 4: Múltiplos indícios
   const marcadas = SITUACOES.filter(s => d['suspeita_' + s.chave]).length;
   if (marcadas >= 3) motivos.push(`${marcadas} situações suspeitas identificadas (mínimo: 3)`);
 
-  // Regra 5
+  // Regra 5: Origem não comprovada
   if (!d.origem_identificada || !d.doc_comprobatoria) {
     pts += SCORING.sem_origem;
     motivos.push('Origem dos recursos não comprovada');
   }
 
-  // Regra 6
+  // Regra 6: Fracionamento
   if (d.pagamento_fracionado) {
     pts += SCORING.fracionamento;
     motivos.push('Pagamento fracionado identificado');
   }
 
-  // Regra 7
-  if (d.operacoes_relacionadas) {
+  // Regra 7: Operações relacionadas
+  if (d.suspeita_operacoes_curto_periodo) {
     pts += SCORING.operacoes_relacionadas;
-    motivos.push('Operações relacionadas identificadas');
+    motivos.push('Diversas operações relacionadas em curto período');
   }
 
-  // Regra 8 — Documentação das partes (verifica por tipo PF/PJ de cada parte)
+  // Regra 8: Documentação das partes (verifica por tipo PF/PJ)
   const partes = d.partes || [];
   const chavesMap = {
     PF: ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'],
@@ -823,6 +952,36 @@ function aplicarRegras(d) {
   if (partes.length > 0 && !todasDocsCompletas) {
     pts += SCORING.docs_incompletas || 2;
     motivos.push('Documentação de parte(s) do ato incompleta');
+  }
+
+  // Regra 9: Valor incompatível
+  if (d.valor_compativel === false) {
+    pts += SCORING.valor_incompativel || 2;
+    motivos.push('Valor incompatível com o patrimônio ou renda informada');
+  }
+
+  // Regra 10: Finalidade econômica
+  if (d.finalidade_economica === false) {
+    pts += SCORING.valor_incompativel || 2;
+    motivos.push('Operação sem finalidade econômica aparente');
+  }
+
+  // Regra 11: Indícios de fraude documental
+  if (d.indicios_fraude_docs) {
+    pts += SCORING.fraude || 5;
+    motivos.push('Documentos com indícios de fraude ou adulteração');
+  }
+
+  // Regra 12: Comportamento incomum
+  if (d.comportamento_incomum) {
+    pts += SCORING.valor_incompativel || 2;
+    motivos.push('Comportamento incomum durante o atendimento');
+  }
+
+  // Regra 13: Terrorismo
+  if (d.suspeita_indicios_terrorismo) {
+    pts += SCORING.lavagem || 5;
+    motivos.push('Indícios de financiamento do terrorismo');
   }
 
   if (pts >= SCORING.limite_comunicacao) {
@@ -903,14 +1062,8 @@ function gerarPDF() {
 
   ${dadosCorrentes.funcionario || dadosCorrentes.protocolo || dadosCorrentes.ordem_servico ? `<h2>Identificação do atendimento</h2><table>${dadosCorrentes.funcionario ? '<tr><td class="label">Funcionário:</td><td>' + dadosCorrentes.funcionario + '</td></tr>' : ''}${dadosCorrentes.protocolo ? '<tr><td class="label">Protocolo:</td><td>' + dadosCorrentes.protocolo + '</td></tr>' : ''}${dadosCorrentes.ordem_servico ? '<tr><td class="label">Ordem de serviço:</td><td>' + dadosCorrentes.ordem_servico + '</td></tr>' : ''}</table>` : ''}
 
-  <h2>Dados do ato</h2>
-  <table><tr><td class="label">Tipo do ato:</td><td>${dadosCorrentes.tipo_ato}</td></tr>
-  <tr><td class="label">Valor:</td><td>R$ ${dadosCorrentes.valor.toFixed(2).replace('.',',')}</td></tr>
-  <tr><td class="label">Forma de pagamento:</td><td>${dadosCorrentes.forma_pagamento}</td></tr>
-  <tr><td class="label">Cidade/Estado:</td><td>${dadosCorrentes.cidade}/${dadosCorrentes.estado}</td></tr>
-  <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr></table>
-
-  ${dadosCorrentes.tipo_ato === 'Procuração' ? `<h2>Poderes da Procuração</h2><table><tr><td class="label">Poderes:</td><td>${(dadosCorrentes.poderes||[]).join(', ') || 'Nenhum selecionado'}</td></tr>${dadosCorrentes.poderes_outros ? `<tr><td class="label">Outros poderes:</td><td>${dadosCorrentes.poderes_outros}</td></tr>` : ''}</table>` : ''}
+  <h2>1. Identificação dos envolvidos</h2>
+  <table><tr><td class="label">Beneficiário final:</td><td>${dadosCorrentes.beneficiario_final ? 'Identificado' : 'Não identificado'}</td></tr></table>
 
   <h2>Partes do ato</h2>
   <table>${(dadosCorrentes.partes||[]).map((p,i) => {
@@ -923,25 +1076,49 @@ function gerarPDF() {
     return linha;
   }).join('')}</table>
 
-  <table><tr><td class="label">PEP:</td><td>${dadosCorrentes.pep ? 'Sim' : 'Não'}${dadosCorrentes.pep ? ' (' + dadosCorrentes.pep_nome + ', ' + dadosCorrentes.pep_cargo + ', ' + dadosCorrentes.pep_cidade + ')' : ''}</td></tr></table>
+  <table><tr><td class="label">PEP declarado:</td><td>${dadosCorrentes.pep ? 'Sim (' + (dadosCorrentes.pep_nome||'') + ', ' + (dadosCorrentes.pep_cargo||'') + ')' : 'Não'}</td></tr></table>
 
-  <h2>Origem dos recursos</h2>
-  <table><tr><td class="label">Origem identificada:</td><td>${dadosCorrentes.origem_identificada ? 'Sim' : 'Não'}</td></tr>
-  <tr><td class="label">Documentação comprobatória:</td><td>${dadosCorrentes.doc_comprobatoria ? 'Sim' : 'Não'}</td></tr>
-  <tr><td class="label">Forma de pagamento declarada:</td><td>${dadosCorrentes.forma_declarada || 'Não informada'}</td></tr></table>
+  <h2>2. Características do negócio</h2>
+  <table><tr><td class="label">Tipo do ato:</td><td>${dadosCorrentes.tipo_ato}</td></tr>
+  <tr><td class="label">Valor:</td><td>R$ ${dadosCorrentes.valor.toFixed(2).replace('.',',')}</td></tr>
+  <tr><td class="label">Cidade/Estado:</td><td>${dadosCorrentes.cidade}/${dadosCorrentes.estado}</td></tr>
+  <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr>
+  <tr><td class="label">Valor compatível:</td><td>${dadosCorrentes.valor_compativel !== false ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Finalidade econômica:</td><td>${dadosCorrentes.finalidade_economica !== false ? 'Sim' : 'Não'}</td></tr></table>
+  ${dadosCorrentes.tipo_ato === 'Procuração' ? `<h2>Poderes da Procuração</h2><table><tr><td class="label">Poderes:</td><td>${(dadosCorrentes.poderes||[]).join(', ') || 'Nenhum selecionado'}</td></tr>${dadosCorrentes.poderes_outros ? `<tr><td class="label">Outros poderes:</td><td>${dadosCorrentes.poderes_outros}</td></tr>` : ''}</table>` : ''}
 
-  <h2>Forma de pagamento</h2>
-  <table><tr><td class="label">Pagamento em espécie:</td><td>${dadosCorrentes.pagamento_especie ? 'Sim (R$ ' + dadosCorrentes.valor_especie.toFixed(2).replace('.',',') + ')' : 'Não'}</td></tr>
+  <h2>3. Forma de pagamento</h2>
+  <table><tr><td class="label">Forma de pagamento:</td><td>${dadosCorrentes.forma_pagamento}</td></tr>
+  <tr><td class="label">Pagamento em espécie:</td><td>${dadosCorrentes.pagamento_especie ? 'Sim (R$ ' + dadosCorrentes.valor_especie.toFixed(2).replace('.',',') + ')' : 'Não'}</td></tr>
   <tr><td class="label">Pagamento fracionado:</td><td>${dadosCorrentes.pagamento_fracionado ? 'Sim' : 'Não'}</td></tr>
-  <tr><td class="label">Operações relacionadas:</td><td>${dadosCorrentes.operacoes_relacionadas ? 'Sim' : 'Não'}</td></tr></table>
+  <tr><td class="label">Terceiros no pagamento:</td><td>${dadosCorrentes.terceiros_pagamento ? 'Sim' : 'Não'}</td></tr></table>
 
-  <h2>Situações suspeitas</h2>
+  <h2>4. Origem dos recursos</h2>
+  <table><tr><td class="label">Origem informada:</td><td>${dadosCorrentes.origem_identificada ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Documentação comprobatória:</td><td>${dadosCorrentes.doc_comprobatoria ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Forma declarada:</td><td>${dadosCorrentes.forma_declarada || 'Não informada'}</td></tr>
+  <tr><td class="label">Explicação compatível:</td><td>${dadosCorrentes.explicacao_compativel !== false ? 'Sim' : 'Não'}</td></tr></table>
+
+  <h2>5. Documentação</h2>
+  <table><tr><td class="label">Indícios de fraude documental:</td><td>${dadosCorrentes.indicios_fraude_docs ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Divergências nas informações:</td><td>${dadosCorrentes.divergencias_info ? 'Sim' : 'Não'}</td></tr></table>
+
+  <h2>6. Perfil dos envolvidos</h2>
+  <table><tr><td class="label">Compatível com atividade:</td><td>${dadosCorrentes.compativel_atividade !== false ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Operações semelhantes:</td><td>${dadosCorrentes.operacoes_semelhantes !== false ? 'Sim' : 'Não'}</td></tr>
+  <tr><td class="label">Comportamento incomum:</td><td>${dadosCorrentes.comportamento_incomum ? 'Sim' : 'Não'}</td></tr></table>
+
+  <h2>7. Indícios de suspeita</h2>
   <table>`;
   SITUACOES.forEach(s => {
     const marcado = dadosCorrentes['suspeita_' + s.chave];
     html += `<tr><td class="label">${marcado ? '✔' : '☐'}</td><td>${s.texto}</td></tr>`;
   });
   html += `</table>`;
+
+  if (dadosCorrentes.outro_fato_texto) {
+    html += `<p><b>Outro fato relevante:</b> ${dadosCorrentes.outro_fato_texto}</p>`;
+  }
 
   if (dadosCorrentes.observacoes) {
     html += `<h2>Observações</h2><p>${dadosCorrentes.observacoes}</p>`;
@@ -998,33 +1175,48 @@ function carregarAnalise(id) {
 }
 
 function preencherFormulario(d) {
+  function setRadio(name, val) {
+    const el = document.querySelector(`input[name="${name}"][value="${val ? 'Sim' : 'Não'}"]`);
+    if (el) el.checked = true;
+  }
   $('funcionario').value = d.funcionario || '';
   $('protocolo').value = d.protocolo || '';
   $('ordem_servico').value = d.ordem_servico || '';
+  setRadio('beneficiario_final', d.beneficiario_final);
   $('tipo_ato').value = d.tipo_ato || 'Compra e venda';
   togglePoderes();
   $('valor').value = d.valor ? d.valor.toFixed(2).replace('.', ',') : '';
-  $('forma_pagamento').value = d.forma_pagamento || 'TED';
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
   $('data').value = d.data || '';
-  document.querySelector(`input[name="pep"][value="${d.pep ? 'Sim' : 'Não'}"]`).checked = true;
+  setRadio('valor_compativel', d.valor_compativel);
+  setRadio('finalidade_economica', d.finalidade_economica);
+  $('forma_pagamento').value = d.forma_pagamento || 'PIX';
+  setRadio('especie', d.pagamento_especie);
+  toggleEspecie();
+  $('valor_especie').value = d.valor_especie ? d.valor_especie.toFixed(2).replace('.', ',') : '';
+  setRadio('fracionado', d.pagamento_fracionado);
+  setRadio('terceiros_pagamento', d.terceiros_pagamento);
+  setRadio('origem', d.origem_identificada);
+  setRadio('doc', d.doc_comprobatoria);
+  $('forma_declarada').value = d.forma_declarada || '';
+  setRadio('explicacao_compativel', d.explicacao_compativel);
+  setRadio('indicios_fraude_docs', d.indicios_fraude_docs);
+  setRadio('divergencias_info', d.divergencias_info);
+  setRadio('compativel_atividade', d.compativel_atividade);
+  setRadio('operacoes_semelhantes', d.operacoes_semelhantes);
+  setRadio('comportamento_incomum', d.comportamento_incomum);
+  setRadio('pep', d.pep);
   togglePep();
   $('pep_nome').value = d.pep_nome || '';
   $('pep_cargo').value = d.pep_cargo || '';
   $('pep_cidade').value = d.pep_cidade || '';
-  document.querySelector(`input[name="origem"][value="${d.origem_identificada ? 'Sim' : 'Não'}"]`).checked = true;
-  document.querySelector(`input[name="doc"][value="${d.doc_comprobatoria ? 'Sim' : 'Não'}"]`).checked = true;
-  $('forma_declarada').value = d.forma_declarada || '';
-  document.querySelector(`input[name="especie"][value="${d.pagamento_especie ? 'Sim' : 'Não'}"]`).checked = true;
-  toggleEspecie();
-  $('valor_especie').value = d.valor_especie ? d.valor_especie.toFixed(2).replace('.', ',') : '';
-  document.querySelector(`input[name="fracionado"][value="${d.pagamento_fracionado ? 'Sim' : 'Não'}"]`).checked = true;
-  document.querySelector(`input[name="relacionadas"][value="${d.operacoes_relacionadas ? 'Sim' : 'Não'}"]`).checked = true;
   SITUACOES.forEach(s => {
     const cb = $('suspeita_' + s.chave);
     if (cb) cb.checked = d['suspeita_' + s.chave] || false;
   });
+  if (d.suspeita_outro_fato_relevante) { $('outroIndicioContainer').style.display = 'block'; }
+  $('outroIndicioTexto').value = d.outro_fato_texto || '';
   $('observacoes').value = d.observacoes || '';
   // Partes
   $('partesContainer').innerHTML = '';
@@ -1041,30 +1233,45 @@ function limparFormulario() {
   partesCount = 0;
   adicionarParte();
   adicionarParte();
+  function resetRadio(name, val) {
+    const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+    if (el) el.checked = true;
+  }
   $('funcionario').value = '';
   $('protocolo').value = '';
   $('ordem_servico').value = '';
+  resetRadio('beneficiario_final', 'Sim');
   $('tipo_ato').value = 'Compra e venda';
   togglePoderes();
   $('valor').value = '';
-  $('forma_pagamento').value = 'TED';
   $('cidade').value = '';
   $('estado').value = 'SP';
   $('data').value = '';
-  document.querySelector('input[name="pep"][value="Não"]').checked = true;
+  resetRadio('valor_compativel', 'Sim');
+  resetRadio('finalidade_economica', 'Sim');
+  $('forma_pagamento').value = 'PIX';
+  resetRadio('especie', 'Não');
+  toggleEspecie();
+  $('valor_especie').value = '';
+  resetRadio('fracionado', 'Não');
+  resetRadio('terceiros_pagamento', 'Não');
+  resetRadio('origem', 'Sim');
+  resetRadio('doc', 'Sim');
+  $('forma_declarada').value = '';
+  resetRadio('explicacao_compativel', 'Sim');
+  resetRadio('indicios_fraude_docs', 'Não');
+  resetRadio('divergencias_info', 'Não');
+  resetRadio('compativel_atividade', 'Sim');
+  resetRadio('operacoes_semelhantes', 'Sim');
+  resetRadio('comportamento_incomum', 'Não');
+  resetRadio('pep', 'Não');
   togglePep();
   $('pep_nome').value = '';
   $('pep_cargo').value = '';
   $('pep_cidade').value = '';
-  document.querySelector('input[name="origem"][value="Sim"]').checked = true;
-  document.querySelector('input[name="doc"][value="Sim"]').checked = true;
-  $('forma_declarada').value = '';
-  document.querySelector('input[name="especie"][value="Não"]').checked = true;
-  toggleEspecie();
-  $('valor_especie').value = '';
-  document.querySelector('input[name="fracionado"][value="Não"]').checked = true;
-  document.querySelector('input[name="relacionadas"][value="Não"]').checked = true;
   SITUACOES.forEach(s => { const cb = $('suspeita_' + s.chave); if (cb) cb.checked = false; });
+  $('outroIndicioContainer').style.display = 'none';
+  $('outroIndicioTexto').value = '';
   $('observacoes').value = '';
   setStatus('Formulário limpo.');
 }

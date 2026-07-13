@@ -175,6 +175,55 @@
     <!-- KPIs -->
     <div class="kpi-grid" id="kpiGrid"></div>
 
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:16px">
+      <h3>Filtros</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:140px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Período (início)</label>
+          <input type="date" id="filtroDataInicio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Período (fim)</label>
+          <input type="date" id="filtroDataFim" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Resultado</label>
+          <select id="filtroResultado" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+            <option value="">Todos</option>
+            <option value="COMUNICAR">COMUNICAR</option>
+            <option value="NAO_COMUNICAR">NÃO COMUNICAR</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Tipo de ato</label>
+          <select id="filtroTipo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">PEP</label>
+          <select id="filtroPEP" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+            <option value="">Todos</option>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Busca (atendente, tipo, partes)</label>
+          <input type="text" id="filtroBusca" placeholder="Pesquisar..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+        </div>
+        <div>
+          <button onclick="aplicarFiltros()" style="padding:7px 20px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Aplicar filtros</button>
+          <button onclick="limparFiltros()" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font-size:13px;cursor:pointer;margin-left:6px;">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .field input, .field select { font-family: inherit; }
+    </style>
+
     <!-- Charts -->
     <div class="charts-row">
       <div class="card">
@@ -270,24 +319,83 @@ for (let i = 0; i < 120; i++) {
 // Ordenar por data decrescente
 analises.sort((a,b) => b.data - a.data);
 
+// ===== FILTROS =====
+function getValorFiltro(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+function getFilteredData() {
+  const dataInicio = getValorFiltro('filtroDataInicio');
+  const dataFim = getValorFiltro('filtroDataFim');
+  const resultado = getValorFiltro('filtroResultado');
+  const tipo = getValorFiltro('filtroTipo');
+  const pep = getValorFiltro('filtroPEP');
+  const busca = getValorFiltro('filtroBusca').toLowerCase();
+
+  return analises.filter(a => {
+    if (dataInicio && a.data < new Date(dataInicio + 'T00:00:00')) return false;
+    if (dataFim) {
+      const fim = new Date(dataFim + 'T23:59:59');
+      if (a.data > fim) return false;
+    }
+    if (resultado && a.resultado !== resultado) return false;
+    if (tipo && a.tipo !== tipo) return false;
+    if (pep === 'sim' && !a.temPEP) return false;
+    if (pep === 'nao' && a.temPEP) return false;
+    if (busca) {
+      const partesStr = a.partes.map(p => p.nome).join(' ');
+      const match = a.atendente.toLowerCase().includes(busca) ||
+                    a.tipo.toLowerCase().includes(busca) ||
+                    partesStr.toLowerCase().includes(busca);
+      if (!match) return false;
+    }
+    return true;
+  });
+}
+
+function aplicarFiltros() {
+  const dados = getFilteredData();
+  renderKPIs(dados);
+  renderBarChart(dados);
+  renderDonut(dados);
+  renderTabela(dados);
+  renderAlertasPEP(dados);
+}
+
+function limparFiltros() {
+  ['filtroDataInicio','filtroDataFim','filtroResultado','filtroTipo','filtroPEP','filtroBusca'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  aplicarFiltros();
+}
+
+// Enter key on search triggers filter
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('filtroBusca')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') aplicarFiltros();
+  });
+});
+
 // ===== RENDERIZAÇÃO =====
 
 // KPIs
-function renderKPIs() {
-  const total = analises.length;
-  const comunicacoes = analises.filter(a => a.resultado === 'COMUNICAR').length;
-  const pctComunicar = (comunicacoes / total * 100).toFixed(1);
-  const totalPEP = analises.filter(a => a.temPEP).length;
-  const valorTotal = analises.reduce((s,a) => s + a.valor, 0);
-  const mesAtual = analises.filter(a => a.data.getMonth() === 5 && a.data.getFullYear() === 2026); // Junho
-  const mesAnterior = analises.filter(a => a.data.getMonth() === 4 && a.data.getFullYear() === 2026); // Maio
-  const variacao = mesAnterior.length ? ((mesAtual.length - mesAnterior.length) / mesAnterior.length * 100).toFixed(1) : 0;
+function renderKPIs(dados) {
+  const total = dados.length;
+  const comunicacoes = dados.filter(a => a.resultado === 'COMUNICAR').length;
+  const pctComunicar = total > 0 ? (comunicacoes / total * 100).toFixed(1) : '0.0';
+  const totalPEP = dados.filter(a => a.temPEP).length;
+  const valorTotal = dados.reduce((s,a) => s + a.valor, 0);
+  const mesAtual = dados.filter(a => a.data.getMonth() === 5 && a.data.getFullYear() === 2026);
+  const mesAnterior = dados.filter(a => a.data.getMonth() === 4 && a.data.getFullYear() === 2026);
+  const variacao = mesAnterior.length ? ((mesAtual.length - mesAnterior.length) / mesAnterior.length * 100).toFixed(1) : '0.0';
 
   const kpis = [
     { label: 'Total de análises', value: total, sub: `${variacao}% vs mês anterior`, cls: variacao >= 0 ? 'up' : 'down' },
-    { label: 'Comunicações', value: comunicacoes, sub: `${pctComunicar}% do total`, cls: 'up' },
-    { label: 'PEPs identificados', value: totalPEP, sub: `${(totalPEP/total*100).toFixed(1)}% dos casos`, cls: 'down' },
-    { label: 'Valor total analisado', value: 'R$ '+(valorTotal/1e6).toFixed(1)+'M', sub: `Média: ${formatMoney(valorTotal/total)}`, cls: 'up' },
+    { label: 'Comunicações', value: comunicacoes + ' (' + pctComunicar + '%)', sub: `${pctComunicar}% do total`, cls: 'up' },
+    { label: 'PEPs identificados', value: totalPEP, sub: total > 0 ? `${(totalPEP/total*100).toFixed(1)}% dos casos` : '0%', cls: 'down' },
+    { label: 'Valor total analisado', value: total > 0 ? 'R$ '+(valorTotal/1e6).toFixed(1)+'M' : 'R$ 0', sub: total > 0 ? `Média: ${formatMoney(valorTotal/total)}` : '—', cls: 'up' },
   ];
   $('kpiGrid').innerHTML = kpis.map(k => `
     <div class="kpi-card">
@@ -299,13 +407,12 @@ function renderKPIs() {
 }
 
 // Gráfico de barras
-function renderBarChart() {
+function renderBarChart(dados) {
   const contagem = {};
   for (let i = 0; i < 6; i++) {
-    const mes = i; // Jan a Jun
-    const total = analises.filter(a => a.data.getMonth() === mes).length;
-    const comunic = analises.filter(a => a.data.getMonth() === mes && a.resultado === 'COMUNICAR').length;
-    contagem[mes] = { total, comunic };
+    const total = dados.filter(a => a.data.getMonth() === i).length;
+    const comunic = dados.filter(a => a.data.getMonth() === i && a.resultado === 'COMUNICAR').length;
+    contagem[i] = { total, comunic };
   }
   const maxTotal = Math.max(...Object.values(contagem).map(v => v.total), 1);
   const container = $('barChart');
@@ -325,15 +432,17 @@ function renderBarChart() {
 }
 
 // Gráfico donut
-function renderDonut() {
-  const total = analises.length;
-  const comunic = analises.filter(a => a.resultado === 'COMUNICAR').length;
+function renderDonut(dados) {
+  const total = dados.length;
+  const comunic = dados.filter(a => a.resultado === 'COMUNICAR').length;
   const nao = total - comunic;
   const pct = total ? Math.round(comunic / total * 100) : 0;
   const angle = pct / 100 * 360;
 
-  $('donutCenter').textContent = pct + '%';
-  $('donutChart').style.background = `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)`;
+  $('donutCenter').textContent = total > 0 ? pct + '%' : '—';
+  $('donutChart').style.background = total > 0
+    ? `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)`
+    : '#EEE';
   $('donutLegend').innerHTML = `
     <span><span class="dot" style="background:var(--danger)"></span> Comunicar (${comunic})</span>
     <span><span class="dot" style="background:var(--primary)"></span> Não comunicar (${nao})</span>
@@ -341,24 +450,26 @@ function renderDonut() {
 }
 
 // Tabela
-function renderTabela() {
-  const recentes = analises.slice(0, 20);
-  $('tabelaAnalises').innerHTML = recentes.map(a => `
-    <tr>
-      <td>${formatDate(a.data)}</td>
-      <td>${a.atendente}</td>
-      <td>${a.tipo}</td>
-      <td>${formatMoney(a.valor)}</td>
-      <td>${a.partes.map(p => p.nome.split(' ')[0] + (p.pep ? ' ⚠️' : '')).join(', ')}</td>
-      <td><strong>${a.pontos}</strong></td>
-      <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? '🔴 COMUNICAR' : '🟢 NÃO COMUNICAR'}</span></td>
-    </tr>
-  `).join('');
+function renderTabela(dados) {
+  const recentes = dados.slice(0, 50);
+  $('tabelaAnalises').innerHTML = recentes.length
+    ? recentes.map(a => `
+      <tr>
+        <td>${formatDate(a.data)}</td>
+        <td>${a.atendente}</td>
+        <td>${a.tipo}</td>
+        <td>${formatMoney(a.valor)}</td>
+        <td>${a.partes.map(p => p.nome.split(' ')[0] + (p.pep ? ' ⚠️' : '')).join(', ')}</td>
+        <td><strong>${a.pontos}</strong></td>
+        <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? '🔴 COMUNICAR' : '🟢 NÃO COMUNICAR'}</span></td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma análise encontrada com os filtros atuais.</td></tr>';
 }
 
 // Alertas PEP
-function renderAlertasPEP() {
-  const pepCases = analises.filter(a => a.temPEP).slice(0, 10);
+function renderAlertasPEP(dados) {
+  const pepCases = dados.filter(a => a.temPEP).slice(0, 10);
   $('alertasPEP').innerHTML = pepCases.length
     ? pepCases.map(a => {
         const pepNames = a.partes.filter(p => p.pep).map(p => p.nome).join(', ');
@@ -373,7 +484,7 @@ function renderAlertasPEP() {
           </div>
         `;
       }).join('')
-    : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado nas últimas análises.</p>';
+    : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado com os filtros atuais.</p>';
 }
 
 function $(id) { return document.getElementById(id); }
@@ -386,12 +497,24 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+function populateFilters() {
+  const sel = document.getElementById('filtroTipo');
+  if (!sel) return;
+  tipos.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
 // Init
-renderKPIs();
-renderBarChart();
-renderDonut();
-renderTabela();
-renderAlertasPEP();
+populateFilters();
+const dadosIniciais = getFilteredData();
+renderKPIs(dadosIniciais);
+renderBarChart(dadosIniciais);
+renderDonut(dadosIniciais);
+renderTabela(dadosIniciais);
+renderAlertasPEP(dadosIniciais);
 </script>
 </body>
 </html>

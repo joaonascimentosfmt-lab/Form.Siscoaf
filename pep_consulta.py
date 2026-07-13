@@ -98,21 +98,39 @@ def consultar_pep(nome: str = "", cpf: str = "") -> Tuple[bool, List[Dict]]:
     return False, []
 
 
+def _extrair_uf(orgao: str) -> str:
+    import re
+    m = re.search(r"[-\s]+([A-Z]{2})$", orgao)
+    return m.group(1) if m else ""
+
+
+def _extrair_cidade(orgao: str) -> str:
+    import re
+    m = re.search(r"[-\s]+[A-Z]{2}$", orgao)
+    return orgao[:m.start()].strip() if m else ""
+
+
 def obter_resumo_pep(resultados: List[Dict]) -> str:
     if not resultados:
         return ""
     cargos = set()
-    orgaos = set()
+    locais = set()
     for r in resultados:
         if r.get("funcao"):
             cargos.add(r["funcao"])
-        if r.get("orgao"):
-            orgaos.add(r["orgao"])
+        orgao = r.get("orgao", "")
+        if orgao:
+            cidade = _extrair_cidade(orgao)
+            uf = _extrair_uf(orgao)
+            if cidade and uf:
+                locais.add(f"{cidade}-{uf}")
+            else:
+                locais.add(orgao)
     partes = []
     if cargos:
         partes.append("Cargo(s): " + ", ".join(sorted(cargos)[:3]))
-    if orgaos:
-        partes.append("Órgão(s): " + ", ".join(sorted(orgaos)[:3]))
+    if locais:
+        partes.append("Local(is): " + ", ".join(sorted(locais)[:3]))
     return " | ".join(partes)
 
 
