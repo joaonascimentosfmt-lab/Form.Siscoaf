@@ -68,6 +68,13 @@ def gerar_relatorio(
     _adicionar_campo(elementos, "Estado", dados.get("estado", ""), estilo_normal)
     _adicionar_campo(elementos, "Data", dados.get("data", ""), estilo_normal)
 
+    if dados.get("tipo_ato") == "Procuração":
+        elementos.append(Paragraph("Poderes da Procuração", estilo_subtitulo))
+        poderes = dados.get("poderes", [])
+        _adicionar_campo(elementos, "Poderes", ", ".join(poderes) if poderes else "Nenhum selecionado", estilo_normal)
+        if dados.get("poderes_outros"):
+            _adicionar_campo(elementos, "Outros poderes", dados["poderes_outros"], estilo_normal)
+
     elementos.append(Paragraph("Participantes", estilo_subtitulo))
     _adicionar_campo(elementos, "Quantidade de compradores", str(dados.get("qtd_compradores", 0)), estilo_normal)
     _adicionar_campo(elementos, "Quantidade de vendedores", str(dados.get("qtd_vendedores", 0)), estilo_normal)

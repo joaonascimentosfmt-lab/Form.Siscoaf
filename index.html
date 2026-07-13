@@ -192,12 +192,23 @@
     <h2>Dados do ato</h2>
     <div class="field">
       <label>Tipo do ato</label>
-      <select id="tipo_ato">
+      <select id="tipo_ato" onchange="togglePoderes()">
         <option>Compra e venda</option><option>Doação</option><option>Permuta</option>
         <option>Constituição de garantia</option><option>Alienação fiduciária</option>
         <option>Integralização de capital</option><option>Procuração</option>
         <option>Escritura diversa</option><option>Ata Notarial</option><option>Outro</option>
       </select>
+    </div>
+    <div id="poderesSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
+      <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Poderes solicitados na procuração:</label>
+      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Amplos Poderes"> Amplos Poderes</label>
+      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Gestão e Movimentação Bancária"> Gestão e Movimentação Bancária</label>
+      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Compra, Venda e Administração de Imóveis"> Compra, Venda e Administração de Imóveis</label>
+      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Representação em Inventário e Partilha"> Representação em Inventário e Partilha</label>
+      <div style="margin-top:8px;">
+        <label style="font-size:12px;font-weight:500;display:block;margin-bottom:2px;">Outros poderes (descreva):</label>
+        <textarea id="poderesOutros" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+      </div>
     </div>
     <div class="field">
       <label>Valor do negócio (R$)</label>
@@ -433,6 +444,11 @@ function init() {
   carregarHistorico();
 }
 
+function togglePoderes() {
+  const section = document.getElementById('poderesSection');
+  section.style.display = document.getElementById('tipo_ato').value === 'Procuração' ? 'block' : 'none';
+}
+
 // Partes do ato
 let partesCount = 0;
 const partesData = [];
@@ -658,6 +674,11 @@ function coletarDados() {
     operacoes_relacionadas: document.querySelector('input[name="relacionadas"]:checked').value === 'Sim',
     observacoes: $('observacoes').value,
   };
+  if (d.tipo_ato === 'Procuração') {
+    d.poderes = [];
+    document.querySelectorAll('.poder-item:checked').forEach(cb => d.poderes.push(cb.value));
+    d.poderes_outros = $('poderesOutros').value.trim();
+  }
   SITUACOES.forEach(s => { d['suspeita_' + s.chave] = $(`suspeita_${s.chave}`).checked; });
   d.partes = coletarPartes();
   return d;
@@ -797,6 +818,8 @@ function gerarPDF() {
   <tr><td class="label">Forma de pagamento:</td><td>${dadosCorrentes.forma_pagamento}</td></tr>
   <tr><td class="label">Cidade/Estado:</td><td>${dadosCorrentes.cidade}/${dadosCorrentes.estado}</td></tr>
   <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr></table>
+
+  ${dadosCorrentes.tipo_ato === 'Procuração' ? `<h2>Poderes da Procuração</h2><table><tr><td class="label">Poderes:</td><td>${(dadosCorrentes.poderes||[]).join(', ') || 'Nenhum selecionado'}</td></tr>${dadosCorrentes.poderes_outros ? `<tr><td class="label">Outros poderes:</td><td>${dadosCorrentes.poderes_outros}</td></tr>` : ''}</table>` : ''}
 
   <h2>Participantes</h2>
   <table><tr><td class="label">Compradores:</td><td>${dadosCorrentes.qtd_compradores}</td></tr>

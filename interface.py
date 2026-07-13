@@ -149,15 +149,38 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         return card
 
+    def _ao_tipo_ato(self, escolha: str):
+        if escolha == "Procuração":
+            self._poderes_frame.grid()
+        else:
+            self._poderes_frame.grid_remove()
+
     def _secao_dados_ato(self, parent, linha: int) -> int:
         card = self._card(parent, "Dados do ato", linha)
         r = 1
 
         ctk.CTkLabel(card, text="Tipo do ato:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
         r += 1
-        self._tipo_ato = ctk.CTkComboBox(card, values=TIPO_ATO_OPCOES, state="readonly", width=300)
+        self._tipo_ato = ctk.CTkComboBox(card, values=TIPO_ATO_OPCOES, state="readonly", width=300, command=self._ao_tipo_ato)
         self._tipo_ato.set("Compra e venda")
         self._tipo_ato.grid(row=r, column=0, columnspan=2, sticky="w", padx=16, pady=(0, 6))
+        r += 1
+
+        # Poderes (visivel apenas se "Procuração")
+        self._poderes_frame = ctk.CTkFrame(card, fg_color="#f5faf5", corner_radius=8)
+        self._poderes_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
+        self._poderes_frame.grid_remove()
+        ctk.CTkLabel(self._poderes_frame, text="Poderes solicitados na procuração:", font=("Segoe UI", 12, "bold"), text_color="#2E7D32").grid(row=0, column=0, columnspan=2, sticky="w", padx=8, pady=(6, 4))
+        self._poderes_vars = {}
+        self._PODERES_OPCOES = ["Amplos Poderes", "Gestão e Movimentação Bancária", "Compra, Venda e Administração de Imóveis", "Representação em Inventário e Partilha"]
+        for i, p in enumerate(self._PODERES_OPCOES):
+            var = ctk.StringVar(value="")
+            cb = ctk.CTkCheckBox(self._poderes_frame, text=p, variable=var, onvalue=p, offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 11))
+            cb.grid(row=i+1, column=0, sticky="w", padx=8, pady=1)
+            self._poderes_vars[p] = var
+        ctk.CTkLabel(self._poderes_frame, text="Outros poderes (descreva):", font=("Segoe UI", 11), text_color=COR_TEXTO).grid(row=len(self._PODERES_OPCOES)+1, column=0, sticky="w", padx=8, pady=(6, 0))
+        self._poderes_outros = ctk.CTkTextbox(self._poderes_frame, height=40, width=400, corner_radius=6)
+        self._poderes_outros.grid(row=len(self._PODERES_OPCOES)+2, column=0, sticky="ew", padx=8, pady=(2, 6))
         r += 1
 
         ctk.CTkLabel(card, text="Valor do negócio (R$):", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
@@ -504,6 +527,9 @@ class AnalisadorSISCOAF(ctk.CTk):
             "operacoes_relacionadas": self._relacionadas_var.get() == "Sim",
             "observacoes": self._observacoes.get("1.0", "end-1c"),
         }
+        if result["tipo_ato"] == "Procuração":
+            result["poderes"] = [v.get() for v in self._poderes_vars.values() if v.get()]
+            result["poderes_outros"] = self._poderes_outros.get("1.0", "end-1c").strip()
         for s in obter_situacoes():
             result[f"suspeita_{s.chave}"] = self._suspeitas_vars[s.chave].get()
         result["partes"] = self._coletar_partes()
@@ -513,6 +539,12 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._carregando = True
         if "tipo_ato" in dados:
             self._tipo_ato.set(dados["tipo_ato"])
+            self._ao_tipo_ato(dados["tipo_ato"])
+        if "poderes" in dados and dados["tipo_ato"] == "Procuração":
+            for p in self._PODERES_OPCOES:
+                self._poderes_vars[p].set(p if p in dados.get("poderes", []) else "")
+            self._poderes_outros.delete("1.0", "end")
+            self._poderes_outros.insert("1.0", dados.get("poderes_outros", ""))
         if "valor" in dados and dados["valor"]:
             val = dados["valor"]
             self._valor.delete(0, "end")
