@@ -451,6 +451,26 @@ function togglePoderes() {
 
 // Partes do ato
 let partesCount = 0;
+const VALIDACOES_DOCS = [
+  { chave: 'doc_oficial', label: 'Documento Oficial Válido' },
+  { chave: 'cpf_regular', label: 'CPF Regular' },
+  { chave: 'estado_civil', label: 'Estado Civil Comprovado' },
+  { chave: 'regime_bens', label: 'Regime de Bens Verificado' },
+  { chave: 'endereco', label: 'Endereço Atualizado' },
+  { chave: 'profissao', label: 'Profissão Informada' },
+  { chave: 'contato', label: 'Contato Atualizado' },
+];
+
+function toggleDocsParte(radio) {
+  const div = radio.closest('.parte-row');
+  const docsDiv = div.querySelector('.parte-docs');
+  if (!docsDiv) return;
+  const papel = radio.value;
+  docsDiv.style.display = 'block';
+  // Atualiza o label do papel
+  const header = docsDiv.querySelector('div:first-child');
+  if (header) header.textContent = 'Documentação do ' + papel + ':';
+}
 const partesData = [];
 
 // Tenta carregar base PEP via fetch (funciona se servido via HTTP)
@@ -590,16 +610,22 @@ function adicionarParte(dados) {
   div.className = 'parte-row';
   div.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
   div.innerHTML = `
-    <input type="text" placeholder="Nome" class="parte-nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
-    <input type="text" placeholder="CPF" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
-    <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
-      <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''}> Outorgante
-    </label>
-    <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
-      <input type="radio" name="papel_${idx}" value="Outorgado" ${dados?.papel==='Outorgado'?'checked':''}> Outorgado
-    </label>
-    <span class="pep-status" style="font-size:11px;min-width:140px;"></span>
-    <button onclick="this.parentElement.remove();" style="padding:4px 10px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;">
+      <input type="text" placeholder="Nome" class="parte-nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
+      <input type="text" placeholder="CPF" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
+      <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+        <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgante
+      </label>
+      <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+        <input type="radio" name="papel_${idx}" value="Outorgado" ${dados?.papel==='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgado
+      </label>
+      <span class="pep-status" style="font-size:11px;min-width:140px;"></span>
+      <button onclick="this.parentElement.parentElement.remove();" style="padding:4px 10px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
+    </div>
+    <div class="parte-docs" style="display:none;margin-top:6px;padding:8px 10px;background:#f9faf9;border-radius:6px;border:1px solid #e0e0e0;width:100%;">
+      <div style="font-size:12px;font-weight:600;color:#2E7D32;margin-bottom:4px;">Documentação do ${dados?.papel||'Outorgante'}:</div>
+      ${VALIDACOES_DOCS.map(d => `<label style="font-size:12px;display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="${d.chave}" ${dados?.docs && dados.docs[d.chave]?'checked':''}> ${d.label}</label>`).join('')}
+    </div>
   `;
   container.appendChild(div);
 
@@ -618,6 +644,9 @@ function adicionarParte(dados) {
 
   partesData.push(div);
   if (dados?.nome || dados?.cpf) setTimeout(() => consultarParteUI(div), 200);
+  // Mostrar docs se já tem papel definido
+  const radioChecked = div.querySelector('input[type="radio"]:checked');
+  if (radioChecked) toggleDocsParte(radioChecked);
 }
 
 function coletarPartes() {
@@ -628,8 +657,10 @@ function coletarPartes() {
     const papel = div.querySelector('input[type="radio"]:checked')?.value || 'Outorgante';
     const statusEl = div.querySelector('.pep-status');
     const isPep = statusEl && statusEl.textContent.includes('PEP:');
+    const docs = {};
+    div.querySelectorAll('.doc-item').forEach(cb => { docs[cb.dataset.chave] = cb.checked; });
     if (nome || cpf) {
-      result.push({ nome, cpf, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '' });
+      result.push({ nome, cpf, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '', docs });
     }
   });
   return result;
@@ -826,7 +857,14 @@ function gerarPDF() {
   <tr><td class="label">Vendedores:</td><td>${dadosCorrentes.qtd_vendedores}</td></tr></table>
 
   <h2>Partes do ato</h2>
-  <table>${(dadosCorrentes.partes||[]).map((p,i) => '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (CPF: ' + p.cpf + ')' : '') + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>').join('')}</table>
+  <table>${(dadosCorrentes.partes||[]).map((p,i) => {
+    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (CPF: ' + p.cpf + ')' : '') + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
+    if (p.docs) {
+      const docsHtml = VALIDACOES_DOCS.map(d => '<span style="font-size:10px;color:' + (p.docs[d.chave] ? '#2E7D32' : '#CC0000') + ';">' + (p.docs[d.chave] ? '✔' : '✘') + ' ' + d.label + '</span>').join(' &nbsp;| ');
+      linha += '<tr><td></td><td style="font-size:10px;padding:0 6px 4px;">' + docsHtml + '</td></tr>';
+    }
+    return linha;
+  }).join('')}</table>
 
   <table><tr><td class="label">PEP:</td><td>${dadosCorrentes.pep ? 'Sim' : 'Não'}${dadosCorrentes.pep ? ' (' + dadosCorrentes.pep_nome + ', ' + dadosCorrentes.pep_cargo + ', ' + dadosCorrentes.pep_cidade + ')' : ''}</td></tr></table>
 

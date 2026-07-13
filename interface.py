@@ -332,6 +332,26 @@ class AnalisadorSISCOAF(ctk.CTk):
         )
         btn_rm.grid(row=0, column=4, padx=(2, 8), pady=6)
 
+        # Documentação (row 1, col 0-4)
+        validacoes = [
+            ("doc_oficial", "Doc. Oficial Válido"),
+            ("cpf_regular", "CPF Regular"),
+            ("estado_civil", "Estado Civil Comprovado"),
+            ("regime_bens", "Regime de Bens Verificado"),
+            ("endereco", "Endereço Atualizado"),
+            ("profissao", "Profissão Informada"),
+            ("contato", "Contato Atualizado"),
+        ]
+        docs_frame = ctk.CTkFrame(frm, fg_color="#f9faf9", corner_radius=6)
+        docs_frame.grid(row=1, column=0, columnspan=5, sticky="ew", padx=8, pady=(0, 6))
+        docs_vars = {}
+        docs_dados = dados.get("docs", {}) if dados else {}
+        for i, (chave, label) in enumerate(validacoes):
+            var = ctk.StringVar(value="1" if docs_dados.get(chave) else "")
+            cb = ctk.CTkCheckBox(docs_frame, text=label, variable=var, onvalue="1", offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 10))
+            cb.grid(row=0, column=i, sticky="w", padx=(0, 8), pady=4)
+            docs_vars[chave] = var
+
         # Timers para consulta automática
         timer_key = {"after_id": None}
 
@@ -360,8 +380,10 @@ class AnalisadorSISCOAF(ctk.CTk):
             "frame": frm,
             "nome": entry_nome,
             "cpf": entry_cpf,
-            "papel": papel_var,
+            "papel_var": papel_var,
             "lbl_pep": lbl_pep,
+            "timer_key": timer_key,
+            "docs_vars": docs_vars,
         })
 
         if (entry_nome.get().strip() or entry_cpf.get().strip()):
@@ -391,6 +413,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 encontrado, resultados = consultar_pep(nome=item["nome"], cpf=item["cpf"])
                 item["pep"] = encontrado
                 item["pep_detalhe"] = obter_resumo_pep(resultados) if encontrado else ""
+                item["docs"] = {chave: var.get() == "1" for chave, var in p["docs_vars"].items()}
                 partes.append(item)
         return partes
 

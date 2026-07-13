@@ -91,6 +91,24 @@ def gerar_relatorio(
             elementos.append(Paragraph(texto, estilo_normal))
             if p.get("pep_detalhe"):
                 elementos.append(Paragraph(f"   PEP: {p['pep_detalhe']}", estilo_normal))
+            docs = p.get("docs", {})
+            if docs:
+                docs_ok = [nome for chave, nome in [
+                    ("doc_oficial", "Doc. Oficial Válido"), ("cpf_regular", "CPF Regular"),
+                    ("estado_civil", "Estado Civil Comprovado"), ("regime_bens", "Regime de Bens Verificado"),
+                    ("endereco", "Endereço Atualizado"), ("profissao", "Profissão Informada"),
+                    ("contato", "Contato Atualizado"),
+                ] if docs.get(chave)]
+                docs_nok = [nome for chave, nome in [
+                    ("doc_oficial", "Doc. Oficial Válido"), ("cpf_regular", "CPF Regular"),
+                    ("estado_civil", "Estado Civil Comprovado"), ("regime_bens", "Regime de Bens Verificado"),
+                    ("endereco", "Endereço Atualizado"), ("profissao", "Profissão Informada"),
+                    ("contato", "Contato Atualizado"),
+                ] if not docs.get(chave)]
+                if docs_ok:
+                    elementos.append(Paragraph(f"   OK: {', '.join(docs_ok)}", estilo_normal))
+                if docs_nok:
+                    elementos.append(Paragraph(f"   Pendente: {', '.join(docs_nok)}", estilo_normal))
 
     pep_texto = "Sim" if dados.get("pep", False) else "Não"
     _adicionar_campo(elementos, "Pessoa Exposta Politicamente (PEP)", pep_texto, estilo_normal)
