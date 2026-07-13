@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 
+import os
 import customtkinter as ctk
 
 from config import (
@@ -24,6 +25,15 @@ COR_TEXTO = "#1B1B1B"
 COR_SUBTEXTO = "#555555"
 
 
+def _aplicar_icon(widget):
+    try:
+        icon_path = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
+        if os.path.exists(icon_path):
+            widget.iconbitmap(icon_path)
+    except Exception:
+        pass
+
+
 class AnalisadorSISCOAF(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -35,6 +45,7 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         self._carregando = False
         self._construir_tela()
+        _aplicar_icon(self)
 
     def _construir_tela(self):
         self.grid_columnconfigure(0, weight=1)
@@ -767,6 +778,7 @@ class ResultadoWindow(ctk.CTkToplevel):
         self.geometry("560x520")
         self.minsize(450, 400)
         self.configure(fg_color=COR_BG)
+        _aplicar_icon(self)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=0)
