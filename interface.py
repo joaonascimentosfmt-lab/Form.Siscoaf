@@ -331,21 +331,27 @@ class AnalisadorSISCOAF(ctk.CTk):
         papel_var = ctk.StringVar(value=dados.get("papel", "Outorgante") if dados else "Outorgante")
         frm_papel = ctk.CTkFrame(frm, fg_color="transparent")
         frm_papel.grid(row=0, column=3, sticky="w", padx=2, pady=6)
-        papel_menu = ctk.CTkOptionMenu(frm_papel, variable=papel_var, values=["Outorgante","Outorgado","Devedor","Credor","Anuente","Representado"], font=("Segoe UI", 9), width=90)
+        ctk.CTkOptionMenu(frm_papel, variable=papel_var, values=["Outorgante","Outorgado","Devedor","Credor","Anuente"], font=("Segoe UI", 9), width=75).pack(side="left", padx=(0,4))
+        representado_var = ctk.BooleanVar(value=dados.get("representado", False) if dados else False)
+        ctk.CTkCheckBox(frm_papel, text="Rep. Proc.", variable=representado_var, font=("Segoe UI", 9), fg_color=COR_PRIMARIA).pack(side="left")
 
         lbl_pep = ctk.CTkLabel(frm, text="", font=("Segoe UI", 9), text_color="#CC0000", width=110, anchor="w")
         lbl_pep.grid(row=0, column=4, sticky="w", padx=2, pady=6)
 
-        # Procurador fields (hidden unless Representado)
+        # Procurador fields (hidden unless representado checkbox is checked)
         proc_nome_entry = ctk.CTkEntry(frm, placeholder_text="Nome do Procurador", font=("Segoe UI", 9), width=130)
         proc_cpf_entry = ctk.CTkEntry(frm, placeholder_text="CPF do Procurador", font=("Segoe UI", 9), width=100)
         proc_nome_entry.grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=(0,4))
         proc_cpf_entry.grid(row=2, column=2, sticky="w", padx=2, pady=(0,4))
-        def _toggle_proc(*_):
-            mostra = papel_var.get() == "Representado"
-            proc_nome_entry.grid() if mostra else proc_nome_entry.grid_remove()
-            proc_cpf_entry.grid() if mostra else proc_cpf_entry.grid_remove()
-        papel_var.trace_add("write", _toggle_proc)
+        def _toggle_proc():
+            mostra = representado_var.get()
+            if mostra:
+                proc_nome_entry.grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=(0,4))
+                proc_cpf_entry.grid(row=2, column=2, sticky="w", padx=2, pady=(0,4))
+            else:
+                proc_nome_entry.grid_remove()
+                proc_cpf_entry.grid_remove()
+        representado_var.trace_add("write", lambda *_: _toggle_proc())
         _toggle_proc()
 
         btn_rm = ctk.CTkButton(
@@ -399,6 +405,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "cpf": entry_cpf,
             "tipo_var": tipo_var,
             "papel_var": papel_var,
+            "representado_var": representado_var,
             "proc_nome": proc_nome_entry,
             "proc_cpf": proc_cpf_entry,
             "lbl_pep": lbl_pep,
@@ -472,8 +479,9 @@ class AnalisadorSISCOAF(ctk.CTk):
                 "cpf": p["cpf"].get().strip(),
                 "tipo": p.get("tipo_var", ctk.StringVar(value="PF")).get(),
                 "papel": p["papel"].get(),
-                "proc_nome": p["proc_nome"].get().strip() if p["papel"].get() == "Representado" else "",
-                "proc_cpf": p["proc_cpf"].get().strip() if p["papel"].get() == "Representado" else "",
+                "representado": p["representado_var"].get(),
+                "proc_nome": p["proc_nome"].get().strip() if p["representado_var"].get() else "",
+                "proc_cpf": p["proc_cpf"].get().strip() if p["representado_var"].get() else "",
             }
             if item["nome"] or item["cpf"]:
                 encontrado, resultados = consultar_pep(nome=item["nome"], cpf=item["cpf"])
