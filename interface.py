@@ -267,14 +267,15 @@ class AnalisadorSISCOAF(ctk.CTk):
         idx = len(self._partes)
         frm = ctk.CTkFrame(self._partes_frame, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
         frm.grid(row=idx, column=0, sticky="ew", padx=8, pady=3)
-        frm.grid_columnconfigure((0, 1, 2), weight=1)
+        frm.grid_columnconfigure((0, 1), weight=1)
+        frm.grid_columnconfigure(2, weight=0)
 
-        entry_nome = ctk.CTkEntry(frm, placeholder_text="Nome completo", width=220)
+        entry_nome = ctk.CTkEntry(frm, placeholder_text="Nome completo", width=200)
         entry_nome.grid(row=0, column=0, sticky="ew", padx=(8, 4), pady=6)
         if dados:
             entry_nome.insert(0, dados.get("nome", ""))
 
-        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CPF", width=140)
+        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CPF", width=130)
         entry_cpf.grid(row=0, column=1, sticky="ew", padx=4, pady=6)
         if dados:
             entry_cpf.insert(0, dados.get("cpf", ""))
@@ -282,29 +283,44 @@ class AnalisadorSISCOAF(ctk.CTk):
         papel_var = ctk.StringVar(value=dados.get("papel", "Outorgante") if dados else "Outorgante")
         frm_papel = ctk.CTkFrame(frm, fg_color="transparent")
         frm_papel.grid(row=0, column=2, sticky="ew", padx=4, pady=6)
-        ctk.CTkRadioButton(frm_papel, text="Outorgante", variable=papel_var, value="Outorgante", font=("Segoe UI", 11)).pack(side="left", padx=(0, 6))
-        ctk.CTkRadioButton(frm_papel, text="Outorgado", variable=papel_var, value="Outorgado", font=("Segoe UI", 11)).pack(side="left")
+        ctk.CTkRadioButton(frm_papel, text="Outorgante", variable=papel_var, value="Outorgante", font=("Segoe UI", 10)).pack(side="left", padx=(0, 4))
+        ctk.CTkRadioButton(frm_papel, text="Outorgado", variable=papel_var, value="Outorgado", font=("Segoe UI", 10)).pack(side="left")
 
-        lbl_pep = ctk.CTkLabel(frm, text="", font=("Segoe UI", 10), text_color="#CC0000")
+        lbl_pep = ctk.CTkLabel(frm, text="", font=("Segoe UI", 10), text_color="#CC0000", width=160, anchor="w")
         lbl_pep.grid(row=0, column=3, sticky="w", padx=4, pady=6)
-
-        btn_consultar = ctk.CTkButton(
-            frm, text="PEP",
-            font=("Segoe UI", 10, "bold"),
-            fg_color="#5C6BC0", hover_color="#3F51B5",
-            width=50, height=28, corner_radius=6,
-            command=lambda e=entry_nome, c=entry_cpf, l=lbl_pep: self._consultar_pep(e, c, l),
-        )
-        btn_consultar.grid(row=0, column=4, padx=2, pady=6)
 
         btn_rm = ctk.CTkButton(
             frm, text="X",
             font=("Segoe UI", 10, "bold"),
             fg_color="#CC0000", hover_color="#990000",
-            width=32, height=28, corner_radius=6,
+            width=28, height=26, corner_radius=6,
             command=lambda f=frm: self._remover_parte(f),
         )
-        btn_rm.grid(row=0, column=5, padx=(2, 8), pady=6)
+        btn_rm.grid(row=0, column=4, padx=(2, 8), pady=6)
+
+        # Timers para consulta automática
+        timer_key = {"after_id": None}
+
+        def _auto_consultar():
+            nome = entry_nome.get().strip()
+            cpf = entry_cpf.get().strip()
+            if not nome and not cpf:
+                lbl_pep.configure(text="")
+                return
+            encontrado, resultados = consultar_pep(nome=nome, cpf=cpf)
+            if encontrado:
+                resumo = obter_resumo_pep(resultados)
+                lbl_pep.configure(text=f"PEP: {resumo[:90]}", text_color="#CC0000")
+            else:
+                lbl_pep.configure(text="Nao consta como PEP", text_color=COR_PRIMARIA)
+
+        def _agendar_consulta(*args):
+            if timer_key["after_id"]:
+                self.after_cancel(timer_key["after_id"])
+            timer_key["after_id"] = self.after(600, _auto_consultar)
+
+        entry_nome.bind("<KeyRelease>", _agendar_consulta)
+        entry_cpf.bind("<KeyRelease>", _agendar_consulta)
 
         self._partes.append({
             "frame": frm,
@@ -313,6 +329,9 @@ class AnalisadorSISCOAF(ctk.CTk):
             "papel": papel_var,
             "lbl_pep": lbl_pep,
         })
+
+        if (entry_nome.get().strip() or entry_cpf.get().strip()):
+            self.after(100, _auto_consultar)
 
     def _remover_parte(self, frame):
         for i, p in enumerate(self._partes):
@@ -325,19 +344,6 @@ class AnalisadorSISCOAF(ctk.CTk):
     def _reorganizar_partes(self):
         for i, p in enumerate(self._partes):
             p["frame"].grid(row=i, column=0, sticky="ew", padx=8, pady=3)
-
-    def _consultar_pep(self, entry_nome, entry_cpf, lbl_pep):
-        nome = entry_nome.get().strip()
-        cpf = entry_cpf.get().strip()
-        if not nome and not cpf:
-            lbl_pep.configure(text="Informe nome ou CPF")
-            return
-        encontrado, resultados = consultar_pep(nome=nome, cpf=cpf)
-        if encontrado:
-            resumo = obter_resumo_pep(resultados)
-            lbl_pep.configure(text=f"✔ PEP: {resumo[:80]}")
-        else:
-            lbl_pep.configure(text="Nao consta como PEP", text_color=COR_PRIMARIA)
 
     def _coletar_partes(self) -> List[Dict]:
         partes = []

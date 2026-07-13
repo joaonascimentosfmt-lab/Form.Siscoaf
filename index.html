@@ -407,6 +407,38 @@ function init() {
 let partesCount = 0;
 const partesData = [];
 
+// Tenta carregar base PEP via fetch (funciona se servido via HTTP)
+let pepDB = null;
+fetch('pep_db/202605_PEP.csv').then(r => r.text()).then(csv => {
+  pepDB = [];
+  const lines = csv.split('\n').slice(1);
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = line.split(';').map(c => c.replace(/^"|"$/g, ''));
+    if (cols.length >= 2) {
+      const cpfRaw = cols[0] || '';
+      const partes = cpfRaw.split('.');
+      let cpfDig = '';
+      if (partes.length >= 3) {
+        cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
+      }
+      pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
+    }
+  }
+  console.log('PEP DB carregado:', pepDB.length, 'registros');
+}).catch(() => console.log('PEP DB nao disponivel no navegador (use a versao Python para consulta automatica)'));
+
+function consultarPEPLocal(nome, cpf) {
+  if (!pepDB) return null;
+  const cpfLimpo = cpf.replace(/\D/g,'');
+  const cpfDig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
+  const nomeUp = nome.toUpperCase();
+  const results = pepDB.filter(r =>
+    (cpfDig && r.cpfDig === cpfDig) || (nomeUp && r.nome.includes(nomeUp))
+  );
+  return results.length > 0 ? results.slice(0,3) : null;
+}
+
 function adicionarParte(dados) {
   const idx = partesCount++;
   const container = $('partesContainer');
@@ -414,34 +446,63 @@ function adicionarParte(dados) {
   div.className = 'parte-row';
   div.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
   div.innerHTML = `
-    <input type="text" placeholder="Nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
-    <input type="text" placeholder="CPF" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
+    <input type="text" placeholder="Nome" class="parte-nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
+    <input type="text" placeholder="CPF" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
     <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
       <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''}> Outorgante
     </label>
     <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
       <input type="radio" name="papel_${idx}" value="Outorgado" ${dados?.papel==='Outorgado'?'checked':''}> Outorgado
     </label>
-    <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;color:var(--danger);">
-      <input type="checkbox" class="pep-check" ${dados?.pep?'checked':''}> PEP
-    </label>
-    <span class="pep-status" style="font-size:11px;color:var(--muted);min-width:80px;"></span>
+    <span class="pep-status" style="font-size:11px;min-width:140px;"></span>
     <button onclick="this.parentElement.remove();" style="padding:4px 10px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
   `;
   container.appendChild(div);
+
+  // Auto-consulta PEP ao digitar
+  const nomeInput = div.querySelector('.parte-nome');
+  const cpfInput = div.querySelector('.parte-cpf');
+  const pepStatus = div.querySelector('.pep-status');
+
+  let timerPEP = null;
+  function autoConsultarPEP() {
+    const n = nomeInput.value.trim();
+    const c = cpfInput.value.trim();
+    if (!n && !c) { pepStatus.textContent = ''; return; }
+    const res = consultarPEPLocal(n, c);
+    if (res === null) {
+      pepStatus.textContent = pepDB ? 'Nao consta como PEP' : '...';
+      if (!pepDB) pepStatus.textContent = '';
+    } else if (res === null || res.length === 0) {
+      pepStatus.textContent = 'Nao consta como PEP';
+      pepStatus.style.color = 'var(--success)';
+    } else {
+      const cargos = res.map(r => r.nome.substring(0,40)).join('; ');
+      pepStatus.textContent = 'PEP: ' + cargos;
+      pepStatus.style.color = 'var(--danger)';
+    }
+  }
+  nomeInput.addEventListener('input', () => {
+    clearTimeout(timerPEP); timerPEP = setTimeout(autoConsultarPEP, 500);
+  });
+  cpfInput.addEventListener('input', () => {
+    clearTimeout(timerPEP); timerPEP = setTimeout(autoConsultarPEP, 500);
+  });
+
   partesData.push(div);
+  if (dados?.nome || dados?.cpf) setTimeout(autoConsultarPEP, 200);
 }
 
 function coletarPartes() {
   const result = [];
   $('partesContainer').querySelectorAll('.parte-row').forEach(div => {
-    const inputs = div.querySelectorAll('input[type="text"]');
-    const nome = inputs[0].value.trim();
-    const cpf = inputs[1].value.trim();
+    const nome = div.querySelector('.parte-nome').value.trim();
+    const cpf = div.querySelector('.parte-cpf').value.trim();
     const papel = div.querySelector('input[type="radio"]:checked')?.value || 'Outorgante';
-    const pep = div.querySelector('.pep-check').checked;
+    const statusEl = div.querySelector('.pep-status');
+    const isPep = statusEl && statusEl.textContent.includes('PEP:');
     if (nome || cpf) {
-      result.push({ nome, cpf, papel, pep, pep_detalhe: pep ? 'Marcado manualmente' : '' });
+      result.push({ nome, cpf, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '' });
     }
   });
   return result;
