@@ -441,21 +441,54 @@ const partesData = [];
 let pepDB = null;
 let pepDBCarregando = false;
 
-// Tenta carregar automaticamente via HTTP (funciona se servido por qualquer servidor web)
-(function autoCarregarPEP() {
-  fetch('pep_db/202605_PEP.csv').then(r => {
+// IndexedDB — persiste a base PEP entre sessões
+const DB_NAME = 'SiscoafDB';
+const DB_STORE = 'pep';
+const CSV_KEY = 'pep_csv_raw';
+
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function salvarNoDB(csv) {
+  return abrirDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(csv, CSV_KEY);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  }));
+}
+
+function carregarDoDB() {
+  return abrirDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(CSV_KEY);
+    req.onsuccess = () => { db.close(); resolve(req.result); };
+    req.onerror = () => { db.close(); reject(req.error); };
+  }));
+}
+
+// Tenta carregar do IndexedDB primeiro
+carregarDoDB().then(csv => {
+  if (csv) { processarPEPCSV(csv); return; }
+  // Fallback: tenta fetch (funciona se servido por HTTP)
+  return fetch('pep_db/202605_PEP.csv').then(r => {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
   }).then(csv => {
-    const fakeEvent = { target: { files: [{ name: '202605_PEP.csv' }] } };
-    pepDBCarregando = true;
-    const reader = new FileReader();
-    reader.onload = (e) => processarPEPCSV(e.target.result);
-    reader.readAsText(new Blob([csv]), 'latin-1');
+    salvarNoDB(csv).catch(() => {});
+    processarPEPCSV(csv);
   }).catch(() => {
-    // Fallback: usuário clica no botão para selecionar o arquivo manualmente
+    atualizarStatusPEP('Clique em "Carregar base PEP" para ativar a consulta');
   });
-})();
+}).catch(() => {
+  atualizarStatusPEP('Clique em "Carregar base PEP" para ativar a consulta');
+});
 
 function processarPEPCSV(csv) {
   const lines = csv.split('\n');
@@ -490,8 +523,10 @@ function carregarPEPDB(event) {
   atualizarStatusPEP('Carregando base PEP...');
   const reader = new FileReader();
   reader.onload = (e) => {
-    try { processarPEPCSV(e.target.result); }
-    catch (err) { pepDBCarregando = false; atualizarStatusPEP('Erro ao carregar: ' + err.message); }
+    try {
+      processarPEPCSV(e.target.result);
+      salvarNoDB(e.target.result).catch(() => {});
+    } catch (err) { pepDBCarregando = false; atualizarStatusPEP('Erro ao carregar: ' + err.message); }
   };
   reader.readAsText(file, 'latin-1');
   event.target.value = '';
