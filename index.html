@@ -253,7 +253,12 @@
   <!-- Partes do ato -->
   <div class="card">
     <h2>Partes do ato</h2>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione as partes e consulte se são PEP.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione as partes e consulte se são PEP na base oficial.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#5C6BC0;color:#fff;" onclick="document.getElementById('filePEP').click()">📂 Carregar base PEP</button>
+      <span id="pepStatusDB" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+    </div>
+    <input type="file" id="filePEP" accept=".csv" style="display:none" onchange="carregarPEPDB(event)">
     <div id="partesContainer"></div>
     <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;margin-top:4px;" onclick="adicionarParte()">+ Adicionar parte</button>
   </div>
@@ -434,27 +439,59 @@ const partesData = [];
 
 // Tenta carregar base PEP via fetch (funciona se servido via HTTP)
 let pepDB = null;
-fetch('pep_db/202605_PEP.csv').then(r => r.text()).then(csv => {
-  pepDB = [];
-  const lines = csv.split('\n').slice(1);
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const cols = line.split(';').map(c => c.replace(/^"|"$/g, ''));
-    if (cols.length >= 2) {
-      const cpfRaw = cols[0] || '';
-      const partes = cpfRaw.split('.');
-      let cpfDig = '';
-      if (partes.length >= 3) {
-        cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
+let pepDBCarregando = false;
+
+function carregarPEPDB(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  pepDBCarregando = true;
+  atualizarStatusPEP('Carregando base PEP...');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const csv = e.target.result;
+      const lines = csv.split('\n');
+      pepDB = [];
+      const header = lines[0];
+      const hasHeader = header.includes('CPF') || header.includes('Nome_PEP');
+      const start = hasHeader ? 1 : 0;
+      for (let i = start; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = line.split(';').map(c => c.replace(/^"|"$/g, ''));
+        if (cols.length < 2) continue;
+        const cpfRaw = cols[0] || '';
+        const partes = cpfRaw.split('.');
+        let cpfDig = '';
+        if (partes.length >= 3) {
+          cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
+        }
+        pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
       }
-      pepDB.push({ cpfDig, nome: (cols[1]||'').toUpperCase() });
+      pepDBCarregando = false;
+      atualizarStatusPEP('Base PEP carregada: ' + pepDB.length.toLocaleString() + ' registros');
+      // Re-consultar todas as partes existentes
+      document.querySelectorAll('.parte-row').forEach(div => {
+        const nome = div.querySelector('.parte-nome').value.trim();
+        const cpf = div.querySelector('.parte-cpf').value.trim();
+        if (nome || cpf) consultarParteUI(div);
+      });
+    } catch (err) {
+      pepDBCarregando = false;
+      atualizarStatusPEP('Erro ao carregar: ' + err.message);
     }
-  }
-  console.log('PEP DB carregado:', pepDB.length, 'registros');
-}).catch(() => console.log('PEP DB nao disponivel no navegador (use a versao Python para consulta automatica)'));
+  };
+  reader.readAsText(file, 'latin-1');
+  event.target.value = '';
+}
+
+function atualizarStatusPEP(msg) {
+  const el = document.getElementById('pepStatusDB');
+  if (el) el.textContent = msg;
+}
 
 function consultarPEPLocal(nome, cpf) {
-  if (!pepDB) return null;
+  if (!pepDB || pepDB.length === 0) return null;
   const cpfLimpo = cpf.replace(/\D/g,'');
   const cpfDig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
   const nomeUp = nome.toUpperCase();
@@ -462,6 +499,25 @@ function consultarPEPLocal(nome, cpf) {
     (cpfDig && r.cpfDig === cpfDig) || (nomeUp && r.nome.includes(nomeUp))
   );
   return results.length > 0 ? results.slice(0,3) : null;
+}
+
+function consultarParteUI(div) {
+  const nome = div.querySelector('.parte-nome').value.trim();
+  const cpf = div.querySelector('.parte-cpf').value.trim();
+  const pepStatus = div.querySelector('.pep-status');
+  if (!nome && !cpf) { pepStatus.textContent = ''; return; }
+  const res = consultarPEPLocal(nome, cpf);
+  if (res === null) {
+    pepStatus.textContent = pepDBCarregando ? 'Carregando...' : 'Clique em "Carregar base PEP"';
+    pepStatus.style.color = 'var(--muted)';
+  } else if (res.length === 0) {
+    pepStatus.textContent = 'Não consta como PEP';
+    pepStatus.style.color = 'var(--success)';
+  } else {
+    const cargos = res.map(r => r.nome.substring(0,40)).join('; ');
+    pepStatus.textContent = '⚠️ PEP: ' + cargos;
+    pepStatus.style.color = 'var(--danger)';
+  }
 }
 
 function adicionarParte(dados) {
@@ -490,32 +546,15 @@ function adicionarParte(dados) {
   const pepStatus = div.querySelector('.pep-status');
 
   let timerPEP = null;
-  function autoConsultarPEP() {
-    const n = nomeInput.value.trim();
-    const c = cpfInput.value.trim();
-    if (!n && !c) { pepStatus.textContent = ''; return; }
-    const res = consultarPEPLocal(n, c);
-    if (res === null) {
-      pepStatus.textContent = pepDB ? 'Nao consta como PEP' : '...';
-      if (!pepDB) pepStatus.textContent = '';
-    } else if (res === null || res.length === 0) {
-      pepStatus.textContent = 'Nao consta como PEP';
-      pepStatus.style.color = 'var(--success)';
-    } else {
-      const cargos = res.map(r => r.nome.substring(0,40)).join('; ');
-      pepStatus.textContent = 'PEP: ' + cargos;
-      pepStatus.style.color = 'var(--danger)';
-    }
-  }
   nomeInput.addEventListener('input', () => {
-    clearTimeout(timerPEP); timerPEP = setTimeout(autoConsultarPEP, 500);
+    clearTimeout(timerPEP); timerPEP = setTimeout(() => consultarParteUI(div), 500);
   });
   cpfInput.addEventListener('input', () => {
-    clearTimeout(timerPEP); timerPEP = setTimeout(autoConsultarPEP, 500);
+    clearTimeout(timerPEP); timerPEP = setTimeout(() => consultarParteUI(div), 500);
   });
 
   partesData.push(div);
-  if (dados?.nome || dados?.cpf) setTimeout(autoConsultarPEP, 200);
+  if (dados?.nome || dados?.cpf) setTimeout(() => consultarParteUI(div), 200);
 }
 
 function coletarPartes() {
