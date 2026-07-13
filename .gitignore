@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+build/
+dist/
+*.spec
+*.db
+202605_PEP.zip
