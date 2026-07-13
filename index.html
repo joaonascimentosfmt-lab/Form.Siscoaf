@@ -572,6 +572,15 @@ function getDocsConfig(isPJ) {
   return isPJ ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
 }
 
+function toggleProcurador(select) {
+  const div = select.closest('.parte-row');
+  const procDiv = div.querySelector('.procurador-fields');
+  if (procDiv) procDiv.style.display = select.value === 'Representado' ? 'flex' : 'none';
+  const docsDiv = div.querySelector('.parte-docs');
+  const header = docsDiv?.querySelector('div:first-child');
+  if (header) header.textContent = 'Documentação do ' + select.value + ':';
+}
+
 function toggleDocsParte(radio) {
   const div = radio.closest('.parte-row');
   const docsDiv = div.querySelector('.parte-docs');
@@ -782,16 +791,22 @@ function adicionarParte(dados) {
       <input type="text" placeholder="${isPJ ? 'CNPJ' : 'CPF'}" class="parte-cpf" style="flex:1;min-width:90px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
       <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;"><input type="radio" name="tipo_${idx}" value="PF" ${!isPJ?'checked':''} onchange="toggleTipoParte(this)"> PF</label>
       <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;"><input type="radio" name="tipo_${idx}" value="PJ" ${isPJ?'checked':''} onchange="toggleTipoParte(this)"> PJ</label>
-      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;">
-        <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgante
-      </label>
-      <label style="font-size:11px;display:flex;align-items:center;gap:2px;white-space:nowrap;">
-        <input type="radio" name="papel_${idx}" value="Outorgado" ${dados?.papel==='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgado
-      </label>
+      <select class="parte-papel" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:#fff;" onchange="toggleProcurador(this)">
+        <option value="Outorgante" ${!dados?.papel || dados.papel==='Outorgante'?'selected':''}>Outorgante</option>
+        <option value="Outorgado" ${dados?.papel==='Outorgado'?'selected':''}>Outorgado</option>
+        <option value="Devedor" ${dados?.papel==='Devedor'?'selected':''}>Devedor</option>
+        <option value="Credor" ${dados?.papel==='Credor'?'selected':''}>Credor</option>
+        <option value="Anuente" ${dados?.papel==='Anuente'?'selected':''}>Anuente</option>
+        <option value="Representado" ${dados?.papel==='Representado'?'selected':''}>Representado por Procuração</option>
+      </select>
       <span class="pep-status" style="font-size:10px;min-width:100px;"></span>
       <button onclick="this.parentElement.parentElement.remove();" style="padding:3px 8px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
     </div>
-    <div class="parte-docs" style="display:block;margin-top:4px;padding:6px 8px;background:#f9faf9;border-radius:6px;border:1px solid #e0e0e0;width:100%;">
+    <div class="procurador-fields" style="display:${dados?.papel==='Representado'?'flex':'none'};gap:6px;width:100%;margin-top:3px;padding:4px 8px;">
+      <input type="text" placeholder="Nome do Procurador" class="proc-nome" style="flex:1.5;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;" value="${dados?.proc_nome||''}">
+      <input type="text" placeholder="CPF do Procurador" class="proc-cpf" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;" value="${dados?.proc_cpf||''}">
+    </div>
+    <div class="parte-docs" style="display:block;margin-top:3px;padding:6px 8px;background:#f9faf9;border-radius:6px;border:1px solid #e0e0e0;width:100%;">
       <div style="font-size:11px;font-weight:600;color:#2E7D32;margin-bottom:3px;">Documentação do ${dados?.papel||'Outorgante'} (${isPJ ? 'PJ' : 'PF'}):</div>
       ${docs.map(d => `<label style="font-size:11px;display:inline-flex;align-items:center;gap:3px;margin:1px 6px 1px 0;white-space:nowrap;"><input type="checkbox" class="doc-item" data-chave="${d.chave}" ${dados?.docs && dados.docs[d.chave]?'checked':''}> ${d.label}</label>`).join('')}
     </div>
@@ -821,13 +836,19 @@ function coletarPartes() {
     const nome = div.querySelector('.parte-nome').value.trim();
     const cpf = div.querySelector('.parte-cpf').value.trim();
     const tipo = div.querySelector('input[name^="tipo_"]:checked')?.value || 'PF';
-    const papel = div.querySelector('input[name^="papel_"]:checked')?.value || 'Outorgante';
+    const papelSel = div.querySelector('.parte-papel');
+    const papel = papelSel ? papelSel.value : 'Outorgante';
     const statusEl = div.querySelector('.pep-status');
     const isPep = statusEl && statusEl.textContent.includes('PEP:');
     const docs = {};
     div.querySelectorAll('.doc-item').forEach(cb => { docs[cb.dataset.chave] = cb.checked; });
+    const parte = { nome, cpf, tipo, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '', docs };
+    if (papel === 'Representado') {
+      parte.proc_nome = div.querySelector('.proc-nome')?.value.trim() || '';
+      parte.proc_cpf = div.querySelector('.proc-cpf')?.value.trim() || '';
+    }
     if (nome || cpf) {
-      result.push({ nome, cpf, tipo, papel, pep: isPep, pep_detalhe: isPep ? statusEl.textContent : '', docs });
+      result.push(parte);
     }
   });
   return result;
@@ -1086,7 +1107,11 @@ function gerarPDF() {
 
   <h2>Partes do ato</h2>
   <table>${(dadosCorrentes.partes||[]).map((p,i) => {
-    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (' + (p.tipo==='PJ'?'CNPJ':'CPF') + ': ' + p.cpf + ')' : '') + ' <span style="font-size:10px;color:#888;">[' + (p.tipo||'PF') + ']</span>' + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
+    let labelPapel = p.papel === 'Representado' ? 'Representado' : p.papel;
+    let linha = '<tr><td class="label">' + (i+1) + '. ' + labelPapel + '</td><td>' + (p.nome||'') + (p.cpf ? ' (' + (p.tipo==='PJ'?'CNPJ':'CPF') + ': ' + p.cpf + ')' : '') + ' <span style="font-size:10px;color:#888;">[' + (p.tipo||'PF') + ']</span>' + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
+    if (p.papel === 'Representado' && (p.proc_nome || p.proc_cpf)) {
+      linha += '<tr><td class="label">Procurador:</td><td style="font-size:11px;">' + (p.proc_nome||'') + (p.proc_cpf ? ' (CPF: ' + p.proc_cpf + ')' : '') + '</td></tr>';
+    }
     if (p.docs) {
       const docsCfg = p.tipo === 'PJ' ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
       const docsHtml = docsCfg.map(d => '<span style="font-size:10px;color:' + (p.docs[d.chave] ? '#2E7D32' : '#CC0000') + ';">' + (p.docs[d.chave] ? '✔' : '✘') + ' ' + d.label + '</span>').join(' &nbsp;| ');

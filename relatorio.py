@@ -91,8 +91,14 @@ def gerar_relatorio(
             tipo = p.get("tipo", "PF")
             pep_info = "✔ PEP" if p.get("pep") else ""
             doc_label = "CNPJ" if tipo == "PJ" else "CPF"
-            texto = f"{i+1}. {papel}: {nome} ({doc_label}: {cpf}) [{tipo}] {pep_info}"
+            label_papel = "Representado por Procuração" if papel == "Representado" else papel
+            texto = f"{i+1}. {label_papel}: {nome} ({doc_label}: {cpf}) [{tipo}] {pep_info}"
             elementos.append(Paragraph(texto, estilo_normal))
+            if papel == "Representado" and (p.get("proc_nome") or p.get("proc_cpf")):
+                proc_info = f"   Procurador: {p.get('proc_nome', '')}"
+                if p.get("proc_cpf"):
+                    proc_info += f" (CPF: {p['proc_cpf']})"
+                elementos.append(Paragraph(proc_info, estilo_normal))
             if p.get("pep_detalhe"):
                 elementos.append(Paragraph(f"   PEP: {p['pep_detalhe']}", estilo_normal))
             docs = p.get("docs", {})
