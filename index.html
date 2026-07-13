@@ -646,7 +646,7 @@ function adicionarParte(dados) {
   div.innerHTML = `
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;">
       <input type="text" placeholder="Nome" class="parte-nome" style="flex:2;min-width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.nome||''}">
-      <input type="text" placeholder="CPF" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
+      <input type="text" placeholder="${document.querySelector('input[name=\"pj\"]:checked').value === 'Sim' ? 'CNPJ' : 'CPF'}" class="parte-cpf" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" value="${dados?.cpf||''}">
       <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
         <input type="radio" name="papel_${idx}" value="Outorgante" ${dados?.papel!=='Outorgado'?'checked':''} onchange="toggleDocsParte(this)"> Outorgante
       </label>
@@ -708,6 +708,8 @@ function togglePep() {
 function togglePJ() {
   const sim = document.querySelector('input[name="pj"]:checked').value === 'Sim';
   $('pjDetails').style.display = sim ? 'block' : 'none';
+  // Alterar placeholder CPF/CNPJ em todas as partes existentes
+  document.querySelectorAll('.parte-cpf').forEach(inp => inp.placeholder = sim ? 'CNPJ' : 'CPF');
 }
 
 function toggleEspecie() {

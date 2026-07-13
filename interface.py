@@ -305,10 +305,13 @@ class AnalisadorSISCOAF(ctk.CTk):
         return linha + 1
 
     def _toggle_pj(self):
-        if self._pj_var.get() == "Sim":
+        is_pj = self._pj_var.get() == "Sim"
+        if is_pj:
             self._pj_frame.grid()
         else:
             self._pj_frame.grid_remove()
+        for p in self._partes:
+            p["cpf"].configure(placeholder_text="CNPJ" if is_pj else "CPF")
 
     def _toggle_pep(self):
         if self._pep_var.get() == "Sim":
@@ -363,7 +366,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         if dados:
             entry_nome.insert(0, dados.get("nome", ""))
 
-        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CPF", width=130)
+        is_pj = self._pj_var.get() == "Sim"
+        entry_cpf = ctk.CTkEntry(frm, placeholder_text="CNPJ" if is_pj else "CPF", width=130)
         entry_cpf.grid(row=0, column=1, sticky="ew", padx=4, pady=6)
         if dados:
             entry_cpf.insert(0, dados.get("cpf", ""))
