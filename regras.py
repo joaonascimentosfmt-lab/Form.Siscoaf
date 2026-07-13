@@ -57,6 +57,11 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
         motivos.append(motivo)
     pontuacao_total += pontos
 
+    comunicar, motivo, pontos = _regra_docs_partes(dados)
+    if comunicar:
+        motivos.append(motivo)
+    pontuacao_total += pontos
+
     if pontuacao_total >= PONTOS.limite_comunicacao:
         motivo = f"Pontuação total ({pontuacao_total}) atingiu o limite mínimo ({PONTOS.limite_comunicacao})"
         if motivo not in motivos:
@@ -141,3 +146,22 @@ def _regra_operacoes_relacionadas(dados: Dict) -> Tuple[bool, str, int]:
     if dados.get("operacoes_relacionadas", False):
         return True, "Operações relacionadas identificadas", PONTOS.operacoes_relacionadas
     return False, "", 0
+
+
+def _regra_docs_partes(dados: Dict) -> Tuple[bool, str, int]:
+    """
+    Regra 8: Documentação das partes incompleta -> COMUNICAR
+    Se todas as partes têm toda a documentação, é fator para não comunicação.
+    """
+    partes = dados.get("partes", [])
+    if not partes:
+        return False, "", 0
+    todas_completas = all(
+        all(p.get("docs", {}).get(chave, False) for chave in
+            ["doc_oficial", "cpf_regular", "estado_civil", "regime_bens",
+             "endereco", "profissao", "contato"])
+        for p in partes
+    )
+    if todas_completas:
+        return False, "", 0
+    return True, "Documentação de parte(s) do ato incompleta", PONTOS.docs_incompletas

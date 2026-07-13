@@ -403,6 +403,7 @@ const SCORING = Object.assign({
   pep: 3, especie: 2, sem_origem: 3, fraude: 5,
   fracionamento: 3, lavagem: 5, ocultacao: 4,
   terceiros: 2, valor_incompativel: 2, operacoes_relacionadas: 3,
+  docs_incompletas: 2,
   limite_comunicacao: _cfg.limite_comunicacao,
 }, _cfg.scoring);
 SCORING.limite_comunicacao = _cfg.limite_comunicacao;
@@ -765,6 +766,17 @@ function aplicarRegras(d) {
   if (d.operacoes_relacionadas) {
     pts += SCORING.operacoes_relacionadas;
     motivos.push('Operações relacionadas identificadas');
+  }
+
+  // Regra 8 — Documentação das partes
+  const partes = d.partes || [];
+  const VALIDACOES_CHAVES = ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'];
+  const todasDocsCompletas = partes.length > 0 && partes.every(p =>
+    VALIDACOES_CHAVES.every(ch => p.docs && p.docs[ch])
+  );
+  if (partes.length > 0 && !todasDocsCompletas) {
+    pts += SCORING.docs_incompletas || 2;
+    motivos.push('Documentação de parte(s) do ato incompleta');
   }
 
   if (pts >= SCORING.limite_comunicacao) {

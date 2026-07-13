@@ -15,6 +15,7 @@ class ScoringConfig:
     terceiros_sem_justificativa: int = 2
     valor_incompativel: int = 2
     operacoes_relacionadas: int = 3
+    docs_incompletas: int = 2
     limite_comunicacao: int = 8
 
 @dataclass
