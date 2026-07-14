@@ -129,13 +129,31 @@
   .badge-pep { background: #FFF3E0; color: var(--warning); }
 
   .recent-list { max-height: 320px; overflow-y: auto; }
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border);
+  }
+  .timeline-item { position: relative; margin-bottom: 14px; }
+  .timeline-item::before {
+    content: ""; position: absolute; left: -24px; top: 4px; width: 12px; height: 12px;
+    border-radius: 50%; border: 2px solid var(--primary); background: var(--card);
+  }
+  .timeline-item.warn::before { border-color: var(--warning); background: #FFF3E0; }
+  .timeline-item.danger::before { border-color: var(--danger); background: #FFEBEE; }
+  .timeline-time { font-size: 11px; color: var(--muted); }
+  .timeline-title { font-size: 13px; font-weight: 600; }
+  .timeline-desc { font-size: 12px; color: var(--muted); }
+  .kpi-progress { height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .kpi-progress-bar { height: 100%; border-radius: 2px; transition: width .6s; }
+  .mini-stat { text-align: center; padding: 8px; }
+  .mini-stat .ms-value { font-size: 20px; font-weight: 800; }
+  .mini-stat .ms-label { font-size: 11px; color: var(--muted); }
 
   /* Responsive */
   @media (max-width: 860px) {
-    .sidebar { width: 60px; }
-    .sidebar-header h1, .sidebar-header small, .sidebar-nav a span, .sidebar-footer { display: none; }
-    .sidebar-nav a { justify-content: center; padding: 12px; }
-    .sidebar-nav a .icon { font-size: 18px; }
+    .sidebar { width: 200px; }
+    .sidebar-header small { display: none; }
+    .sidebar-footer { display: none; }
     .charts-row { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
@@ -154,7 +172,7 @@
   <nav class="sidebar-nav">
     <a href="#" class="active"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Dashboard</span></a>
     <a href="index.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Nova Análise</span></a>
-    <a href="index.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z"/></svg><span>Histórico</span></a>
+    <a href="historico.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z"/></svg><span>Histórico</span></a>
     <a href="configuracoes.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Configurações</span></a>
     <a href="usuarios.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Usuários</span></a>
   </nav>
@@ -171,63 +189,23 @@
     </div>
   </div>
 
-  <div class="content">
-    <!-- KPIs -->
+  <div class="content" style="max-width:1100px;margin:0 auto;">
     <div class="kpi-grid" id="kpiGrid"></div>
 
-    <!-- Filtros -->
-    <div class="card" style="margin-bottom:16px">
-      <h3>Filtros</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-        <div class="field" style="flex:1;min-width:140px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Período (início)</label>
-          <input type="date" id="filtroDataInicio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-        </div>
-        <div class="field" style="flex:1;min-width:140px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Período (fim)</label>
-          <input type="date" id="filtroDataFim" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-        </div>
-        <div class="field" style="flex:1;min-width:120px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Resultado</label>
-          <select id="filtroResultado" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-            <option value="">Todos</option>
-            <option value="COMUNICAR">COMUNICAR</option>
-            <option value="NAO_COMUNICAR">NÃO COMUNICAR</option>
-          </select>
-        </div>
-        <div class="field" style="flex:1;min-width:120px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Tipo de ato</label>
-          <select id="filtroTipo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="field" style="flex:1;min-width:120px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">PEP</label>
-          <select id="filtroPEP" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-            <option value="">Todos</option>
-            <option value="sim">Sim</option>
-            <option value="nao">Não</option>
-          </select>
-        </div>
-        <div class="field" style="flex:1;min-width:140px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">Busca (atendente, tipo, partes)</label>
-          <input type="text" id="filtroBusca" placeholder="Pesquisar..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
-        </div>
-        <div>
-          <button onclick="aplicarFiltros()" style="padding:7px 20px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Aplicar filtros</button>
-          <button onclick="limparFiltros()" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font-size:13px;cursor:pointer;margin-left:6px;">Limpar</button>
-        </div>
+    <div class="charts-row">
+      <div class="card">
+        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:6px"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6z"/></svg> Atividades recentes</h3>
+        <div class="timeline" id="timeline"></div>
+      </div>
+      <div class="card">
+        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:6px"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg> Maiores operações</h3>
+        <div id="topOperacoes"></div>
       </div>
     </div>
 
-    <style>
-      .field input, .field select { font-family: inherit; }
-    </style>
-
-    <!-- Charts -->
     <div class="charts-row">
       <div class="card">
-        <h3>Comunicações por mês</h3>
+        <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:6px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Análises por mês</h3>
         <div class="bar-chart" id="barChart"></div>
       </div>
       <div class="card" style="text-align:center">
@@ -236,62 +214,43 @@
           <div class="donut-center" id="donutCenter">0%</div>
         </div>
         <div class="donut-legend" id="donutLegend"></div>
+        <div style="margin-top:12px;display:flex;gap:12px;justify-content:center;" id="miniStats"></div>
       </div>
     </div>
 
-    <!-- Últimas análises -->
     <div class="card">
-      <h3>Últimas análises realizadas</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data/Hora</th>
-              <th>Atendente</th>
-              <th>Tipo de ato</th>
-              <th>Valor</th>
-              <th>Partes</th>
-              <th>Pontos</th>
-              <th>Resultado</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaAnalises"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Alertas PEP -->
-    <div class="card" style="margin-top:16px">
-      <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--warning)" style="vertical-align:middle;margin-right:4px"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> Últimas ocorrências PEP</h3>
+      <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--warning)" style="vertical-align:middle;margin-right:6px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Alertas PEP recentes</h3>
       <div class="recent-list" id="alertasPEP"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ===== DADOS SIMULADOS =====
 const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const nomes = ['Ana Oliveira','Carlos Santos','Maria Souza','João Lima','Fernanda Rocha','Pedro Alves','Lucas Mendes','Juliana Costa','Rafaela Silva','Gustavo Pereira'];
+const nomes = ['Ana Oliveira','Carlos Santos','Maria Souza','João Lima','Fernanda Rocha','Pedro Alves','Lucas Mendes','Juliana Costa','Rafaela Silva','Gustavo Pereira','Camila Barbosa','Bruno Martins'];
 const tipos = ['Compra e venda','Doação','Permuta','Procuração','Ata Notarial','Cessão de Direitos','Integralização','Constituição de garantia'];
-const cidades = ['São Paulo','Rio de Janeiro','Belo Horizonte','Brasília','Salvador','Curitiba','Porto Alegre','Fortaleza','Recife','Manaus'];
 
-// Gerar dados simulados
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function pick(arr) { return arr[rand(0, arr.length-1)]; }
 function formatDate(d) {
   return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
-function formatMoney(v) {
-  return 'R$ '+v.toFixed(2).replace('.',',');
+function formatMoney(v) { return 'R$ '+v.toFixed(2).replace('.',','); }
+function formatTimeAgo(d) {
+  const diff = Date.now() - d.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 60) return min + ' min atrás';
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return hrs + 'h atrás';
+  return Math.floor(hrs / 24) + 'd atrás';
 }
 
-// Gerar 120 análises simuladas
 const analises = [];
-for (let i = 0; i < 120; i++) {
-  const data = new Date(2026, rand(0,5), rand(1,28), rand(8,18), rand(0,59));
+for (let i = 0; i < 150; i++) {
+  const data = new Date(2026, rand(0,6), rand(1,28), rand(8,18), rand(0,59));
   const tipo = pick(tipos);
-  const valor = rand(50000, 5000000);
-  const qtdPartes = rand(1,4);
+  const valor = rand(30000, 9000000);
+  const qtdPartes = rand(1, 5);
   const partes = [];
   let temPEP = false;
   for (let j = 0; j < qtdPartes; j++) {
@@ -299,222 +258,116 @@ for (let i = 0; i < 120; i++) {
     if (isPEP) temPEP = true;
     partes.push({ nome: pick(nomes), pep: isPEP });
   }
-
   let pontos = 0;
   if (temPEP) pontos += 3;
-  if (Math.random() < 0.2) { pontos += 2; } // especie
-  if (Math.random() < 0.25) { pontos += 3; } // sem origem
-  if (Math.random() < 0.15) { pontos += rand(2,5); } // situacao suspeita
-  if (Math.random() < 0.1) { pontos += 5; } // fraude/lavagem
-
-  const comunicar = pontos >= 4 || (temPEP && Math.random() < 0.6) || Math.random() < 0.12;
-
-  analises.push({
-    id: i+1, data, tipo, valor, atendente: pick(nomes),
-    partes, temPEP, pontos,
-    resultado: comunicar ? 'COMUNICAR' : 'NAO_COMUNICAR',
-  });
+  if (Math.random() < 0.22) pontos += 2;
+  if (Math.random() < 0.25) pontos += 3;
+  if (Math.random() < 0.15) pontos += rand(2, 5);
+  if (Math.random() < 0.1) pontos += 5;
+  const comunicar = pontos >= 4 || (temPEP && Math.random() < 0.5) || Math.random() < 0.1;
+  analises.push({ id: i+1, data, tipo, valor, atendente: pick(nomes), partes, temPEP, pontos, resultado: comunicar ? 'COMUNICAR' : 'NAO_COMUNICAR' });
 }
-
-// Ordenar por data decrescente
-analises.sort((a,b) => b.data - a.data);
-
-// ===== FILTROS =====
-function getValorFiltro(id) {
-  const el = document.getElementById(id);
-  return el ? el.value : '';
-}
-
-function getFilteredData() {
-  const dataInicio = getValorFiltro('filtroDataInicio');
-  const dataFim = getValorFiltro('filtroDataFim');
-  const resultado = getValorFiltro('filtroResultado');
-  const tipo = getValorFiltro('filtroTipo');
-  const pep = getValorFiltro('filtroPEP');
-  const busca = getValorFiltro('filtroBusca').toLowerCase();
-
-  return analises.filter(a => {
-    if (dataInicio && a.data < new Date(dataInicio + 'T00:00:00')) return false;
-    if (dataFim) {
-      const fim = new Date(dataFim + 'T23:59:59');
-      if (a.data > fim) return false;
-    }
-    if (resultado && a.resultado !== resultado) return false;
-    if (tipo && a.tipo !== tipo) return false;
-    if (pep === 'sim' && !a.temPEP) return false;
-    if (pep === 'nao' && a.temPEP) return false;
-    if (busca) {
-      const partesStr = a.partes.map(p => p.nome).join(' ');
-      const match = a.atendente.toLowerCase().includes(busca) ||
-                    a.tipo.toLowerCase().includes(busca) ||
-                    partesStr.toLowerCase().includes(busca);
-      if (!match) return false;
-    }
-    return true;
-  });
-}
-
-function aplicarFiltros() {
-  const dados = getFilteredData();
-  renderKPIs(dados);
-  renderBarChart(dados);
-  renderDonut(dados);
-  renderTabela(dados);
-  renderAlertasPEP(dados);
-}
-
-function limparFiltros() {
-  ['filtroDataInicio','filtroDataFim','filtroResultado','filtroTipo','filtroPEP','filtroBusca'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  aplicarFiltros();
-}
-
-// Enter key on search triggers filter
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('filtroBusca')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') aplicarFiltros();
-  });
-});
-
-// ===== RENDERIZAÇÃO =====
-
-// KPIs
-function renderKPIs(dados) {
-  const total = dados.length;
-  const comunicacoes = dados.filter(a => a.resultado === 'COMUNICAR').length;
-  const pctComunicar = total > 0 ? (comunicacoes / total * 100).toFixed(1) : '0.0';
-  const totalPEP = dados.filter(a => a.temPEP).length;
-  const valorTotal = dados.reduce((s,a) => s + a.valor, 0);
-  const mesAtual = dados.filter(a => a.data.getMonth() === 5 && a.data.getFullYear() === 2026);
-  const mesAnterior = dados.filter(a => a.data.getMonth() === 4 && a.data.getFullYear() === 2026);
-  const variacao = mesAnterior.length ? ((mesAtual.length - mesAnterior.length) / mesAnterior.length * 100).toFixed(1) : '0.0';
-
-  const kpis = [
-    { label: 'Total de análises', value: total, sub: `${variacao}% vs mês anterior`, cls: variacao >= 0 ? 'up' : 'down' },
-    { label: 'Comunicações', value: comunicacoes + ' (' + pctComunicar + '%)', sub: `${pctComunicar}% do total`, cls: 'up' },
-    { label: 'PEPs identificados', value: totalPEP, sub: total > 0 ? `${(totalPEP/total*100).toFixed(1)}% dos casos` : '0%', cls: 'down' },
-    { label: 'Valor total analisado', value: total > 0 ? 'R$ '+(valorTotal/1e6).toFixed(1)+'M' : 'R$ 0', sub: total > 0 ? `Média: ${formatMoney(valorTotal/total)}` : '—', cls: 'up' },
-  ];
-  $('kpiGrid').innerHTML = kpis.map(k => `
-    <div class="kpi-card">
-      <div class="label">${k.label}</div>
-      <div class="value">${k.value}</div>
-      <div class="sub ${k.cls}">${k.sub}</div>
-    </div>
-  `).join('');
-}
-
-// Gráfico de barras
-function renderBarChart(dados) {
-  const contagem = {};
-  for (let i = 0; i < 6; i++) {
-    const total = dados.filter(a => a.data.getMonth() === i).length;
-    const comunic = dados.filter(a => a.data.getMonth() === i && a.resultado === 'COMUNICAR').length;
-    contagem[i] = { total, comunic };
-  }
-  const maxTotal = Math.max(...Object.values(contagem).map(v => v.total), 1);
-  const container = $('barChart');
-  container.innerHTML = Object.entries(contagem).map(([mes, v]) => {
-    const hTotal = (v.total / maxTotal * 100);
-    const hCom = (v.comunic / maxTotal * 100);
-    return `
-      <div class="bar-group">
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;width:100%">
-          <div class="bar" style="height:${hCom}%;background:var(--danger);width:60%" title="${v.comunic} comunicações"></div>
-          <div class="bar" style="height:${hTotal}%;background:var(--primary);width:60%;margin-top:2px" title="${v.total} total"></div>
-        </div>
-        <div class="bar-label">${meses[mes]}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Gráfico donut
-function renderDonut(dados) {
-  const total = dados.length;
-  const comunic = dados.filter(a => a.resultado === 'COMUNICAR').length;
-  const nao = total - comunic;
-  const pct = total ? Math.round(comunic / total * 100) : 0;
-  const angle = pct / 100 * 360;
-
-  $('donutCenter').textContent = total > 0 ? pct + '%' : '—';
-  $('donutChart').style.background = total > 0
-    ? `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)`
-    : '#EEE';
-  $('donutLegend').innerHTML = `
-    <span><span class="dot" style="background:var(--danger)"></span> Comunicar (${comunic})</span>
-    <span><span class="dot" style="background:var(--primary)"></span> Não comunicar (${nao})</span>
-  `;
-}
-
-// Tabela
-function renderTabela(dados) {
-  const recentes = dados.slice(0, 50);
-  $('tabelaAnalises').innerHTML = recentes.length
-    ? recentes.map(a => `
-      <tr>
-        <td>${formatDate(a.data)}</td>
-        <td>${a.atendente}</td>
-        <td>${a.tipo}</td>
-        <td>${formatMoney(a.valor)}</td>
-        <td>${a.partes.map(p => p.nome.split(' ')[0] + (p.pep ? ' <svg viewBox="0 0 24 24" width="12" height="12" fill="var(--warning)" style="vertical-align:middle"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>' : '')).join(', ')}</td>
-        <td><strong>${a.pontos}</strong></td>
-        <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--danger)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> COMUNICAR' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--success)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> NÃO COMUNICAR'}</span></td>
-      </tr>
-    `).join('')
-    : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma análise encontrada com os filtros atuais.</td></tr>';
-}
-
-// Alertas PEP
-function renderAlertasPEP(dados) {
-  const pepCases = dados.filter(a => a.temPEP).slice(0, 10);
-  $('alertasPEP').innerHTML = pepCases.length
-    ? pepCases.map(a => {
-        const pepNames = a.partes.filter(p => p.pep).map(p => p.nome).join(', ');
-        return `
-          <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:12px;background:#FFFBF0;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning)" style="vertical-align:middle"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-            <div style="flex:1">
-              <strong style="color:var(--warning)">${pepNames}</strong>
-              <span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDate(a.data)}</span>
-            </div>
-            <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado}</span>
-          </div>
-        `;
-      }).join('')
-    : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado com os filtros atuais.</p>';
-}
+analises.sort((a, b) => b.data - a.data);
 
 function $(id) { return document.getElementById(id); }
 
-// Clock
+function renderDashboard() {
+  const total = analises.length;
+  const comunic = analises.filter(a => a.resultado === 'COMUNICAR').length;
+  const naoComunic = total - comunic;
+  const pctCom = total > 0 ? (comunic / total * 100) : 0;
+  const totalPEP = analises.filter(a => a.temPEP).length;
+  const valorTotal = analises.reduce((s, a) => s + a.valor, 0);
+  const mesAtual = analises.filter(a => a.data.getMonth() === new Date().getMonth()).length;
+  const mesAnt = analises.filter(a => a.data.getMonth() === new Date().getMonth() - 1).length;
+  const variacao = mesAnt ? (((mesAtual - mesAnt) / mesAnt) * 100).toFixed(1) : '0';
+
+  // KPIs
+  $('kpiGrid').innerHTML = [
+    { label: 'Total de an\u00e1lises', value: total, prog: 100, cor: 'var(--primary)', sub: `${variacao}% vs m\u00eas anterior` },
+    { label: 'Comunica\u00e7\u00f5es', value: comunic, prog: pctCom, cor: 'var(--danger)', sub: `${pctCom.toFixed(1)}% do total` },
+    { label: 'PEPs identificados', value: totalPEP, prog: total > 0 ? (totalPEP / total * 100) : 0, cor: 'var(--warning)', sub: total > 0 ? `${(totalPEP/total*100).toFixed(1)}% dos casos` : '0%' },
+    { label: 'Valor analisado', value: 'R$' + (valorTotal / 1e6).toFixed(1) + 'M', prog: Math.min(100, valorTotal / 100000), cor: 'var(--info)', sub: total > 0 ? `M\u00e9dia: ${formatMoney(valorTotal/total)}` : '-' },
+  ].map(k => `
+    <div class="kpi-card">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="kpi-progress"><div class="kpi-progress-bar" style="width:${k.prog}%;background:${k.cor}"></div></div>
+      <div class="sub up" style="margin-top:4px">${k.sub}</div>
+    </div>
+  `).join('');
+
+  // Timeline
+  const recentes = analises.slice(0, 12);
+  $('timeline').innerHTML = recentes.map(a => {
+    const cls = a.resultado === 'COMUNICAR' ? 'danger' : a.temPEP ? 'warn' : '';
+    return `
+      <div class="timeline-item ${cls}">
+        <div class="timeline-time">${formatTimeAgo(a.data)}</div>
+        <div class="timeline-title">${a.tipo} - ${formatMoney(a.valor)}</div>
+        <div class="timeline-desc">${a.atendente} ${a.temPEP ? '- PEP identificado' : ''} <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : 'N\u00c3O COMUNICAR'}</span></div>
+      </div>
+    `;
+  }).join('');
+
+  // Top operacoes
+  const topOps = [...analises].sort((a, b) => b.valor - a.valor).slice(0, 5);
+  $('topOperacoes').innerHTML = topOps.map((a, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:${i < 4 ? '1px solid var(--border)' : 'none'}">
+      <div style="width:24px;height:24px;border-radius:6px;background:${i === 0 ? 'var(--warning)' : i === 1 ? 'var(--muted)' : i === 2 ? '#CD7F32' : 'var(--border)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${a.tipo}</div>
+        <div style="font-size:11px;color:var(--muted)">${a.atendente} - ${formatDate(a.data)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:700">${formatMoney(a.valor)}</div>
+        <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : 'N\u00c3O COMUNICAR'}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Bar chart - 12 meses
+  const contagem = {};
+  for (let i = 0; i < 12; i++) {
+    const t = analises.filter(a => a.data.getMonth() === i).length;
+    const c = analises.filter(a => a.data.getMonth() === i && a.resultado === 'COMUNICAR').length;
+    contagem[i] = { total: t, comunic: c };
+  }
+  const maxTotal = Math.max(...Object.values(contagem).map(v => v.total), 1);
+  $('barChart').innerHTML = Object.entries(contagem).map(([mes, v]) => {
+    const ht = (v.total / maxTotal * 100);
+    const hc = (v.comunic / maxTotal * 100);
+    return `<div class="bar-group"><div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;width:100%"><div class="bar" style="height:${hc}%;background:var(--danger);width:60%" title="${v.comunic} comunica\u00e7\u00f5es"></div><div class="bar" style="height:${ht}%;background:var(--primary);width:60%;margin-top:2px" title="${v.total} total"></div></div><div class="bar-label">${meses[mes]}</div></div>`;
+  }).join('');
+
+  // Donut
+  const angle = pctCom / 100 * 360;
+  $('donutCenter').textContent = total > 0 ? Math.round(pctCom) + '%' : '-';
+  $('donutChart').style.background = total > 0 ? `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)` : '#EEE';
+  $('donutLegend').innerHTML = `<span><span class="dot" style="background:var(--danger)"></span> Comunicar (${comunic})</span><span><span class="dot" style="background:var(--primary)"></span> N\u00e3o comunicar (${naoComunic})</span>`;
+  $('miniStats').innerHTML = `
+    <div class="mini-stat"><div class="ms-value">${comunic}</div><div class="ms-label">Comunicar</div></div>
+    <div class="mini-stat"><div class="ms-value">${naoComunic}</div><div class="ms-label">N\u00e3o comunicar</div></div>
+    <div class="mini-stat"><div class="ms-value">${totalPEP}</div><div class="ms-label">Com PEP</div></div>
+  `;
+
+  // Alertas PEP
+  const pepCases = analises.filter(a => a.temPEP).slice(0, 6);
+  $('alertasPEP').innerHTML = pepCases.length
+    ? pepCases.map(a => {
+        const pepNames = a.partes.filter(p => p.pep).map(p => p.nome).join(', ');
+        return `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:12px;background:#FFFBF0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><div style="flex:1"><strong style="color:var(--warning);font-size:13px">${pepNames}</strong><span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDate(a.data)}</span></div><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado}</span></div>`;
+      }).join('')
+    : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado.</p>';
+}
+
 function updateClock() {
   const now = new Date();
   $('clock').textContent = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
 }
 setInterval(updateClock, 1000);
 updateClock();
-
-function populateFilters() {
-  const sel = document.getElementById('filtroTipo');
-  if (!sel) return;
-  tipos.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t; opt.textContent = t;
-    sel.appendChild(opt);
-  });
-}
-
-// Init
-populateFilters();
-const dadosIniciais = getFilteredData();
-renderKPIs(dadosIniciais);
-renderBarChart(dadosIniciais);
-renderDonut(dadosIniciais);
-renderTabela(dadosIniciais);
-renderAlertasPEP(dadosIniciais);
+renderDashboard();
 </script>
 </body>
 </html>
