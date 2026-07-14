@@ -915,6 +915,9 @@ function coletarPartes() {
   return result;
 }
 
+function formatMoney(v) { var p = v.toFixed(2).split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return 'R$ ' + p.join(','); }
+function fmtNum(v) { var p = v.toFixed(2).split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return p.join(','); }
+
 function togglePep() {
   const sim = document.querySelector('input[name="pep"]:checked').value === 'Sim';
   $('pepDetails').classList.toggle('show', sim);
@@ -1011,7 +1014,7 @@ function aplicarRegras(d) {
   // Regra 2: Espécie acima do limite
   if (d.pagamento_especie && d.valor_especie > LIMITE_ESPECIE) {
     pts += SCORING.especie;
-    motivos.push(`Pagamento em espécie de R$ ${d.valor_especie.toFixed(2)} acima do limite de R$ ${LIMITE_ESPECIE.toFixed(2)}`);
+    motivos.push(`Pagamento em espécie de ${formatMoney(d.valor_especie)} acima do limite de ${formatMoney(LIMITE_ESPECIE)}`);
   }
 
   // Regra 3: PEP com inconsistência
@@ -1184,7 +1187,7 @@ function gerarPDF() {
 
   <h2>2. Características do negócio</h2>
   <table><tr><td class="label">Tipo do ato:</td><td>${dadosCorrentes.tipo_ato}</td></tr>
-  <tr><td class="label">Valor:</td><td>R$ ${dadosCorrentes.valor.toFixed(2).replace('.',',')}</td></tr>
+  <tr><td class="label">Valor:</td><td>${formatMoney(dadosCorrentes.valor)}</td></tr>
   <tr><td class="label">Cidade/Estado:</td><td>${dadosCorrentes.cidade}/${dadosCorrentes.estado}</td></tr>
   <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr>
   <tr><td class="label">Valor compatível:</td><td>${dadosCorrentes.valor_compativel !== false ? 'Sim' : 'Não'}</td></tr>
@@ -1193,7 +1196,7 @@ function gerarPDF() {
 
   <h2>3. Forma de pagamento</h2>
   <table><tr><td class="label">Forma de pagamento:</td><td>${dadosCorrentes.forma_pagamento}</td></tr>
-  <tr><td class="label">Pagamento em espécie:</td><td>${dadosCorrentes.pagamento_especie ? 'Sim (R$ ' + dadosCorrentes.valor_especie.toFixed(2).replace('.',',') + ')' : 'Não'}</td></tr>
+  <tr><td class="label">Pagamento em espécie:</td><td>${dadosCorrentes.pagamento_especie ? 'Sim (' + formatMoney(dadosCorrentes.valor_especie) + ')' : 'Não'}</td></tr>
   <tr><td class="label">Pagamento fracionado:</td><td>${dadosCorrentes.pagamento_fracionado ? 'Sim' : 'Não'}</td></tr>
   <tr><td class="label">Terceiros no pagamento:</td><td>${dadosCorrentes.terceiros_pagamento ? 'Sim' : 'Não'}</td></tr></table>
 
@@ -1289,7 +1292,7 @@ function preencherFormulario(d) {
   setRadio('beneficiario_final', d.beneficiario_final);
   $('tipo_ato').value = d.tipo_ato || 'Compra e venda';
   togglePoderes();
-  $('valor').value = d.valor ? d.valor.toFixed(2).replace('.', ',') : '';
+  $('valor').value = d.valor ? fmtNum(d.valor) : '';
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
   $('data').value = d.data || '';
@@ -1298,7 +1301,7 @@ function preencherFormulario(d) {
   $('forma_pagamento').value = d.forma_pagamento || 'PIX';
   setRadio('especie', d.pagamento_especie);
   toggleEspecie();
-  $('valor_especie').value = d.valor_especie ? d.valor_especie.toFixed(2).replace('.', ',') : '';
+  $('valor_especie').value = d.valor_especie ? fmtNum(d.valor_especie) : '';
   setRadio('fracionado', d.pagamento_fracionado);
   setRadio('terceiros_pagamento', d.terceiros_pagamento);
   setRadio('origem', d.origem_identificada);

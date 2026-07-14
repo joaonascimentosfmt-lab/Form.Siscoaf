@@ -275,7 +275,7 @@ function formatDate(d) {
 function formatDateShort(d) {
   return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
 }
-function formatMoney(v) { return 'R$ '+v.toFixed(2).replace('.',','); }
+function formatMoney(v) { var p = v.toFixed(2).split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return 'R$ ' + p.join(','); }
 
 const analises = [];
 for (let i = 0; i < 200; i++) {
