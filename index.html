@@ -154,7 +154,15 @@
   .modal-body li {
     padding: 5px 0; font-size: 14px;
   }
-  .modal-body li::before { content: "✔ "; color: var(--primary); font-weight: 700; }
+  .modal-body li::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232E7D32"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>') no-repeat center;
+    background-size: contain;
+  }
   .modal-body .no-motives {
     color: var(--muted); font-style: italic; font-size: 14px;
   }
@@ -222,11 +230,11 @@
     <small>Painel Administrativo</small>
   </div>
   <nav class="sidebar-nav">
-    <a href="admin.html"><span class="icon">📊</span><span>Dashboard</span></a>
-    <a href="#" class="active"><span class="icon">📋</span><span>Nova Análise</span></a>
-    <a href="historico.html"><span class="icon">📁</span><span>Histórico</span></a>
-    <a href="configuracoes.html"><span class="icon">⚙️</span><span>Configurações</span></a>
-    <a href="usuarios.html"><span class="icon">👥</span><span>Usuários</span></a>
+    <a href="admin.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Dashboard</span></a>
+    <a href="#" class="active"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Nova Análise</span></a>
+    <a href="historico.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z"/></svg><span>Histórico</span></a>
+    <a href="configuracoes.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Configurações</span></a>
+    <a href="usuarios.html"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Usuários</span></a>
   </nav>
   <div class="sidebar-footer">v2.0 &middot; 2026</div>
 </div>
@@ -816,7 +824,7 @@ function consultarParteUI(div) {
       if (r.funcao) d += ')';
       return d;
     }).join('; ');
-    pepStatus.textContent = '⚠️ PEP: ' + detalhes;
+    pepStatus.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--danger)" style="vertical-align:middle;margin-right:2px"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> PEP: ' + detalhes;
     pepStatus.style.color = 'var(--danger)';
 
     // Auto-preenche seção PEP
@@ -1161,13 +1169,13 @@ function gerarPDF() {
 
   <h2>Partes do ato</h2>
   <table>${(dadosCorrentes.partes||[]).map((p,i) => {
-    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + (p.representado ? ' (Rep. Procuração)' : '') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (' + (p.tipo==='PJ'?'CNPJ':'CPF') + ': ' + p.cpf + ')' : '') + ' <span style="font-size:10px;color:#888;">[' + (p.tipo||'PF') + ']</span>' + (p.pep ? ' <b>✔ PEP</b>' : '') + '</td></tr>';
+    let linha = '<tr><td class="label">' + (i+1) + '. ' + (p.papel||'') + (p.representado ? ' (Rep. Procuração)' : '') + '</td><td>' + (p.nome||'') + (p.cpf ? ' (' + (p.tipo==='PJ'?'CNPJ':'CPF') + ': ' + p.cpf + ')' : '') + ' <span style="font-size:10px;color:#888;">[' + (p.tipo||'PF') + ']</span>' + (p.pep ? ' <b><svg viewBox="0 0 24 24" width="12" height="12" fill="var(--success)" style="vertical-align:middle"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> PEP</b>' : '') + '</td></tr>';
     if (p.representado && (p.proc_nome || p.proc_cpf)) {
       linha += '<tr><td class="label">Procurador:</td><td style="font-size:11px;">' + (p.proc_nome||'') + (p.proc_cpf ? ' (CPF: ' + p.proc_cpf + ')' : '') + '</td></tr>';
     }
     if (p.docs) {
       const docsCfg = p.tipo === 'PJ' ? VALIDACOES_DOCS_PJ : VALIDACOES_DOCS;
-      const docsHtml = docsCfg.map(d => '<span style="font-size:10px;color:' + (p.docs[d.chave] ? '#2E7D32' : '#CC0000') + ';">' + (p.docs[d.chave] ? '✔' : '✘') + ' ' + d.label + '</span>').join(' &nbsp;| ');
+      const docsHtml = docsCfg.map(d => '<span style="font-size:10px;color:' + (p.docs[d.chave] ? '#2E7D32' : '#CC0000') + ';">' + (p.docs[d.chave] ? '<svg viewBox="0 0 24 24" width="10" height="10" fill="#2E7D32" style="vertical-align:middle"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : '<svg viewBox="0 0 24 24" width="10" height="10" fill="#CC0000" style="vertical-align:middle"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>') + ' ' + d.label + '</span>').join(' &nbsp;| ');
       linha += '<tr><td></td><td style="font-size:10px;padding:0 6px 4px;">' + docsHtml + '</td></tr>';
     }
     return linha;
@@ -1209,7 +1217,7 @@ function gerarPDF() {
   <table>`;
   SITUACOES.forEach(s => {
     const marcado = dadosCorrentes['suspeita_' + s.chave];
-    html += `<tr><td class="label">${marcado ? '✔' : '☐'}</td><td>${s.texto}</td></tr>`;
+    html += `<tr><td class="label">${marcado ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--success)" style="vertical-align:middle"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--muted)" style="vertical-align:middle"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'}</td><td>${s.texto}</td></tr>`;
   });
   html += `</table>`;
 
