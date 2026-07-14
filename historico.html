@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico - Analisador SISCOAF</title>
+<link rel="icon" type="image/x-icon" href="assets/icon.ico">
+<link rel="icon" type="image/png" sizes="256x256" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<style>
+  :root {
+    --primary: #2E7D32;
+    --primary-hover: #1B5E20;
+    --primary-light: #E8F5E9;
+    --bg: #F5F7F5;
+    --card: #FFFFFF;
+    --text: #1B1B1B;
+    --muted: #666;
+    --border: #E0E0E0;
+    --danger: #CC0000;
+    --success: #006600;
+    --warning: #E65100;
+    --info: #1565C0;
+    --sidebar: #1B3A1B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); display: flex; min-height: 100vh;
+  }
+  .sidebar {
+    width: 240px; background: var(--sidebar); color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-header { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .sidebar-header h1 { font-size: 17px; font-weight: 700; }
+  .sidebar-header small { font-size: 11px; opacity: .7; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; color: rgba(255,255,255,.75); text-decoration: none;
+    font-size: 13px; transition: .15s; border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar-nav a.active { border-left-color: var(--primary); }
+  .sidebar-nav a .icon { font-size: 16px; width: 22px; text-align: center; }
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); font-size: 11px; opacity: .6; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    gap: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .topbar h2 { font-size: 18px; flex: 1; }
+  .topbar .user { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .topbar .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--card); border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border);
+  }
+  .kpi-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-card .value { font-size: 28px; font-weight: 800; margin: 4px 0 2px; }
+  .kpi-card .sub { font-size: 12px; }
+  .kpi-card .sub.up { color: var(--success); }
+  .kpi-card .sub.down { color: var(--danger); }
+  .charts-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card); border-radius: 12px; padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 15px; margin-bottom: 12px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding-top: 10px; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; max-width: 36px; border-radius: 4px 4px 0 0; min-height: 4px; transition: .3s; }
+  .bar:hover { opacity: .8; }
+  .bar-label { font-size: 10px; color: var(--muted); margin-top: 4px; text-align: center; }
+  .donut { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 12px; position: relative; }
+  .donut-center {
+    position: absolute; inset: 20px; border-radius: 50%; background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800;
+  }
+  .donut-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .donut-legend span { font-size: 12px; display: flex; align-items: center; gap: 5px; }
+  .donut-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border);
+    color: var(--muted); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .5px; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--text); }
+  th .sort-arrow { font-size: 10px; margin-left: 4px; opacity: .5; }
+  th .sort-arrow.active { opacity: 1; color: var(--primary); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--primary-light); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge-comunicar { background: #FFEBEE; color: var(--danger); }
+  .badge-nao { background: #E8F5E9; color: var(--success); }
+  .badge-pep { background: #FFF3E0; color: var(--warning); }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; margin-bottom: 3px; color: var(--muted); }
+  .field select, .field input {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+  }
+  .field select:focus, .field input:focus { outline: none; border-color: var(--primary); }
+  .recent-list { max-height: 320px; overflow-y: auto; }
+  .pagination {
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px;
+  }
+  .pagination button {
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  .pagination button:hover { background: var(--primary-light); }
+  .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pagination button:disabled { opacity: .4; cursor: default; }
+  .pagination .info { font-size: 12px; color: var(--muted); }
+  @media (max-width: 860px) {
+    .sidebar { width: 60px; }
+    .sidebar-header h1, .sidebar-header small, .sidebar-nav a span, .sidebar-footer { display: none; }
+    .sidebar-nav a { justify-content: center; padding: 12px; }
+    .sidebar-nav a .icon { font-size: 18px; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>SISCOAF</h1>
+    <small>Painel Administrativo</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin.html"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="index.html"><span class="icon">📋</span><span>Nova Análise</span></a>
+    <a href="#" class="active"><span class="icon">📁</span><span>Histórico</span></a>
+    <a href="configuracoes.html"><span class="icon">⚙️</span><span>Configurações</span></a>
+    <a href="usuarios.html"><span class="icon">👥</span><span>Usuários</span></a>
+  </nav>
+  <div class="sidebar-footer">v2.0 &middot; 2026</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2>Histórico de Análises</h2>
+    <div class="user">
+      <span id="clock"></span>
+      <span class="avatar">A</span>
+      <span>Admin</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Filtros</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>Período (início)</label>
+          <input type="date" id="filtroDataInicio">
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>Período (fim)</label>
+          <input type="date" id="filtroDataFim">
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label>Resultado</label>
+          <select id="filtroResultado">
+            <option value="">Todos</option>
+            <option value="COMUNICAR">COMUNICAR</option>
+            <option value="NAO_COMUNICAR">NÃO COMUNICAR</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label>Tipo de ato</label>
+          <select id="filtroTipo"><option value="">Todos</option></select>
+        </div>
+        <div class="field" style="flex:1;min-width:100px;">
+          <label>PEP</label>
+          <select id="filtroPEP">
+            <option value="">Todos</option>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:100px;">
+          <label>Pontos (mín.)</label>
+          <input type="number" id="filtroPontosMin" placeholder="0" min="0">
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>Busca (atendente, tipo, partes)</label>
+          <input type="text" id="filtroBusca" placeholder="Pesquisar...">
+        </div>
+        <div>
+          <button onclick="aplicarFiltros()" style="padding:7px 20px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Aplicar filtros</button>
+          <button onclick="limparFiltros()" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font-size:13px;cursor:pointer;margin-left:6px;">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="card">
+        <h3>Comunicações por mês</h3>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <h3>Distribuição de resultados</h3>
+        <div class="donut" id="donutChart">
+          <div class="donut-center" id="donutCenter">0%</div>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Todas as análises</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="ordenarPor('data')">Data/Hora <span class="sort-arrow" id="sortArrowData">▼</span></th>
+              <th onclick="ordenarPor('atendente')">Atendente <span class="sort-arrow" id="sortArrowAtendente">▲</span></th>
+              <th onclick="ordenarPor('tipo')">Tipo de ato <span class="sort-arrow" id="sortArrowTipo">▲</span></th>
+              <th onclick="ordenarPor('valor')">Valor <span class="sort-arrow" id="sortArrowValor">▲</span></th>
+              <th onclick="ordenarPor('partes')">Partes <span class="sort-arrow" id="sortArrowPartes">▲</span></th>
+              <th onclick="ordenarPor('pontos')">Pontos <span class="sort-arrow" id="sortArrowPontos">▲</span></th>
+              <th onclick="ordenarPor('resultado')">Resultado <span class="sort-arrow" id="sortArrowResultado">▲</span></th>
+            </tr>
+          </thead>
+          <tbody id="tabelaAnalises"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="paginacao"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>⚠️  Ocorrências PEP</h3>
+      <div class="recent-list" id="alertasPEP"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const nomes = ['Ana Oliveira','Carlos Santos','Maria Souza','João Lima','Fernanda Rocha','Pedro Alves','Lucas Mendes','Juliana Costa','Rafaela Silva','Gustavo Pereira','Camila Barbosa','Bruno Martins','Beatriz Ribeiro','Felipe Nascimento','Aline Teixeira','Ricardo Gomes','Larissa Rodrigues','Eduardo Carvalho','Tatiane Araújo','Marcos Dias'];
+const tipos = ['Compra e venda','Doação','Permuta','Procuração','Ata Notarial','Cessão de Direitos','Integralização','Constituição de garantia'];
+const cidades = ['São Paulo','Rio de Janeiro','Belo Horizonte','Brasília','Salvador','Curitiba','Porto Alegre','Fortaleza','Recife','Manaus'];
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[rand(0, arr.length-1)]; }
+function formatDate(d) {
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function formatDateShort(d) {
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+}
+function formatMoney(v) { return 'R$ '+v.toFixed(2).replace('.',','); }
+
+const analises = [];
+for (let i = 0; i < 200; i++) {
+  const data = new Date(2025, rand(6,11), rand(1,28), rand(8,18), rand(0,59));
+  const tipo = pick(tipos);
+  const valor = rand(10000, 8000000);
+  const qtdPartes = rand(1, 5);
+  const partes = [];
+  let temPEP = false;
+  for (let j = 0; j < qtdPartes; j++) {
+    const isPEP = Math.random() < 0.15;
+    if (isPEP) temPEP = true;
+    partes.push({ nome: pick(nomes), pep: isPEP });
+  }
+  let pontos = 0;
+  if (temPEP) pontos += 3;
+  if (Math.random() < 0.22) pontos += 2;
+  if (Math.random() < 0.25) pontos += 3;
+  if (Math.random() < 0.15) pontos += rand(2, 5);
+  if (Math.random() < 0.1) pontos += 5;
+  const comunicar = pontos >= 4 || (temPEP && Math.random() < 0.5) || Math.random() < 0.1;
+  analises.push({
+    id: i+1,
+    data,
+    tipo,
+    valor,
+    atendente: pick(nomes),
+    partes,
+    temPEP,
+    pontos,
+    resultado: comunicar ? 'COMUNICAR' : 'NAO_COMUNICAR',
+    cidade: pick(cidades),
+    protocolo: 'PROT-' + (1000 + i).toString(),
+  });
+}
+
+analises.sort((a, b) => b.data - a.data);
+
+let paginaAtual = 1;
+const porPagina = 15;
+let sortCampo = 'data';
+let sortDir = 'desc';
+
+function $(id) { return document.getElementById(id); }
+
+function populateFilters() {
+  const sel = $('filtroTipo');
+  tipos.forEach(t => { const opt = document.createElement('option'); opt.value = t; opt.textContent = t; sel.appendChild(opt); });
+}
+
+function getFilteredData() {
+  const dataInicio = $('filtroDataInicio').value;
+  const dataFim = $('filtroDataFim').value;
+  const resultado = $('filtroResultado').value;
+  const tipo = $('filtroTipo').value;
+  const pep = $('filtroPEP').value;
+  const pontosMin = parseInt($('filtroPontosMin').value) || 0;
+  const busca = $('filtroBusca').value.toLowerCase();
+  return analises.filter(a => {
+    if (dataInicio && a.data < new Date(dataInicio + 'T00:00:00')) return false;
+    if (dataFim) { const fim = new Date(dataFim + 'T23:59:59'); if (a.data > fim) return false; }
+    if (resultado && a.resultado !== resultado) return false;
+    if (tipo && a.tipo !== tipo) return false;
+    if (pep === 'sim' && !a.temPEP) return false;
+    if (pep === 'nao' && a.temPEP) return false;
+    if (a.pontos < pontosMin) return false;
+    if (busca) {
+      const partesStr = a.partes.map(p => p.nome).join(' ');
+      if (!a.atendente.toLowerCase().includes(busca) && !a.tipo.toLowerCase().includes(busca) && !partesStr.toLowerCase().includes(busca) && !a.cidade.toLowerCase().includes(busca)) return false;
+    }
+    return true;
+  });
+}
+
+function ordenarPor(campo) {
+  if (sortCampo === campo) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortCampo = campo; sortDir = 'asc'; }
+  document.querySelectorAll('.sort-arrow').forEach(el => el.classList.remove('active'));
+  const arrowId = 'sortArrow' + campo.charAt(0).toUpperCase() + campo.slice(1);
+  const arrow = $(arrowId);
+  if (arrow) { arrow.classList.add('active'); arrow.textContent = sortDir === 'asc' ? '▲' : '▼'; }
+  paginaAtual = 1;
+  aplicarFiltros();
+}
+
+function aplicarFiltros() {
+  let dados = getFilteredData();
+  if (sortCampo) {
+    dados.sort((a, b) => {
+      let va = a[sortCampo], vb = b[sortCampo];
+      if (sortCampo === 'data') { va = a.data.getTime(); vb = b.data.getTime(); }
+      else if (sortCampo === 'partes') { va = a.partes.map(p => p.nome).join(', ').toLowerCase(); vb = b.partes.map(p => p.nome).join(', ').toLowerCase(); }
+      else if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  renderKPIs(dados);
+  renderBarChart(dados);
+  renderDonut(dados);
+  renderTabela(dados);
+  renderAlertasPEP(dados);
+}
+
+function limparFiltros() {
+  ['filtroDataInicio','filtroDataFim','filtroResultado','filtroTipo','filtroPEP','filtroPontosMin','filtroBusca'].forEach(id => { const el = $(id); if (el) el.value = ''; });
+  paginaAtual = 1;
+  aplicarFiltros();
+}
+
+function renderKPIs(dados) {
+  const total = dados.length;
+  const comunicacoes = dados.filter(a => a.resultado === 'COMUNICAR').length;
+  const pctComunicar = total > 0 ? (comunicacoes / total * 100).toFixed(1) : '0.0';
+  const totalPEP = dados.filter(a => a.temPEP).length;
+  const valorTotal = dados.reduce((s, a) => s + a.valor, 0);
+  const mesAtual = dados.filter(a => a.data.getMonth() === new Date().getMonth() && a.data.getFullYear() === 2026).length;
+  const mesAnterior = dados.filter(a => a.data.getMonth() === new Date().getMonth() - 1 && a.data.getFullYear() === 2026).length;
+  const variacao = mesAnterior ? ((mesAtual - mesAnterior) / mesAnterior * 100).toFixed(1) : '0.0';
+  const kpis = [
+    { label: 'Total de análises', value: total, sub: `${variacao}% vs mês anterior`, cls: variacao >= 0 ? 'up' : 'down' },
+    { label: 'Comunicações', value: comunicacoes + ' (' + pctComunicar + '%)', sub: `${pctComunicar}% do total`, cls: 'up' },
+    { label: 'PEPs identificados', value: totalPEP, sub: total > 0 ? `${(totalPEP/total*100).toFixed(1)}% dos casos` : '0%', cls: 'down' },
+    { label: 'Valor total analisado', value: total > 0 ? 'R$ '+(valorTotal/1e6).toFixed(1)+'M' : 'R$ 0', sub: total > 0 ? `Média: ${formatMoney(valorTotal/total)}` : '—', cls: 'up' },
+  ];
+  $('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub ${k.cls}">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderBarChart(dados) {
+  const contagem = {};
+  for (let i = 0; i < 12; i++) {
+    const total = dados.filter(a => a.data.getMonth() === i).length;
+    const comunic = dados.filter(a => a.data.getMonth() === i && a.resultado === 'COMUNICAR').length;
+    contagem[i] = { total, comunic };
+  }
+  const maxTotal = Math.max(...Object.values(contagem).map(v => v.total), 1);
+  const container = $('barChart');
+  container.innerHTML = Object.entries(contagem).map(([mes, v]) => {
+    const hTotal = (v.total / maxTotal * 100);
+    const hCom = (v.comunic / maxTotal * 100);
+    return `
+      <div class="bar-group">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;width:100%">
+          <div class="bar" style="height:${hCom}%;background:var(--danger);width:60%" title="${v.comunic} comunicações"></div>
+          <div class="bar" style="height:${hTotal}%;background:var(--primary);width:60%;margin-top:2px" title="${v.total} total"></div>
+        </div>
+        <div class="bar-label">${meses[mes]}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDonut(dados) {
+  const total = dados.length;
+  const comunic = dados.filter(a => a.resultado === 'COMUNICAR').length;
+  const nao = total - comunic;
+  const pct = total ? Math.round(comunic / total * 100) : 0;
+  const angle = pct / 100 * 360;
+  $('donutCenter').textContent = total > 0 ? pct + '%' : '—';
+  $('donutChart').style.background = total > 0 ? `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)` : '#EEE';
+  $('donutLegend').innerHTML = `
+    <span><span class="dot" style="background:var(--danger)"></span> Comunicar (${comunic})</span>
+    <span><span class="dot" style="background:var(--primary)"></span> Não comunicar (${nao})</span>
+  `;
+}
+
+function renderTabela(dados) {
+  const inicio = (paginaAtual - 1) * porPagina;
+  const pagina = dados.slice(inicio, inicio + porPagina);
+  const totalPaginas = Math.max(1, Math.ceil(dados.length / porPagina));
+  $('tabelaAnalises').innerHTML = pagina.length
+    ? pagina.map(a => `
+      <tr>
+        <td>${formatDate(a.data)}</td>
+        <td>${a.atendente}</td>
+        <td>${a.tipo}</td>
+        <td>${formatMoney(a.valor)}</td>
+        <td>${a.partes.map(p => p.nome.split(' ')[0] + (p.pep ? ' ⚠️' : '')).join(', ')}</td>
+        <td><strong>${a.pontos}</strong></td>
+        <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? '🔴 COMUNICAR' : '🟢 NÃO COMUNICAR'}</span></td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma análise encontrada com os filtros atuais.</td></tr>';
+  renderPaginacao(dados.length, totalPaginas);
+}
+
+function renderPaginacao(total, totalPaginas) {
+  const c = $('paginacao');
+  if (total <= porPagina) { c.innerHTML = ''; return; }
+  let html = `<span class="info">${total} registros · Página ${paginaAtual} de ${totalPaginas}</span><div>`;
+  html += `<button onclick="irPagina(${paginaAtual-1})" ${paginaAtual<=1?'disabled':''}>◀ Anterior</button>`;
+  for (let i = Math.max(1, paginaAtual-2); i <= Math.min(totalPaginas, paginaAtual+2); i++) {
+    html += `<button onclick="irPagina(${i})" class="${i===paginaAtual?'active':''}">${i}</button>`;
+  }
+  html += `<button onclick="irPagina(${paginaAtual+1})" ${paginaAtual>=totalPaginas?'disabled':''}>Próximo ▶</button></div>`;
+  c.innerHTML = html;
+}
+
+function irPagina(pag) {
+  let dados = getFilteredData();
+  if (sortCampo) {
+    dados.sort((a, b) => {
+      let va = a[sortCampo], vb = b[sortCampo];
+      if (sortCampo === 'data') { va = a.data.getTime(); vb = b.data.getTime(); }
+      else if (sortCampo === 'partes') { va = a.partes.map(p=>p.nome).join(', ').toLowerCase(); vb = b.partes.map(p=>p.nome).join(', ').toLowerCase(); }
+      else if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  const totalPaginas = Math.max(1, Math.ceil(dados.length / porPagina));
+  if (pag < 1 || pag > totalPaginas) return;
+  paginaAtual = pag;
+  renderTabela(dados);
+}
+
+function renderAlertasPEP(dados) {
+  const pepCases = dados.filter(a => a.temPEP).slice(0, 10);
+  $('alertasPEP').innerHTML = pepCases.length
+    ? pepCases.map(a => {
+        const pepNames = a.partes.filter(p => p.pep).map(p => p.nome).join(', ');
+        return `
+          <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:12px;background:#FFFBF0;">
+            <span style="font-size:18px">⚠️</span>
+            <div style="flex:1">
+              <strong style="color:var(--warning)">${pepNames}</strong>
+              <span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDateShort(a.data)}</span>
+            </div>
+            <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado}</span>
+          </div>
+        `;
+      }).join('')
+    : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado com os filtros atuais.</p>';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('filtroBusca')?.addEventListener('keydown', e => { if (e.key === 'Enter') aplicarFiltros(); });
+});
+
+function updateClock() {
+  const now = new Date();
+  $('clock').textContent = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+populateFilters();
+sortCampo = 'data';
+sortDir = 'desc';
+const da = $('sortArrowData');
+if (da) { da.classList.add('active'); da.textContent = '▼'; }
+aplicarFiltros();
+</script>
+</body>
+</html>

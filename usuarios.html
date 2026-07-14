@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuários - Analisador SISCOAF</title>
+<link rel="icon" type="image/x-icon" href="assets/icon.ico">
+<link rel="icon" type="image/png" sizes="256x256" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<style>
+  :root {
+    --primary: #2E7D32;
+    --primary-hover: #1B5E20;
+    --primary-light: #E8F5E9;
+    --bg: #F5F7F5;
+    --card: #FFFFFF;
+    --text: #1B1B1B;
+    --muted: #666;
+    --border: #E0E0E0;
+    --danger: #CC0000;
+    --success: #006600;
+    --warning: #E65100;
+    --info: #1565C0;
+    --sidebar: #1B3A1B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); display: flex; min-height: 100vh;
+  }
+  .sidebar {
+    width: 240px; background: var(--sidebar); color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-header { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .sidebar-header h1 { font-size: 17px; font-weight: 700; }
+  .sidebar-header small { font-size: 11px; opacity: .7; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; color: rgba(255,255,255,.75); text-decoration: none;
+    font-size: 13px; transition: .15s; border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar-nav a.active { border-left-color: var(--primary); }
+  .sidebar-nav a .icon { font-size: 16px; width: 22px; text-align: center; }
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); font-size: 11px; opacity: .6; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    gap: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .topbar h2 { font-size: 18px; flex: 1; }
+  .topbar .user { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .topbar .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--card); border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border);
+  }
+  .kpi-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-card .value { font-size: 28px; font-weight: 800; margin: 4px 0 2px; }
+  .kpi-card .sub { font-size: 12px; }
+  .kpi-card .sub.up { color: var(--success); }
+  .kpi-card .sub.down { color: var(--danger); }
+  .charts-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card); border-radius: 12px; padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 15px; margin-bottom: 12px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding-top: 10px; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; max-width: 36px; border-radius: 4px 4px 0 0; min-height: 4px; transition: .3s; }
+  .bar:hover { opacity: .8; }
+  .bar-label { font-size: 10px; color: var(--muted); margin-top: 4px; text-align: center; }
+  .donut { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 12px; position: relative; }
+  .donut-center {
+    position: absolute; inset: 20px; border-radius: 50%; background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800;
+  }
+  .donut-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .donut-legend span { font-size: 12px; display: flex; align-items: center; gap: 5px; }
+  .donut-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border);
+    color: var(--muted); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .5px; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--text); }
+  th .sort-arrow { font-size: 10px; margin-left: 4px; opacity: .5; }
+  th .sort-arrow.active { opacity: 1; color: var(--primary); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--primary-light); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge-ativo { background: #E8F5E9; color: var(--success); }
+  .badge-inativo { background: #FFEBEE; color: var(--danger); }
+  .badge-admin { background: #E3F2FD; color: var(--info); }
+  .badge-analista { background: #FFF3E0; color: var(--warning); }
+  .badge-visualizador { background: #F3E5F5; color: #7B1FA2; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; margin-bottom: 3px; color: var(--muted); }
+  .field select, .field input {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+  }
+  .field select:focus, .field input:focus { outline: none; border-color: var(--primary); }
+  .pagination {
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px;
+  }
+  .pagination button {
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  .pagination button:hover { background: var(--primary-light); }
+  .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pagination button:disabled { opacity: .4; cursor: default; }
+  .pagination .info { font-size: 12px; color: var(--muted); }
+  @media (max-width: 860px) {
+    .sidebar { width: 60px; }
+    .sidebar-header h1, .sidebar-header small, .sidebar-nav a span, .sidebar-footer { display: none; }
+    .sidebar-nav a { justify-content: center; padding: 12px; }
+    .sidebar-nav a .icon { font-size: 18px; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>SISCOAF</h1>
+    <small>Painel Administrativo</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin.html"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="index.html"><span class="icon">📋</span><span>Nova Análise</span></a>
+    <a href="historico.html"><span class="icon">📁</span><span>Histórico</span></a>
+    <a href="configuracoes.html"><span class="icon">⚙️</span><span>Configurações</span></a>
+    <a href="#" class="active"><span class="icon">👥</span><span>Usuários</span></a>
+  </nav>
+  <div class="sidebar-footer">v2.0 &middot; 2026</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2>Usuários</h2>
+    <div class="user">
+      <span id="clock"></span>
+      <span class="avatar">A</span>
+      <span>Admin</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Filtros</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>Função</label>
+          <select id="filtroFuncao">
+            <option value="">Todas</option>
+            <option value="Admin">Admin</option>
+            <option value="Analista">Analista</option>
+            <option value="Visualizador">Visualizador</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label>Status</label>
+          <select id="filtroStatus">
+            <option value="">Todos</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label>Análises (mín.)</label>
+          <input type="number" id="filtroAnalisesMin" placeholder="0" min="0">
+        </div>
+        <div class="field" style="flex:1;min-width:160px;">
+          <label>Busca (nome, email, cargo)</label>
+          <input type="text" id="filtroBusca" placeholder="Pesquisar...">
+        </div>
+        <div>
+          <button onclick="aplicarFiltros()" style="padding:7px 20px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Aplicar filtros</button>
+          <button onclick="limparFiltros()" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font-size:13px;cursor:pointer;margin-left:6px;">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="card">
+        <h3>Usuários por função</h3>
+        <div class="bar-chart" id="barChartFuncao"></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <h3>Distribuição de funções</h3>
+        <div class="donut" id="donutChart">
+          <div class="donut-center" id="donutCenter">0%</div>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Lista de usuários</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="ordenarPor('nome')">Nome <span class="sort-arrow" id="sortArrowNome">▲</span></th>
+              <th onclick="ordenarPor('email')">Email <span class="sort-arrow" id="sortArrowEmail">▲</span></th>
+              <th onclick="ordenarPor('funcao')">Função <span class="sort-arrow" id="sortArrowFuncao">▲</span></th>
+              <th onclick="ordenarPor('status')">Status <span class="sort-arrow" id="sortArrowStatus">▲</span></th>
+              <th onclick="ordenarPor('analises')">Análises <span class="sort-arrow" id="sortArrowAnalises">▲</span></th>
+              <th onclick="ordenarPor('ultimoAcesso')">Último acesso <span class="sort-arrow" id="sortArrowUltimoAcesso">▲</span></th>
+            </tr>
+          </thead>
+          <tbody id="tabelaUsuarios"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="paginacao"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const primeirosNomes = ['Ana','Carlos','Maria','João','Fernanda','Pedro','Lucas','Juliana','Rafaela','Gustavo','Camila','Bruno','Beatriz','Felipe','Aline','Ricardo','Larissa','Eduardo','Tatiane','Marcos'];
+const sobrenomes = ['Oliveira','Santos','Souza','Lima','Rocha','Alves','Mendes','Costa','Silva','Pereira','Gomes','Barbosa','Ribeiro','Carvalho','Teixeira','Martins','Rodrigues','Nascimento','Araújo','Dias'];
+const funcoes = ['Admin','Analista','Analista','Analista','Visualizador','Visualizador'];
+const dominios = ['siscoaf.gov.br','analise.siscoaf.gov.br','corp.siscoaf.gov.br'];
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[rand(0, arr.length-1)]; }
+function formatDate(d) {
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function formatDateShort(d) {
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+}
+
+const usuarios = [];
+const usedNames = new Set();
+for (let i = 0; i < 45; i++) {
+  let nomeCompleto;
+  do {
+    nomeCompleto = pick(primeirosNomes) + ' ' + pick(sobrenomes);
+  } while (usedNames.has(nomeCompleto));
+  usedNames.add(nomeCompleto);
+  const email = nomeCompleto.toLowerCase().replace(/ /g, '.') + '@' + pick(dominios);
+  const funcao = pick(funcoes);
+  const status = Math.random() < 0.15 ? 'Inativo' : 'Ativo';
+  const analises = rand(0, 120);
+  const ultimoAcesso = new Date(2026, rand(0,6), rand(1,28), rand(7,20), rand(0,59));
+  const criadoEm = new Date(2024, rand(0,11), rand(1,28));
+  usuarios.push({ id: i+1, nome: nomeCompleto, email, funcao, status, analises, ultimoAcesso, criadoEm });
+}
+
+let paginaAtual = 1;
+const porPagina = 10;
+let sortCampo = null;
+let sortDir = 'asc';
+
+function $(id) { return document.getElementById(id); }
+
+function getFilteredData() {
+  const funcao = $('filtroFuncao').value;
+  const status = $('filtroStatus').value;
+  const analisesMin = parseInt($('filtroAnalisesMin').value) || 0;
+  const busca = $('filtroBusca').value.toLowerCase();
+  return usuarios.filter(u => {
+    if (funcao && u.funcao !== funcao) return false;
+    if (status && u.status !== status) return false;
+    if (u.analises < analisesMin) return false;
+    if (busca && !u.nome.toLowerCase().includes(busca) && !u.email.toLowerCase().includes(busca) && !u.funcao.toLowerCase().includes(busca)) return false;
+    return true;
+  });
+}
+
+function ordenarPor(campo) {
+  if (sortCampo === campo) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortCampo = campo;
+    sortDir = 'asc';
+  }
+  document.querySelectorAll('.sort-arrow').forEach(el => el.classList.remove('active'));
+  const arrow = $('sortArrow' + campo.charAt(0).toUpperCase() + campo.slice(1));
+  if (arrow) { arrow.classList.add('active'); arrow.textContent = sortDir === 'asc' ? '▲' : '▼'; }
+  paginaAtual = 1;
+  aplicarFiltros();
+}
+
+function aplicarFiltros() {
+  let dados = getFilteredData();
+  if (sortCampo) {
+    dados.sort((a, b) => {
+      let va = a[sortCampo], vb = b[sortCampo];
+      if (typeof va === 'string') va = va.toLowerCase();
+      if (typeof vb === 'string') vb = vb.toLowerCase();
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  renderKPIs(dados);
+  renderBarChart(dados);
+  renderDonut(dados);
+  renderTabela(dados);
+}
+
+function limparFiltros() {
+  ['filtroFuncao','filtroStatus','filtroAnalisesMin','filtroBusca'].forEach(id => { const el = $(id); if (el) el.value = ''; });
+  paginaAtual = 1;
+  aplicarFiltros();
+}
+
+function renderKPIs(dados) {
+  const total = dados.length;
+  const ativos = dados.filter(u => u.status === 'Ativo').length;
+  const totalAnalises = dados.reduce((s, u) => s + u.analises, 0);
+  const mediaAnalises = total > 0 ? (totalAnalises / total).toFixed(1) : '0';
+  const admins = dados.filter(u => u.funcao === 'Admin').length;
+  const kpis = [
+    { label: 'Total de usuários', value: total, sub: `${ativos} ativos · ${total - ativos} inativos`, cls: total > 0 ? 'up' : '' },
+    { label: 'Usuários ativos', value: ativos, sub: total > 0 ? `${(ativos/total*100).toFixed(0)}% do total` : '0%', cls: ativos > 0 ? 'up' : 'down' },
+    { label: 'Total de análises', value: totalAnalises, sub: `Média: ${mediaAnalises} por usuário`, cls: 'up' },
+    { label: 'Administradores', value: admins, sub: total > 0 ? `${(admins/total*100).toFixed(0)}% do total` : '0%', cls: admins > 0 ? 'up' : '' },
+  ];
+  $('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub ${k.cls}">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderBarChart(dados) {
+  const contagem = { Admin: 0, Analista: 0, Visualizador: 0 };
+  const cores = { Admin: 'var(--info)', Analista: 'var(--warning)', Visualizador: '#7B1FA2' };
+  dados.forEach(u => { if (contagem[u.funcao] !== undefined) contagem[u.funcao]++; });
+  const maxVal = Math.max(...Object.values(contagem), 1);
+  const container = $('barChartFuncao');
+  container.innerHTML = Object.entries(contagem).map(([func, qtd]) => `
+    <div class="bar-group">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;width:100%">
+        <div class="bar" style="height:${qtd/maxVal*100}%;background:${cores[func]};width:60%" title="${qtd} ${func}"></div>
+      </div>
+      <div class="bar-label">${func}</div>
+    </div>
+  `).join('');
+}
+
+function renderDonut(dados) {
+  const contagem = { Admin: 0, Analista: 0, Visualizador: 0 };
+  const cores = { Admin: 'var(--info)', Analista: 'var(--warning)', Visualizador: '#7B1FA2' };
+  dados.forEach(u => { if (contagem[u.funcao] !== undefined) contagem[u.funcao]++; });
+  const total = dados.length;
+  const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+  const maior = sorted[0];
+  const pct = total && maior ? Math.round(maior[1] / total * 100) : 0;
+  const angles = [];
+  let acc = 0;
+  sorted.forEach(([func, qtd]) => {
+    const a = total ? (qtd / total * 360) : 0;
+    angles.push({ func, qtd, start: acc, end: acc + a, cor: cores[func] });
+    acc += a;
+  });
+  const gradient = angles.map(a => `${a.cor} ${a.start}deg ${a.end}deg`).join(', ');
+  $('donutCenter').textContent = maior && total ? maior[1] + '/' + total : '—';
+  $('donutChart').style.background = total > 0 ? `conic-gradient(${gradient})` : '#EEE';
+  $('donutLegend').innerHTML = sorted.map(([func, qtd]) =>
+    `<span><span class="dot" style="background:${cores[func]}"></span> ${func} (${qtd})</span>`
+  ).join('');
+}
+
+function renderTabela(dados) {
+  const inicio = (paginaAtual - 1) * porPagina;
+  const pagina = dados.slice(inicio, inicio + porPagina);
+  const totalPaginas = Math.max(1, Math.ceil(dados.length / porPagina));
+  $('tabelaUsuarios').innerHTML = pagina.length
+    ? pagina.map(u => {
+        const badgeStatus = u.status === 'Ativo' ? 'badge-ativo' : 'badge-inativo';
+        const badgeFuncao = u.funcao === 'Admin' ? 'badge-admin' : u.funcao === 'Analista' ? 'badge-analista' : 'badge-visualizador';
+        return `
+          <tr>
+            <td><strong>${u.nome}</strong></td>
+            <td style="color:var(--muted)">${u.email}</td>
+            <td><span class="badge ${badgeFuncao}">${u.funcao}</span></td>
+            <td><span class="badge ${badgeStatus}">${u.status}</span></td>
+            <td><strong>${u.analises}</strong></td>
+            <td>${formatDateShort(u.ultimoAcesso)}</td>
+          </tr>
+        `;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Nenhum usuário encontrado com os filtros atuais.</td></tr>';
+  renderPaginacao(dados.length, totalPaginas);
+}
+
+function renderPaginacao(total, totalPaginas) {
+  const container = $('paginacao');
+  if (total <= porPagina) { container.innerHTML = ''; return; }
+  let html = `<span class="info">${total} registros · Página ${paginaAtual} de ${totalPaginas}</span><div>`;
+  html += `<button onclick="irPagina(${paginaAtual - 1})" ${paginaAtual <= 1 ? 'disabled' : ''}>◀ Anterior</button>`;
+  for (let i = Math.max(1, paginaAtual - 2); i <= Math.min(totalPaginas, paginaAtual + 2); i++) {
+    html += `<button onclick="irPagina(${i})" class="${i === paginaAtual ? 'active' : ''}">${i}</button>`;
+  }
+  html += `<button onclick="irPagina(${paginaAtual + 1})" ${paginaAtual >= totalPaginas ? 'disabled' : ''}>Próximo ▶</button></div>`;
+  container.innerHTML = html;
+}
+
+function irPagina(pag) {
+  const dados = getFilteredData();
+  if (sortCampo) {
+    dados.sort((a, b) => {
+      let va = a[sortCampo], vb = b[sortCampo];
+      if (typeof va === 'string') va = va.toLowerCase();
+      if (typeof vb === 'string') vb = vb.toLowerCase();
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  const totalPaginas = Math.max(1, Math.ceil(dados.length / porPagina));
+  if (pag < 1 || pag > totalPaginas) return;
+  paginaAtual = pag;
+  renderTabela(dados);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('filtroBusca')?.addEventListener('keydown', e => { if (e.key === 'Enter') aplicarFiltros(); });
+});
+
+function updateClock() {
+  const now = new Date();
+  $('clock').textContent = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+aplicarFiltros();
+</script>
+</body>
+</html>
