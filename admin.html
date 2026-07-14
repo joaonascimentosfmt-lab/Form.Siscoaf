@@ -236,13 +236,8 @@ function formatDate(d) {
   return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
 function formatMoney(v) { var p = v.toFixed(2).split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return 'R$ ' + p.join(','); }
-function formatTimeAgo(d) {
-  const diff = Date.now() - d.getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 60) return min + ' min atrás';
-  const hrs = Math.floor(min / 60);
-  if (hrs < 24) return hrs + 'h atrás';
-  return Math.floor(hrs / 24) + 'd atrás';
+function fmtDataHora(d) {
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
 
 const analises = [];
@@ -303,7 +298,7 @@ function renderDashboard() {
     const cls = a.resultado === 'COMUNICAR' ? 'danger' : a.temPEP ? 'warn' : '';
     return `
       <div class="timeline-item ${cls}">
-        <div class="timeline-time">${formatTimeAgo(a.data)}</div>
+        <div class="timeline-time">${fmtDataHora(a.data)}</div>
         <div class="timeline-title">${a.tipo} - ${formatMoney(a.valor)}</div>
         <div class="timeline-desc">${a.atendente} ${a.temPEP ? '- PEP identificado' : ''} <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : 'N\u00c3O COMUNICAR'}</span></div>
       </div>
