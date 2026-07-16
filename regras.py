@@ -17,7 +17,7 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
 
     # Soma pontos das situações suspeitas marcadas
     for situacao in obter_situacoes():
-        if dados.get(f"suspeita_{situacao.chave}", False):
+        if dados.get(f"suspeita_{situacao.chave}") == "Sim":
             pontuacao_total += situacao.pontuacao
 
     if dados.get("pep", False):
@@ -80,7 +80,7 @@ def _regra_indicios_lavagem(dados: Dict) -> Tuple[bool, str, int]:
     Regra 1: Se houver indícios de lavagem de dinheiro -> COMUNICAR
     Pontuação já contabilizada via situacao.indicios_lavagem
     """
-    if dados.get("suspeita_indicios_lavagem", False):
+    if dados.get("suspeita_indicios_lavagem") == "Sim":
         return True, "Indícios de lavagem de dinheiro identificados", 0
     return False, "", 0
 
@@ -103,8 +103,8 @@ def _regra_pep_inconsistencia(dados: Dict) -> Tuple[bool, str, int]:
     Pontuação já contabilizada via situacoes (documentacao_inconsistente, resistencia_documentos)
     """
     pep = dados.get("pep", False)
-    doc_inconsistente = dados.get("suspeita_documentacao_inconsistente", False)
-    resistencia = dados.get("suspeita_resistencia_documentos", False)
+    doc_inconsistente = dados.get("suspeita_documentacao_inconsistente") == "Sim"
+    resistencia = dados.get("suspeita_resistencia_documentos") == "Sim"
     if pep and (doc_inconsistente or resistencia):
         return True, "PEP identificado com inconsistência documental", 0
     return False, "", 0
@@ -115,7 +115,7 @@ def _regra_tres_ou_mais_situacoes(dados: Dict) -> Tuple[bool, str, int]:
     Regra 4: Três ou mais situações suspeitas marcadas -> COMUNICAR
     """
     situacoes = obter_situacoes()
-    marcadas = sum(1 for s in situacoes if dados.get(f"suspeita_{s.chave}", False))
+    marcadas = sum(1 for s in situacoes if dados.get(f"suspeita_{s.chave}") == "Sim")
     if marcadas >= 3:
         return True, f"{marcadas} situações suspeitas identificadas (mínimo: 3)", 0
     return False, "", 0

@@ -144,7 +144,7 @@ def gerar_relatorio(
 
     elementos.append(Paragraph("Situações Suspeitas", estilo_subtitulo))
     for situacao in obter_situacoes():
-        marcado = dados.get(f"suspeita_{situacao.chave}", False)
+        marcado = dados.get(f"suspeita_{situacao.chave}") == "Sim"
         texto = f"{'✔' if marcado else '☐'} {situacao.texto}"
         elementos.append(Paragraph(texto, estilo_normal))
 

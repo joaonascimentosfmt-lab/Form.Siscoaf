@@ -576,26 +576,51 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         ctk.CTkLabel(
             card,
-            text="Marque todas as situações identificadas:",
+            text="Selecione Sim ou Não para cada situação:",
             font=("Segoe UI", 11),
             text_color=COR_SUBTEXTO,
         ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
         r += 1
 
-        self._suspeitas_vars: Dict[str, ctk.BooleanVar] = {}
+        self._suspeitas_vars: Dict[str, ctk.StringVar] = {}
         for situacao in obter_situacoes():
-            var = ctk.BooleanVar(value=False)
+            var = ctk.StringVar(value="Não")
             self._suspeitas_vars[situacao.chave] = var
-            cb = ctk.CTkCheckBox(
-                card,
+
+            frame = ctk.CTkFrame(card, fg_color="transparent")
+            frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=1)
+
+            ctk.CTkLabel(
+                frame,
                 text=situacao.texto,
-                variable=var,
                 font=("Segoe UI", 12),
                 text_color=COR_TEXTO,
+                anchor="w",
+                width=300,
+            ).pack(side="left", padx=(0, 12))
+
+            rb_sim = ctk.CTkRadioButton(
+                frame,
+                text="Sim",
+                variable=var,
+                value="Sim",
+                font=("Segoe UI", 11),
                 fg_color=COR_PRIMARIA,
                 hover_color="#1B5E20",
             )
-            cb.grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=1)
+            rb_sim.pack(side="left", padx=(0, 8))
+
+            rb_nao = ctk.CTkRadioButton(
+                frame,
+                text="Não",
+                variable=var,
+                value="Não",
+                font=("Segoe UI", 11),
+                fg_color=COR_PRIMARIA,
+                hover_color="#1B5E20",
+            )
+            rb_nao.pack(side="left")
+
             r += 1
 
         return linha + 1
@@ -706,7 +731,10 @@ class AnalisadorSISCOAF(ctk.CTk):
         for s in obter_situacoes():
             chave = f"suspeita_{s.chave}"
             if chave in dados:
-                self._suspeitas_vars[s.chave].set(dados[chave])
+                val = dados[chave]
+                if isinstance(val, bool):
+                    val = "Sim" if val else "Não"
+                self._suspeitas_vars[s.chave].set(val)
         if "observacoes" in dados:
             self._observacoes.delete("1.0", "end")
             self._observacoes.insert("1.0", dados["observacoes"])
@@ -780,7 +808,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._fracionado_var.set("Não")
         self._relacionadas_var.set("Não")
         for var in self._suspeitas_vars.values():
-            var.set(False)
+            var.set("Não")
         while self._partes:
             p = self._partes.pop()
             p["frame"].destroy()
