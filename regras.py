@@ -9,9 +9,17 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
     motivos: List[str] = []
     pontuacao_total = 0
 
+    tem_situacao_marcada = False
     for situacao in obter_situacoes():
         if dados.get(f"suspeita_{situacao.chave}") == "Sim":
+            tem_situacao_marcada = True
             pontuacao_total += situacao.pontuacao
+
+    if tem_situacao_marcada:
+        marcadas = sum(1 for s in obter_situacoes() if dados.get(f"suspeita_{s.chave}") == "Sim")
+        motivos.append(f"{marcadas} indicio(s) de suspeita assinalado(s)")
+        resultado = "COMUNICAR"
+        return resultado, motivos, pontuacao_total
 
     if dados.get("pep", False):
         pontuacao_total += PONTOS.pep
@@ -21,19 +29,10 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
         motivos.append(motivo)
     pontuacao_total += pontos
 
-    comunicar, motivo, pontos = _regra_tres_ou_mais_situacoes(dados)
-    if comunicar:
-        motivos.append(motivo)
-
     comunicar, motivo, pontos = _regra_docs_partes(dados)
     if comunicar:
         motivos.append(motivo)
     pontuacao_total += pontos
-
-    if pontuacao_total >= PONTOS.limite_comunicacao:
-        motivo = f"Pontuação total ({pontuacao_total}) atingiu o limite mínimo ({PONTOS.limite_comunicacao})"
-        if motivo not in motivos:
-            motivos.append(motivo)
 
     if motivos:
         resultado = "COMUNICAR"
@@ -49,14 +48,6 @@ def _regra_especie_acima_limite(dados: Dict) -> Tuple[bool, str, int]:
     if especie and valor_especie > LIMITE_ESPECIE:
         pontos = PONTOS.especie
         return True, f"Pagamento em espécie de R$ {valor_especie:,.2f} acima do limite de R$ {LIMITE_ESPECIE:,.2f}", pontos
-    return False, "", 0
-
-
-def _regra_tres_ou_mais_situacoes(dados: Dict) -> Tuple[bool, str, int]:
-    situacoes = obter_situacoes()
-    marcadas = sum(1 for s in situacoes if dados.get(f"suspeita_{s.chave}") == "Sim")
-    if marcadas >= 3:
-        return True, f"{marcadas} situações suspeitas identificadas (mínimo: 3)", 0
     return False, "", 0
 
 

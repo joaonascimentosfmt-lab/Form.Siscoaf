@@ -941,20 +941,20 @@ function aplicarRegras(d) {
   const motivos = [];
   let pts = 0;
 
-  SITUACOES.forEach(s => { if (d['suspeita_' + s.chave] === 'Sim') pts += s.pts; });
+  const marcadas = SITUACOES.filter(s => d['suspeita_' + s.chave] === 'Sim');
+  marcadas.forEach(s => pts += s.pts);
+  if (marcadas.length > 0) {
+    motivos.push(`${marcadas.length} indicio(s) de suspeita assinalado(s)`);
+    return { resultado: 'COMUNICAR', motivos, pontuacao: pts };
+  }
+
   if (d.pep) pts += SCORING.pep;
 
-  // Regra 1: Espécie acima do limite
   if (d.pagamento_especie && d.valor_especie > LIMITE_ESPECIE) {
     pts += SCORING.especie;
     motivos.push(`Pagamento em espécie de ${formatMoney(d.valor_especie)} acima do limite de ${formatMoney(LIMITE_ESPECIE)}`);
   }
 
-  // Regra 2: Múltiplos artigos assinalados
-  const marcadas = SITUACOES.filter(s => d['suspeita_' + s.chave] === 'Sim').length;
-  if (marcadas >= 3) motivos.push(`${marcadas} situações suspeitas identificadas (mínimo: 3)`);
-
-  // Regra 3: Documentação das partes incompleta
   const partes = d.partes || [];
   const chavesMap = {
     PF: ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'],
@@ -966,11 +966,6 @@ function aplicarRegras(d) {
   if (partes.length > 0 && !todasDocsCompletas) {
     pts += SCORING.docs_incompletas || 2;
     motivos.push('Documentação de parte(s) do ato incompleta');
-  }
-
-  if (pts >= SCORING.limite_comunicacao) {
-    const msg = `Pontuação total (${pts}) atingiu o limite mínimo (${SCORING.limite_comunicacao})`;
-    if (!motivos.includes(msg)) motivos.push(msg);
   }
 
   const resultado = motivos.length > 0 ? 'COMUNICAR' : 'NAO_COMUNICAR';
