@@ -93,10 +93,9 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         linha = 0
         linha = self._secao_cabecalho(scroll, linha)
-        linha = self._secao_dados_ato(scroll, linha)
-        linha = self._secao_pep(scroll, linha)
         linha = self._secao_partes(scroll, linha)
-        linha = self._secao_origem_recursos(scroll, linha)
+        linha = self._secao_pep(scroll, linha)
+        linha = self._secao_dados_ato(scroll, linha)
         linha = self._secao_pagamento(scroll, linha)
         linha = self._secao_situacoes_suspeitas(scroll, linha)
         linha = self._secao_observacoes(scroll, linha)
@@ -491,37 +490,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 partes.append(item)
         return partes
 
-    def _secao_origem_recursos(self, parent, linha: int) -> int:
-        card = self._card(parent, "Origem dos recursos", linha)
-        r = 1
 
-        frm_origem = ctk.CTkFrame(card, fg_color="transparent")
-        frm_origem.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
-        frm_origem.grid_columnconfigure((0, 1), weight=1)
-
-        ctk.CTkLabel(frm_origem, text="Origem identificada?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
-        self._origem_var = ctk.StringVar(value="Sim")
-        frm_r1 = ctk.CTkFrame(frm_origem, fg_color="transparent")
-        frm_r1.grid(row=1, column=0, sticky="w")
-        ctk.CTkRadioButton(frm_r1, text="Sim", variable=self._origem_var, value="Sim").pack(side="left", padx=(0, 15))
-        ctk.CTkRadioButton(frm_r1, text="Não", variable=self._origem_var, value="Não").pack(side="left")
-
-        ctk.CTkLabel(frm_origem, text="Doc. comprobatória?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=1, sticky="w")
-        self._doc_var = ctk.StringVar(value="Sim")
-        frm_r2 = ctk.CTkFrame(frm_origem, fg_color="transparent")
-        frm_r2.grid(row=1, column=1, sticky="w")
-        ctk.CTkRadioButton(frm_r2, text="Sim", variable=self._doc_var, value="Sim").pack(side="left", padx=(0, 15))
-        ctk.CTkRadioButton(frm_r2, text="Não", variable=self._doc_var, value="Não").pack(side="left")
-        r += 1
-
-        ctk.CTkLabel(card, text="Forma de pagamento declarada:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        r += 1
-        self._forma_declarada = ctk.CTkComboBox(card, values=["", "TED", "PIX", "Transferência Bancária", "Financiamento", "Consórcio", "Recursos Próprios"], state="readonly", width=250)
-        self._forma_declarada.set("")
-        self._forma_declarada.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 10))
-        r += 1
-
-        return linha + 1
 
     def _secao_pagamento(self, parent, linha: int) -> int:
         card = self._card(parent, "Forma de pagamento", linha)
@@ -544,24 +513,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._especie_frame.grid_remove()
         r += 1
 
-        ctk.CTkLabel(card, text="Pagamento fracionado?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        r += 1
-        self._fracionado_var = ctk.StringVar(value="Não")
-        frm_frac = ctk.CTkFrame(card, fg_color="transparent")
-        frm_frac.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 6))
-        ctk.CTkRadioButton(frm_frac, text="Sim", variable=self._fracionado_var, value="Sim").pack(side="left", padx=(0, 20))
-        ctk.CTkRadioButton(frm_frac, text="Não", variable=self._fracionado_var, value="Não").pack(side="left")
-        r += 1
-
-        ctk.CTkLabel(card, text="Várias operações relacionadas?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        r += 1
-        self._relacionadas_var = ctk.StringVar(value="Não")
-        frm_rel = ctk.CTkFrame(card, fg_color="transparent")
-        frm_rel.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 6))
-        ctk.CTkRadioButton(frm_rel, text="Sim", variable=self._relacionadas_var, value="Sim").pack(side="left", padx=(0, 20))
-        ctk.CTkRadioButton(frm_rel, text="Não", variable=self._relacionadas_var, value="Não").pack(side="left")
-        r += 1
-
         return linha + 1
 
     def _toggle_especie(self):
@@ -571,12 +522,12 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._especie_frame.grid_remove()
 
     def _secao_situacoes_suspeitas(self, parent, linha: int) -> int:
-        card = self._card(parent, "7. Indícios de suspeita (Art. 155-A)", linha)
+        card = self._card(parent, "4. Indícios de suspeita", linha)
         r = 1
 
         ctk.CTkLabel(
             card,
-            text="Selecione Sim ou Não para cada situação:",
+            text="Selecione Sim ou Não para cada situação (Provimento CN n. 149/2023, incluído pelo Provimento CN n. 161/2024):",
             font=("Segoe UI", 11),
             text_color=COR_SUBTEXTO,
         ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
@@ -587,35 +538,47 @@ class AnalisadorSISCOAF(ctk.CTk):
             var = ctk.StringVar(value="Não")
             self._suspeitas_vars[situacao.chave] = var
 
-            import re
-            match = re.match(r'^(Art\.\s*[^,]+(?:,\s*[^-\s]+)?(?:,?\s*[IVXLCDM]+)?)\s*-\s*(.+)', situacao.texto)
-            artigo = match.group(1) if match else ""
-            descricao = match.group(2) if match else situacao.texto
-
             frame = ctk.CTkFrame(card, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
             frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=4)
             frame.grid_columnconfigure(0, weight=1)
 
+            top = ctk.CTkFrame(frame, fg_color="transparent")
+            top.grid(row=0, column=0, sticky="ew", padx=10, pady=(8, 0))
+            top.grid_columnconfigure(1, weight=1)
             ctk.CTkLabel(
-                frame,
-                text=artigo,
+                top,
+                text=f"{situacao.codigo}",
+                font=("Segoe UI", 9, "bold"),
+                text_color="#888",
+            ).grid(row=0, column=0, sticky="w", padx=(0, 6))
+            ctk.CTkLabel(
+                top,
+                text=situacao.artigo,
                 font=("Segoe UI", 11, "bold"),
                 text_color=COR_PRIMARIA,
                 anchor="w",
-            ).grid(row=0, column=0, sticky="w", padx=10, pady=(8, 0))
+            ).grid(row=0, column=1, sticky="w")
 
             ctk.CTkLabel(
                 frame,
-                text=descricao,
-                font=("Segoe UI", 11),
+                text=situacao.texto,
+                font=("Segoe UI", 10),
                 text_color=COR_TEXTO,
                 anchor="w",
                 wraplength=500,
                 justify="left",
-            ).grid(row=1, column=0, sticky="w", padx=10, pady=(2, 4))
+            ).grid(row=1, column=0, sticky="w", padx=10, pady=(2, 2))
+
+            ctk.CTkLabel(
+                frame,
+                text="CNJ - Provimento CN n. 149/2023 (incluído pelo Provimento CN n. 161, de 11.3.2024)",
+                font=("Segoe UI", 8),
+                text_color="#999",
+                anchor="w",
+            ).grid(row=2, column=0, sticky="w", padx=10, pady=(0, 4))
 
             frm_radio = ctk.CTkFrame(frame, fg_color="transparent")
-            frm_radio.grid(row=2, column=0, sticky="w", padx=10, pady=(0, 8))
+            frm_radio.grid(row=3, column=0, sticky="w", padx=10, pady=(0, 8))
 
             ctk.CTkRadioButton(
                 frm_radio,
@@ -667,13 +630,8 @@ class AnalisadorSISCOAF(ctk.CTk):
             "pep_nome": self._pep_nome.get(),
             "pep_cargo": self._pep_cargo.get(),
             "pep_cidade": self._pep_cidade.get(),
-            "origem_identificada": self._origem_var.get() == "Sim",
-            "doc_comprobatoria": self._doc_var.get() == "Sim",
-            "forma_declarada": self._forma_declarada.get(),
             "pagamento_especie": self._especie_var.get() == "Sim",
             "valor_especie": validar_valor(self._valor_especie.get()) if self._especie_var.get() == "Sim" else 0.0,
-            "pagamento_fracionado": self._fracionado_var.get() == "Sim",
-            "operacoes_relacionadas": self._relacionadas_var.get() == "Sim",
             "observacoes": self._observacoes.get("1.0", "end-1c"),
         }
         if result["tipo_ato"] == "Procuração":
@@ -729,12 +687,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "pep_cidade" in dados:
             self._pep_cidade.delete(0, "end")
             self._pep_cidade.insert(0, dados["pep_cidade"])
-        if "origem_identificada" in dados:
-            self._origem_var.set("Sim" if dados["origem_identificada"] else "Não")
-        if "doc_comprobatoria" in dados:
-            self._doc_var.set("Sim" if dados["doc_comprobatoria"] else "Não")
-        if "forma_declarada" in dados:
-            self._forma_declarada.set(dados["forma_declarada"])
         if "pagamento_especie" in dados:
             self._especie_var.set("Sim" if dados["pagamento_especie"] else "Não")
             self._toggle_especie()
@@ -742,10 +694,6 @@ class AnalisadorSISCOAF(ctk.CTk):
             val = dados["valor_especie"]
             self._valor_especie.delete(0, "end")
             self._valor_especie.insert(0, f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-        if "pagamento_fracionado" in dados:
-            self._fracionado_var.set("Sim" if dados["pagamento_fracionado"] else "Não")
-        if "operacoes_relacionadas" in dados:
-            self._relacionadas_var.set("Sim" if dados["operacoes_relacionadas"] else "Não")
         for s in obter_situacoes():
             chave = f"suspeita_{s.chave}"
             if chave in dados:
@@ -817,14 +765,9 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_nome.delete(0, "end")
         self._pep_cargo.delete(0, "end")
         self._pep_cidade.delete(0, "end")
-        self._origem_var.set("Sim")
-        self._doc_var.set("Sim")
-        self._forma_declarada.set("")
         self._especie_var.set("Não")
         self._toggle_especie()
         self._valor_especie.delete(0, "end")
-        self._fracionado_var.set("Não")
-        self._relacionadas_var.set("Não")
         for var in self._suspeitas_vars.values():
             var.set("Não")
         while self._partes:

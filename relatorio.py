@@ -130,22 +130,15 @@ def gerar_relatorio(
         _adicionar_campo(elementos, "Cargo PEP", dados.get("pep_cargo", ""), estilo_normal)
         _adicionar_campo(elementos, "Cidade PEP", dados.get("pep_cidade", ""), estilo_normal)
 
-    elementos.append(Paragraph("Origem dos Recursos", estilo_subtitulo))
-    _adicionar_campo(elementos, "Origem identificada", "Sim" if dados.get("origem_identificada", False) else "Não", estilo_normal)
-    _adicionar_campo(elementos, "Documentação comprobatória", "Sim" if dados.get("doc_comprobatoria", False) else "Não", estilo_normal)
-    _adicionar_campo(elementos, "Forma de pagamento declarada", dados.get("forma_declarada", "Não informada"), estilo_normal)
-
     elementos.append(Paragraph("Forma de Pagamento", estilo_subtitulo))
     _adicionar_campo(elementos, "Pagamento em espécie", "Sim" if dados.get("pagamento_especie", False) else "Não", estilo_normal)
     if dados.get("pagamento_especie", False):
         _adicionar_campo(elementos, "Valor em espécie", formatar_moeda(dados.get("valor_especie", 0.0)), estilo_normal)
-    _adicionar_campo(elementos, "Pagamento fracionado", "Sim" if dados.get("pagamento_fracionado", False) else "Não", estilo_normal)
-    _adicionar_campo(elementos, "Operações relacionadas", "Sim" if dados.get("operacoes_relacionadas", False) else "Não", estilo_normal)
 
-    elementos.append(Paragraph("Situações Suspeitas", estilo_subtitulo))
+    elementos.append(Paragraph("Indícios de Suspeita (Provimento CN n. 149/2023)", estilo_subtitulo))
     for situacao in obter_situacoes():
         marcado = dados.get(f"suspeita_{situacao.chave}") == "Sim"
-        texto = f"{'✔' if marcado else '☐'} {situacao.texto}"
+        texto = f"{'✔' if marcado else '☐'} [{situacao.codigo}] {situacao.artigo}: {situacao.texto}"
         elementos.append(Paragraph(texto, estilo_normal))
 
     observacoes = dados.get("observacoes", "")
