@@ -154,6 +154,10 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._poderes_frame.grid()
         else:
             self._poderes_frame.grid_remove()
+        if escolha in ("Escritura diversa", "Procuração"):
+            self._livro_folha_frame.grid()
+        else:
+            self._livro_folha_frame.grid_remove()
 
     def _secao_cabecalho(self, parent, linha: int) -> int:
         card = self._card(parent, "Identificação do atendimento", linha)
@@ -170,6 +174,19 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._protocolo.grid(row=1, column=1, sticky="ew", padx=4)
         self._ordem_servico = ctk.CTkEntry(frm, placeholder_text="Nº OS", width=150)
         self._ordem_servico.grid(row=1, column=2, sticky="ew", padx=4)
+        r += 1
+
+        self._livro_folha_frame = ctk.CTkFrame(card, fg_color="transparent")
+        self._livro_folha_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 10))
+        self._livro_folha_frame.grid_columnconfigure((0, 1), weight=1)
+        ctk.CTkLabel(self._livro_folha_frame, text="Livro:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(self._livro_folha_frame, text="Folha:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=1, sticky="w")
+        self._livro = ctk.CTkEntry(self._livro_folha_frame, placeholder_text="Nº do livro", width=120)
+        self._livro.grid(row=1, column=0, sticky="w", padx=(0, 10))
+        self._folha = ctk.CTkEntry(self._livro_folha_frame, placeholder_text="Nº da folha", width=120)
+        self._folha.grid(row=1, column=1, sticky="w")
+        self._livro_folha_frame.grid_remove()
+
         return linha + 1
 
     def _secao_dados_ato(self, parent, linha: int) -> int:
@@ -620,6 +637,8 @@ class AnalisadorSISCOAF(ctk.CTk):
             "funcionario": self._funcionario.get().strip(),
             "protocolo": self._protocolo.get().strip(),
             "ordem_servico": self._ordem_servico.get().strip(),
+            "livro": self._livro.get().strip(),
+            "folha": self._folha.get().strip(),
             "tipo_ato": self._tipo_ato.get(),
             "valor": validar_valor(self._valor.get()) or 0.0,
             "forma_pagamento": self._forma_pagamento.get(),
@@ -653,6 +672,12 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "ordem_servico" in dados:
             self._ordem_servico.delete(0, "end")
             self._ordem_servico.insert(0, dados["ordem_servico"])
+        if "livro" in dados:
+            self._livro.delete(0, "end")
+            self._livro.insert(0, dados["livro"])
+        if "folha" in dados:
+            self._folha.delete(0, "end")
+            self._folha.insert(0, dados["folha"])
         if "tipo_ato" in dados:
             self._tipo_ato.set(dados["tipo_ato"])
             self._ao_tipo_ato(dados["tipo_ato"])
@@ -753,6 +778,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._funcionario.delete(0, "end")
         self._protocolo.delete(0, "end")
         self._ordem_servico.delete(0, "end")
+        self._livro.delete(0, "end")
+        self._folha.delete(0, "end")
         self._tipo_ato.set("Compra e venda")
         self._ao_tipo_ato("Compra e venda")
         self._valor.delete(0, "end")

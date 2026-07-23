@@ -60,11 +60,13 @@ def gerar_relatorio(
     elementos.append(Paragraph(f"Pontuação total: {pontuacao}", estilo_normal))
     elementos.append(Spacer(1, 10 * mm))
 
-    if any(dados.get(k) for k in ["funcionario", "protocolo", "ordem_servico"]):
+    if any(dados.get(k) for k in ["funcionario", "protocolo", "ordem_servico", "livro", "folha"]):
         elementos.append(Paragraph("Identificação do Atendimento", estilo_subtitulo))
         _adicionar_campo(elementos, "Funcionário", dados.get("funcionario", ""), estilo_normal)
         _adicionar_campo(elementos, "Protocolo", dados.get("protocolo", ""), estilo_normal)
         _adicionar_campo(elementos, "Ordem de serviço", dados.get("ordem_servico", ""), estilo_normal)
+        _adicionar_campo(elementos, "Livro", dados.get("livro", ""), estilo_normal)
+        _adicionar_campo(elementos, "Folha", dados.get("folha", ""), estilo_normal)
 
     elementos.append(Paragraph("Dados do Ato", estilo_subtitulo))
     _adicionar_campo(elementos, "Tipo do ato", dados.get("tipo_ato", ""), estilo_normal)
@@ -136,10 +138,14 @@ def gerar_relatorio(
         _adicionar_campo(elementos, "Valor em espécie", formatar_moeda(dados.get("valor_especie", 0.0)), estilo_normal)
 
     elementos.append(Paragraph("Indícios de Suspeita (Provimento CN n. 149/2023)", estilo_subtitulo))
+    tem_marcados = False
     for situacao in obter_situacoes():
-        marcado = dados.get(f"suspeita_{situacao.chave}") == "Sim"
-        texto = f"{'✔' if marcado else '☐'} [{situacao.codigo}] {situacao.artigo}: {situacao.texto}"
-        elementos.append(Paragraph(texto, estilo_normal))
+        if dados.get(f"suspeita_{situacao.chave}") == "Sim":
+            tem_marcados = True
+            texto = f"✔ [{situacao.codigo}] {situacao.artigo}: {situacao.texto}"
+            elementos.append(Paragraph(texto, estilo_normal))
+    if not tem_marcados:
+        elementos.append(Paragraph("Nenhum indicio de suspeita assinalado.", estilo_normal))
 
     observacoes = dados.get("observacoes", "")
     if observacoes:

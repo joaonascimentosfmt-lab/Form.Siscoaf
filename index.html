@@ -72,6 +72,7 @@
   .topbar button:hover { opacity: .85; }
   .topbar .btn-primary { background: var(--primary); color: #fff; }
   .topbar .btn-historic { background: #5C6BC0; color: #fff; }
+  .topbar .btn-outlined { background: transparent; color: #5C6BC0; border: 2px solid #5C6BC0; padding: 5px 16px; }
   .content {
     flex: 1; padding: 20px; overflow-y: auto;
   }
@@ -241,6 +242,8 @@
 <div class="main">
   <div class="topbar">
     <h2>Nova Análise</h2>
+    <span id="pepStatusDB" style="font-size:12px;color:var(--muted);"></span>
+    <button class="btn-outlined" onclick="document.getElementById('filePEP').click()">Carregar base PEP</button>
     <button class="btn-historic" onclick="abrirHistorico()">Histórico</button>
     <button onclick="limparFormulario()">Limpar</button>
   </div>
@@ -255,6 +258,12 @@
       <div class="field"><label>Protocolo do serviço</label><input type="text" id="protocolo" placeholder="Nº protocolo"></div>
       <div class="field"><label>Ordem de serviço</label><input type="text" id="ordem_servico" placeholder="Nº OS"></div>
     </div>
+    <div id="livroFolhaSection" style="display:none;margin-top:8px;">
+      <div class="row">
+        <div class="field"><label>Livro</label><input type="text" id="livro" placeholder="Nº do livro"></div>
+        <div class="field"><label>Folha</label><input type="text" id="folha" placeholder="Nº da folha"></div>
+      </div>
+    </div>
   </div>
 
   <!-- 1. Identificação dos envolvidos -->
@@ -263,11 +272,6 @@
 
     <h3 style="font-size:14px;margin:6px 0 8px;color:var(--text);">Partes do ato</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Adicione compradores, vendedores, procuradores ou representantes legais (PF ou PJ).</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-      <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#5C6BC0;color:#fff;" onclick="document.getElementById('filePEP').click()">📂 Carregar base PEP</button>
-      <span id="pepStatusDB" style="font-size:12px;color:var(--muted);align-self:center;"></span>
-    </div>
-    <input type="file" id="filePEP" accept=".csv" style="display:none" onchange="carregarPEPDB(event)">
     <div id="partesContainer"></div>
     <button style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;margin-top:4px;" onclick="adicionarParte()">+ Adicionar parte</button>
 
@@ -385,6 +389,7 @@
 
 <div class="status" id="statusBar">Pronto</div>
 </div>
+<input type="file" id="filePEP" accept=".csv" style="display:none" onchange="carregarPEPDB(event)">
 
 <!-- Modal resultado -->
 <div class="modal-overlay" id="modalResultado">
@@ -532,9 +537,17 @@ function init() {
   carregarHistorico();
 }
 
+function mostrarLivroFolha() {
+  const val = document.getElementById('tipo_ato').value;
+  const show = val === 'Escritura diversa' || val === 'Procuração';
+  document.getElementById('livroFolhaSection').style.display = show ? 'block' : 'none';
+}
+
 function togglePoderes() {
   const section = document.getElementById('poderesSection');
-  section.style.display = document.getElementById('tipo_ato').value === 'Procuração' ? 'block' : 'none';
+  const isProc = document.getElementById('tipo_ato').value === 'Procuração';
+  section.style.display = isProc ? 'block' : 'none';
+  mostrarLivroFolha();
 }
 
 // Partes do ato
@@ -768,7 +781,7 @@ function adicionarParte(dados) {
   const container = $('partesContainer');
   const div = document.createElement('div');
   div.className = 'parte-row';
-  div.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
+  div.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;position:relative;';
   const isPJ = dados?.tipo === 'PJ';
   const docs = getDocsConfig(isPJ);
   div.innerHTML = `
@@ -786,8 +799,8 @@ function adicionarParte(dados) {
       </select>
       <label style="font-size:11px;display:flex;align-items:center;gap:3px;white-space:nowrap;"><input type="checkbox" class="parte-representado" ${dados?.representado?'checked':''} onchange="toggleProcurador(this)"> Rep. Procuração</label>
       <span class="pep-status" style="font-size:10px;min-width:100px;"></span>
-      <button onclick="this.parentElement.parentElement.remove();" style="padding:3px 8px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff;">X</button>
     </div>
+    <button onclick="this.parentElement.remove();" style="position:absolute;top:4px;right:4px;padding:2px 6px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:transparent;color:#999;line-height:1;" title="Remover parte"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
     <div class="procurador-fields" style="display:${dados?.representado?'flex':'none'};gap:6px;width:100%;margin-top:3px;padding:4px 8px;">
       <input type="text" placeholder="Nome do Procurador" class="proc-nome" style="flex:1.5;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;" value="${dados?.proc_nome||''}">
       <input type="text" placeholder="CPF do Procurador" class="proc-cpf" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;" value="${dados?.proc_cpf||''}">
@@ -880,6 +893,8 @@ function coletarDados() {
     funcionario: $('funcionario').value.trim(),
     protocolo: $('protocolo').value.trim(),
     ordem_servico: $('ordem_servico').value.trim(),
+    livro: $('livro').value.trim(),
+    folha: $('folha').value.trim(),
     tipo_ato: $('tipo_ato').value,
     valor: parseValor($('valor').value),
     cidade: $('cidade').value,
@@ -1021,7 +1036,7 @@ function gerarPDF() {
   <div class="resultado">${txtRes}</div>
   <div class="score">Pontuação total: ${pontuacaoCorrente}</div>
 
-  ${dadosCorrentes.funcionario || dadosCorrentes.protocolo || dadosCorrentes.ordem_servico ? `<h2>Identificação do atendimento</h2><table>${dadosCorrentes.funcionario ? '<tr><td class="label">Funcionário:</td><td>' + dadosCorrentes.funcionario + '</td></tr>' : ''}${dadosCorrentes.protocolo ? '<tr><td class="label">Protocolo:</td><td>' + dadosCorrentes.protocolo + '</td></tr>' : ''}${dadosCorrentes.ordem_servico ? '<tr><td class="label">Ordem de serviço:</td><td>' + dadosCorrentes.ordem_servico + '</td></tr>' : ''}</table>` : ''}
+  ${dadosCorrentes.funcionario || dadosCorrentes.protocolo || dadosCorrentes.ordem_servico || dadosCorrentes.livro || dadosCorrentes.folha ? `<h2>Identificação do atendimento</h2><table>${dadosCorrentes.funcionario ? '<tr><td class="label">Funcionário:</td><td>' + dadosCorrentes.funcionario + '</td></tr>' : ''}${dadosCorrentes.protocolo ? '<tr><td class="label">Protocolo:</td><td>' + dadosCorrentes.protocolo + '</td></tr>' : ''}${dadosCorrentes.ordem_servico ? '<tr><td class="label">Ordem de serviço:</td><td>' + dadosCorrentes.ordem_servico + '</td></tr>' : ''}${dadosCorrentes.livro ? '<tr><td class="label">Livro:</td><td>' + dadosCorrentes.livro + '</td></tr>' : ''}${dadosCorrentes.folha ? '<tr><td class="label">Folha:</td><td>' + dadosCorrentes.folha + '</td></tr>' : ''}</table>` : ''}
 
   <h2>Partes do ato</h2>
   <table>${(dadosCorrentes.partes||[]).map((p,i) => {
@@ -1052,12 +1067,14 @@ function gerarPDF() {
 
   <h2>4. Indícios de suspeita</h2>
   <table>`;
-  SITUACOES.forEach(s => {
-    const valor = dadosCorrentes['suspeita_' + s.chave];
-    const simNao = valor === 'Sim' ? 'Sim' : 'Não';
-    const cor = simNao === 'Sim' ? '#2E7D32' : '#888';
-    html += `<tr><td class="label" style="font-size:10px;">[${s.codigo}] ${s.artigo}</td><td style="color:${cor};font-weight:${simNao==='Sim'?'700':'400'}">${simNao}</td></tr>`;
-  });
+  const marcados = SITUACOES.filter(s => dadosCorrentes['suspeita_' + s.chave] === 'Sim');
+  if (marcados.length === 0) {
+    html += `<tr><td style="color:#888;font-style:italic;">Nenhum indicio de suspeita assinalado.</td></tr>`;
+  } else {
+    marcados.forEach(s => {
+      html += `<tr><td class="label" style="font-size:10px;">[${s.codigo}] ${s.artigo}</td><td style="color:#2E7D32;font-weight:700">Sim</td></tr>`;
+    });
+  }
   html += `</table>`;
 
   if (dadosCorrentes.outro_fato_texto) {
@@ -1126,8 +1143,11 @@ function preencherFormulario(d) {
   $('funcionario').value = d.funcionario || '';
   $('protocolo').value = d.protocolo || '';
   $('ordem_servico').value = d.ordem_servico || '';
+  $('livro').value = d.livro || '';
+  $('folha').value = d.folha || '';
   $('tipo_ato').value = d.tipo_ato || 'Compra e venda';
   togglePoderes();
+  mostrarLivroFolha();
   $('valor').value = d.valor ? fmtNum(d.valor) : '';
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
@@ -1171,8 +1191,11 @@ function limparFormulario() {
   $('funcionario').value = '';
   $('protocolo').value = '';
   $('ordem_servico').value = '';
+  $('livro').value = '';
+  $('folha').value = '';
   $('tipo_ato').value = 'Compra e venda';
   togglePoderes();
+  mostrarLivroFolha();
   $('valor').value = '';
   $('cidade').value = '';
   $('estado').value = 'SP';
