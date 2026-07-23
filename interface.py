@@ -571,7 +571,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._especie_frame.grid_remove()
 
     def _secao_situacoes_suspeitas(self, parent, linha: int) -> int:
-        card = self._card(parent, "Situações suspeitas", linha)
+        card = self._card(parent, "7. Indícios de suspeita (Art. 155-A)", linha)
         r = 1
 
         ctk.CTkLabel(
@@ -587,39 +587,57 @@ class AnalisadorSISCOAF(ctk.CTk):
             var = ctk.StringVar(value="Não")
             self._suspeitas_vars[situacao.chave] = var
 
-            frame = ctk.CTkFrame(card, fg_color="transparent")
-            frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=1)
+            import re
+            match = re.match(r'^(Art\.\s*[^,]+(?:,\s*[^-\s]+)?(?:,?\s*[IVXLCDM]+)?)\s*-\s*(.+)', situacao.texto)
+            artigo = match.group(1) if match else ""
+            descricao = match.group(2) if match else situacao.texto
+
+            frame = ctk.CTkFrame(card, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
+            frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=4)
+            frame.grid_columnconfigure(0, weight=1)
 
             ctk.CTkLabel(
                 frame,
-                text=situacao.texto,
-                font=("Segoe UI", 12),
+                text=artigo,
+                font=("Segoe UI", 11, "bold"),
+                text_color=COR_PRIMARIA,
+                anchor="w",
+            ).grid(row=0, column=0, sticky="w", padx=10, pady=(8, 0))
+
+            ctk.CTkLabel(
+                frame,
+                text=descricao,
+                font=("Segoe UI", 11),
                 text_color=COR_TEXTO,
                 anchor="w",
-                width=300,
-            ).pack(side="left", padx=(0, 12))
+                wraplength=500,
+                justify="left",
+            ).grid(row=1, column=0, sticky="w", padx=10, pady=(2, 4))
 
-            rb_sim = ctk.CTkRadioButton(
-                frame,
+            frm_radio = ctk.CTkFrame(frame, fg_color="transparent")
+            frm_radio.grid(row=2, column=0, sticky="w", padx=10, pady=(0, 8))
+
+            ctk.CTkRadioButton(
+                frm_radio,
                 text="Sim",
                 variable=var,
                 value="Sim",
-                font=("Segoe UI", 11),
-                fg_color=COR_PRIMARIA,
-                hover_color="#1B5E20",
-            )
-            rb_sim.pack(side="left", padx=(0, 8))
+                font=("Segoe UI", 11, "bold"),
+                fg_color="#CC0000",
+                text_color="#CC0000",
+                hover_color="#990000",
+            ).pack(side="left", padx=(0, 12))
 
-            rb_nao = ctk.CTkRadioButton(
-                frame,
+            ctk.CTkRadioButton(
+                frm_radio,
                 text="Não",
                 variable=var,
                 value="Não",
-                font=("Segoe UI", 11),
+                font=("Segoe UI", 11, "bold"),
                 fg_color=COR_PRIMARIA,
+                text_color=COR_PRIMARIA,
                 hover_color="#1B5E20",
-            )
-            rb_nao.pack(side="left")
+            ).pack(side="left")
 
             r += 1
 

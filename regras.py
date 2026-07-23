@@ -78,10 +78,10 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
 def _regra_indicios_lavagem(dados: Dict) -> Tuple[bool, str, int]:
     """
     Regra 1: Se houver indícios de lavagem de dinheiro -> COMUNICAR
-    Pontuação já contabilizada via situacao.indicios_lavagem
+    Art. 155-A, XVIII - quaisquer outras operações que possam configurar sérios indícios de LD/FTP
     """
-    if dados.get("suspeita_indicios_lavagem") == "Sim":
-        return True, "Indícios de lavagem de dinheiro identificados", 0
+    if dados.get("suspeita_outras_operacoes_indicios_ldftp") == "Sim":
+        return True, "Indícios de lavagem de dinheiro ou FT identificados (Art. 155-A, XVIII)", 0
     return False, "", 0
 
 
@@ -100,11 +100,12 @@ def _regra_especie_acima_limite(dados: Dict) -> Tuple[bool, str, int]:
 def _regra_pep_inconsistencia(dados: Dict) -> Tuple[bool, str, int]:
     """
     Regra 3: PEP + inconsistência documental -> COMUNICAR
-    Pontuação já contabilizada via situacoes (documentacao_inconsistente, resistencia_documentos)
+    Art. 155-A, VIII - resistência ao fornecimento de informação/documentação
+    Art. 155-A, IX - informação ou documentação falsa ou de difícil verificação
     """
     pep = dados.get("pep", False)
-    doc_inconsistente = dados.get("suspeita_documentacao_inconsistente") == "Sim"
-    resistencia = dados.get("suspeita_resistencia_documentos") == "Sim"
+    doc_inconsistente = dados.get("suspeita_informacao_documentacao_falsa") == "Sim"
+    resistencia = dados.get("suspeita_resistencia_fornecimento_info") == "Sim"
     if pep and (doc_inconsistente or resistencia):
         return True, "PEP identificado com inconsistência documental", 0
     return False, "", 0

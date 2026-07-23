@@ -478,7 +478,7 @@
     <div id="suspeitasContainer"></div>
     <div id="outroIndicioContainer" style="display:none;margin-top:8px;">
       <div class="field">
-        <label>Descreva o fato relevante:</label>
+        <label>Descreva a situação:</label>
         <textarea id="outroIndicioTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
       </div>
     </div>
@@ -566,18 +566,26 @@ const SCORING = Object.assign({
 SCORING.limite_comunicacao = _cfg.limite_comunicacao;
 
 const SITUACOES = [
-  { chave: 'resistencia_info', texto: 'Cliente demonstrou resistência em fornecer informações', pts: 3 },
-  { chave: 'ocultar_identidade', texto: 'Cliente tentou ocultar a identidade do verdadeiro interessado', pts: 4 },
-  { chave: 'interpostas_pessoas', texto: 'Utilização de interpostas pessoas ("laranjas")', pts: 3 },
-  { chave: 'sem_justificativa', texto: 'Operação sem justificativa econômica', pts: 2 },
-  { chave: 'valor_incompativel', texto: 'Valor incompatível com a capacidade financeira', pts: 2 },
-  { chave: 'operacoes_curto_periodo', texto: 'Diversas operações relacionadas em curto período', pts: 2 },
-  { chave: 'origem_nao_comprovada', texto: 'Recursos de origem não comprovada', pts: 3 },
-  { chave: 'especie_alto_valor', texto: 'Pagamento em espécie de alto valor', pts: 2 },
-  { chave: 'indicios_ocultacao', texto: 'Indícios de ocultação patrimonial', pts: 4 },
-  { chave: 'indicios_lavagem', texto: 'Indícios de lavagem de dinheiro', pts: 5 },
-  { chave: 'indicios_terrorismo', texto: 'Indícios de financiamento do terrorismo', pts: 5 },
-  { chave: 'outro_fato_relevante', texto: 'Outro fato relevante', pts: 2 },
+  { chave: 'nao_decorrer_ativ_usuais', texto: 'Art. 155-A, I - Aparentem não decorrer de atividades ou negócios usuais do cliente, de outros envolvidos ou do seu ramo de atuação', pts: 3 },
+  { chave: 'origem_fundamentacao_nao_aferivel', texto: 'Art. 155-A, II - Tenham origem ou fundamentação econômica ou legal não claramente aferíveis', pts: 3 },
+  { chave: 'incompativeis_patrimonio', texto: 'Art. 155-A, III - Se mostrem incompatíveis com o patrimônio ou com a capacidade econômico-financeira do cliente ou de outros envolvidos', pts: 3 },
+  { chave: 'dificil_identificacao_beneficiario', texto: 'Art. 155-A, IV - Envolvam difícil ou inviável identificação de beneficiário(s) final(is)', pts: 3 },
+  { chave: 'pessoa_juridica_gafi_alto_risco', texto: 'Art. 155-A, V - Se relacionem a pessoa jurídica domiciliada em jurisdição listada pelo Gafi como de alto risco ou com deficiências estratégicas em matéria de PLD/FTP', pts: 3 },
+  { chave: 'paises_rfb_tributacao_favorecida', texto: 'Art. 155-A, VI - Envolvam países ou dependências listados pela RFB como de tributação favorecida e/ou regime fiscal privilegiado', pts: 3 },
+  { chave: 'pj_socios_gafi', texto: 'Art. 155-A, VII - Se relacionem a pessoa jurídica cujos sócios, administradores, beneficiários finais, procuradores ou representantes legais mantenham domicílio em jurisdições consideradas pelo Gafi de alto risco', pts: 3 },
+  { chave: 'resistencia_fornecimento_info', texto: 'Art. 155-A, VIII - Apresentem, por parte de cliente ou demais envolvidos, resistência ao fornecimento de informação ou documentação solicitada', pts: 3 },
+  { chave: 'informacao_documentacao_falsa', texto: 'Art. 155-A, IX - Envolvam a prestação, por parte de cliente ou demais envolvidos, de informação ou documentação falsa ou de difícil ou onerosa verificação', pts: 4 },
+  { chave: 'complexas_onerosas_injustificadas', texto: 'Art. 155-A, X - Se mostrem injustificadamente mais complexas ou onerosas que de ordinário, mormente se isso puder dificultar o rastreamento de recursos ou a identificação de real propósito', pts: 3 },
+  { chave: 'sinais_carater_ficticio', texto: 'Art. 155-A, XI - Apresentem sinais de caráter fictício ou de relação com valores incompatíveis com os de mercado', pts: 4 },
+  { chave: 'clausulas_incompativeis_mercado', texto: 'Art. 155-A, XII - Envolvam cláusulas que estabeleçam condições incompatíveis com as praticadas no mercado', pts: 3 },
+  { chave: 'tentativa_burlar_controles', texto: 'Art. 155-A, XIII - Aparentem tentativa de burlar controles e registros exigidos pela legislação de PLD/FTP, inclusive mediante fracionamento ou pagamento em espécie, com título emitido ao portador ou por outros meios que dificultem a rastreabilidade', pts: 5 },
+  { chave: 'documento_estrangeiro_dificuldade', texto: 'Art. 155-A, XIV - Envolvam o registro de documento de procedência estrangeira que ofereçam dificuldade significativa para a compreensão do seu sentido jurídico no contexto da atividade notarial ou registral', pts: 3 },
+  { chave: 'substancial_ganho_capital', texto: 'Art. 155-A, XV - Revelem substancial ganho de capital em curto período', pts: 3 },
+  { chave: 'procuracao_amplos_poderes', texto: 'Art. 155-A, XVI - Envolvam lavratura ou utilização de instrumento de procuração que outorgue amplos poderes de administração, especialmente quando conferidos em caráter irrevogável ou irretratável ou isento de prestação de contas', pts: 4 },
+  { chave: 'aumento_capital_destoante', texto: 'Art. 155-A, XVII - Revelem operações de aumento de capital social que pareçam destoar dos efetivos atributos de valor, patrimônio ou outros aspectos relacionados às condições econômico-financeiras da sociedade', pts: 3 },
+  { chave: 'outras_operacoes_indicios_ldftp', texto: 'Art. 155-A, XVIII - Quaisquer outras operações, propostas de operação ou situações que possam configurar sérios indícios de práticas de LD/FTP ou de infrações que com elas se relacionem', pts: 4 },
+  { chave: 'emprego_nao_usual_pagamento_anonimo', texto: 'Art. 155-A, Parágrafo único, I - Revelem emprego não usual de meio ou forma de pagamento que possa viabilizar anonimato ou dificultar a rastreabilidade, como uso de valores anormalmente elevados em espécie, título ao portador ou ativo virtual não vinculado nominalmente', pts: 4 },
+  { chave: 'relacao_terrorismo', texto: 'Art. 155-A, Parágrafo único, II - Apresentem algum sinal de possível relação com práticas de terrorismo ou proliferação de armas de destruição em massa ou com seus financiamentos', pts: 5 },
 ];
 
 let dadosCorrentes = null;
@@ -591,20 +599,26 @@ function init() {
   const container = $('suspeitasContainer');
   SITUACOES.forEach(s => {
     const div = document.createElement('div');
-    div.className = 'radio-group';
-    div.style.marginBottom = '6px';
+    div.style.cssText = 'margin-bottom:8px;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;';
+    const match = s.texto.match(/^(Art\.\s*[^,]+(?:,\s*[^-\s]+)?(?:,?\s*[IVXLCDM]+)?)\s*-\s*(.+)/);
+    const artigo = match ? match[1] : '';
+    const descricao = match ? match[2] : s.texto;
     div.innerHTML = `
-      <span style="font-size:14px;margin-right:12px;min-width:280px;display:inline-block;">${s.texto}:</span>
-      <label style="margin:0 8px 0 0;"><input type="radio" name="suspeita_${s.chave}" value="Sim"> Sim</label>
-      <label><input type="radio" name="suspeita_${s.chave}" value="Não" checked> Não</label>
+      <div style="font-weight:600;font-size:12px;color:var(--primary);margin-bottom:3px;">${artigo}</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px;">${descricao}</div>
+      <div class="radio-group" style="gap:12px;">
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Sim"> <span style="color:#CC0000;font-weight:600;">Sim</span></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Não" checked> <span style="color:var(--success);font-weight:600;">Não</span></label>
+      </div>
     `;
     container.appendChild(div);
+    if (s.chave === 'outras_operacoes_indicios_ldftp') {
+      const radios = div.querySelectorAll('input[type="radio"]');
+      radios.forEach(r => r.addEventListener('change', function() {
+        $('outroIndicioContainer').style.display = this.value === 'Sim' ? 'block' : 'none';
+      }));
+    }
   });
-  // Toggle campo "Outro fato relevante"
-  const radiosOutro = document.querySelectorAll('input[name="suspeita_outro_fato_relevante"]');
-  radiosOutro.forEach(r => r.addEventListener('change', function() {
-    $('outroIndicioContainer').style.display = this.value === 'Sim' ? 'block' : 'none';
-  }));
   $('estado').value = 'SP';
   adicionarParte();
   adicionarParte();
@@ -1014,8 +1028,8 @@ function aplicarRegras(d) {
   SITUACOES.forEach(s => { if (d['suspeita_' + s.chave] === 'Sim') pts += s.pts; });
   if (d.pep) pts += SCORING.pep;
 
-  // Regra 1: Lavagem
-  if (d.suspeita_indicios_lavagem === 'Sim') { motivos.push('Indícios de lavagem de dinheiro identificados'); }
+  // Regra 1: Lavagem (Art. 155-A, XVIII)
+  if (d.suspeita_outras_operacoes_indicios_ldftp === 'Sim') { motivos.push('Indícios de lavagem de dinheiro ou FT identificados (Art. 155-A, XVIII)'); }
 
   // Regra 2: Espécie acima do limite
   if (d.pagamento_especie && d.valor_especie > LIMITE_ESPECIE) {
@@ -1044,10 +1058,10 @@ function aplicarRegras(d) {
     motivos.push('Pagamento fracionado identificado');
   }
 
-  // Regra 7: Operações relacionadas
-  if (d.suspeita_operacoes_curto_periodo === 'Sim') {
+  // Regra 7: Operações relacionadas (Art. 155-A, X)
+  if (d.suspeita_complexas_onerosas_injustificadas === 'Sim') {
     pts += SCORING.operacoes_relacionadas;
-    motivos.push('Diversas operações relacionadas em curto período');
+    motivos.push('Operações injustificadamente complexas ou onerosas (Art. 155-A, X)');
   }
 
   // Regra 8: Documentação das partes (verifica por tipo PF/PJ)
@@ -1088,10 +1102,10 @@ function aplicarRegras(d) {
     motivos.push('Comportamento incomum durante o atendimento');
   }
 
-  // Regra 13: Terrorismo
-  if (d.suspeita_indicios_terrorismo === 'Sim') {
+  // Regra 13: Terrorismo (Art. 155-A, Parágrafo único, II)
+  if (d.suspeita_relacao_terrorismo === 'Sim') {
     pts += SCORING.lavagem || 5;
-    motivos.push('Indícios de financiamento do terrorismo');
+    motivos.push('Indícios de relação com terrorismo ou financiamento do terrorismo (Art. 155-A, Parágrafo único, II)');
   }
 
   if (pts >= SCORING.limite_comunicacao) {
@@ -1331,7 +1345,7 @@ function preencherFormulario(d) {
     const el = document.querySelector(`input[name="suspeita_${s.chave}"][value="${val === 'Sim' ? 'Sim' : 'Não'}"]`);
     if (el) el.checked = true;
   });
-  if (d.suspeita_outro_fato_relevante === 'Sim') { $('outroIndicioContainer').style.display = 'block'; }
+  if (d.suspeita_outras_operacoes_indicios_ldftp === 'Sim') { $('outroIndicioContainer').style.display = 'block'; }
   $('outroIndicioTexto').value = d.outro_fato_texto || '';
   $('observacoes').value = d.observacoes || '';
   // Partes
