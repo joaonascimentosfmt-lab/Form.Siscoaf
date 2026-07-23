@@ -72,15 +72,20 @@ def obter_situacoes() -> List[SituacaoItem]:
         SituacaoItem(chave="cod_1397", codigo="1397", artigo="Art. 172 c/c art. 162, VI", texto="Art. 172 c/c art. 162, VI: Art. 172. O tabelião de notas, ou seu oficial de cumprimento, deve analisar com especial atenção, para fins de eventual comunicação à UIF na forma do art. 151, I, operações, propostas de operação ou situações relacionadas a quaisquer das hipóteses listadas no art. 162, quando envolverem escritura pública. Art. 162. [...] VI - registro de título no qual conste valor declarado de bem com diferença anormal em relação a outros valores a ele associados, como o de sua avaliação fiscal ou o valor patrimonial pelo qual tenha sido considerado para fins sucessórios ou de integralização de capital de sociedade, por exemplo.", pontuacao=2),
     ]
 
-TIPO_ATO_OPCOES = [
+TIPO_ATO_CATEGORIAS = [
+    "Escritura",
+    "Procuração",
+    "Protesto",
+    "Pessoa Jurídica",
+]
+
+ESCRITURA_OPCOES = [
     "Compra e venda",
     "Doação",
     "Permuta",
     "Constituição de garantia",
     "Alienação fiduciária",
     "Integralização de capital",
-    "Procuração",
-    "Escritura diversa",
     "Ata Notarial",
     "Outro",
 ]

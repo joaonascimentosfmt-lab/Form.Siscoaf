@@ -258,7 +258,7 @@
       <div class="field"><label>Protocolo do serviço</label><input type="text" id="protocolo" placeholder="Nº protocolo"></div>
       <div class="field"><label>Ordem de serviço</label><input type="text" id="ordem_servico" placeholder="Nº OS"></div>
     </div>
-    <div id="livroFolhaSection" style="display:none;margin-top:8px;">
+    <div id="livroFolhaSection" style="margin-top:8px;">
       <div class="row">
         <div class="field"><label>Livro</label><input type="text" id="livro" placeholder="Nº do livro"></div>
         <div class="field"><label>Folha</label><input type="text" id="folha" placeholder="Nº da folha"></div>
@@ -298,11 +298,16 @@
     <h2>2. Características do negócio</h2>
     <div class="field">
       <label>Qual é o tipo do ato?</label>
-      <select id="tipo_ato" onchange="togglePoderes()">
+      <select id="tipo_ato_categoria" onchange="onTipoAtoChange()">
+        <option>Escritura</option><option>Procuração</option><option>Protesto</option><option>Pessoa Jurídica</option>
+      </select>
+    </div>
+    <div id="escrituraSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
+      <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Tipo de escritura:</label>
+      <select id="tipo_ato_especifico" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;">
         <option>Compra e venda</option><option>Doação</option><option>Permuta</option>
         <option>Constituição de garantia</option><option>Alienação fiduciária</option>
-        <option>Integralização de capital</option><option>Procuração</option>
-        <option>Escritura diversa</option><option>Ata Notarial</option><option>Outro</option>
+        <option>Integralização de capital</option><option>Ata Notarial</option><option>Outro</option>
       </select>
     </div>
     <div id="poderesSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
@@ -537,17 +542,10 @@ function init() {
   carregarHistorico();
 }
 
-function mostrarLivroFolha() {
-  const val = document.getElementById('tipo_ato').value;
-  const show = val === 'Escritura diversa' || val === 'Procuração';
-  document.getElementById('livroFolhaSection').style.display = show ? 'block' : 'none';
-}
-
-function togglePoderes() {
-  const section = document.getElementById('poderesSection');
-  const isProc = document.getElementById('tipo_ato').value === 'Procuração';
-  section.style.display = isProc ? 'block' : 'none';
-  mostrarLivroFolha();
+function onTipoAtoChange() {
+  const cat = document.getElementById('tipo_ato_categoria').value;
+  document.getElementById('escrituraSection').style.display = cat === 'Escritura' ? 'block' : 'none';
+  document.getElementById('poderesSection').style.display = cat === 'Procuração' ? 'block' : 'none';
 }
 
 // Partes do ato
@@ -895,7 +893,8 @@ function coletarDados() {
     ordem_servico: $('ordem_servico').value.trim(),
     livro: $('livro').value.trim(),
     folha: $('folha').value.trim(),
-    tipo_ato: $('tipo_ato').value,
+    tipo_ato_categoria: $('tipo_ato_categoria').value,
+    tipo_ato: $('tipo_ato_categoria').value === 'Escritura' ? 'Escritura - ' + $('tipo_ato_especifico').value : $('tipo_ato_categoria').value,
     valor: parseValor($('valor').value),
     cidade: $('cidade').value,
     estado: $('estado').value,
@@ -1145,9 +1144,17 @@ function preencherFormulario(d) {
   $('ordem_servico').value = d.ordem_servico || '';
   $('livro').value = d.livro || '';
   $('folha').value = d.folha || '';
-  $('tipo_ato').value = d.tipo_ato || 'Compra e venda';
-  togglePoderes();
-  mostrarLivroFolha();
+  const stored = d.tipo_ato || '';
+  if (stored.startsWith('Escritura - ')) {
+    $('tipo_ato_categoria').value = 'Escritura';
+    $('tipo_ato_especifico').value = stored.replace('Escritura - ', '');
+  } else if (['Escritura','Procuração','Protesto','Pessoa Jurídica'].includes(stored)) {
+    $('tipo_ato_categoria').value = stored;
+  } else {
+    $('tipo_ato_categoria').value = 'Escritura';
+    $('tipo_ato_especifico').value = stored || 'Compra e venda';
+  }
+  onTipoAtoChange();
   $('valor').value = d.valor ? fmtNum(d.valor) : '';
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
@@ -1193,9 +1200,9 @@ function limparFormulario() {
   $('ordem_servico').value = '';
   $('livro').value = '';
   $('folha').value = '';
-  $('tipo_ato').value = 'Compra e venda';
-  togglePoderes();
-  mostrarLivroFolha();
+  $('tipo_ato_categoria').value = 'Escritura';
+  $('tipo_ato_especifico').value = 'Compra e venda';
+  onTipoAtoChange();
   $('valor').value = '';
   $('cidade').value = '';
   $('estado').value = 'SP';
