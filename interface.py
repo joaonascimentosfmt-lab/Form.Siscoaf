@@ -155,6 +155,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._poderes_frame.grid()
             self._escritura_frame.grid_remove()
             self._tipo_outro_frame.grid_remove()
+            self._forma_pagamento_combo.set("Não especificado")
         elif escolha == "Escritura":
             self._poderes_frame.grid_remove()
             self._escritura_frame.grid()
@@ -771,7 +772,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             return "Informe a cidade do ato."
         if not dados.get("data", "").strip():
             return "Informe a data do ato."
-        if dados["valor"] <= 0:
+        if dados.get("tipo_ato") != "Procuração" and dados["valor"] <= 0:
             return "Informe um valor válido para o negócio."
         if dados["pep"] and not dados.get("pep_nome", "").strip():
             return "Informe o nome do PEP."

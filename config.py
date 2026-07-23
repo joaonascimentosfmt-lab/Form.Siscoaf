@@ -89,6 +89,7 @@ ESCRITURA_OPCOES = [
 ]
 
 FORMA_PAGAMENTO_OPCOES = [
+    "Não especificado",
     "PIX",
     "TED",
     "Dinheiro",

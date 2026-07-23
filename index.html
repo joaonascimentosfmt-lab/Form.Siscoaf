@@ -352,7 +352,7 @@
     <div class="field">
       <label>Como será realizado o pagamento?</label>
       <select id="forma_pagamento" onchange="onFormaPagChange()">
-        <option>PIX</option><option>TED</option><option>Dinheiro</option>
+        <option>Não especificado</option><option>PIX</option><option>TED</option><option>Dinheiro</option>
         <option>Cheque</option><option>Boleto bancário</option><option>Mista</option><option>Outro</option>
       </select>
     </div>
@@ -561,6 +561,7 @@ function onFormaPagChange() {
 
 function onTipoAtoChange() {
   const cat = document.getElementById('tipo_ato_categoria').value;
+  if (cat === 'Procuração') document.getElementById('forma_pagamento').value = 'Não especificado';
   const escSub = document.getElementById('tipo_ato_especifico').value;
   document.getElementById('escrituraSection').style.display = cat === 'Escritura' ? 'block' : 'none';
   document.getElementById('poderesSection').style.display = cat === 'Procuração' ? 'block' : 'none';
@@ -937,7 +938,7 @@ function coletarDados() {
 function validar(d) {
   if (!d.cidade.trim()) return 'Informe a cidade do ato.';
   if (!d.data.trim()) return 'Informe a data do ato.';
-  if (d.valor <= 0) return 'Informe um valor válido para o negócio.';
+  if (d.tipo_ato !== 'Procuração' && d.valor <= 0) return 'Informe um valor válido para o negócio.';
   if (d.pep && !d.pep_nome.trim()) return 'Informe o nome do PEP.';
 
   return null;
