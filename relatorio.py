@@ -178,7 +178,7 @@ def gerar_relatorio(
 
     def _add_bg(canvas, doc):
         canvas.saveState()
-        bg_path = os.path.join(os.path.dirname(__file__), "WhatsApp Image 2026-07-23 at 16.00.53.jpeg")
+        bg_path = os.path.join(os.path.dirname(__file__), "Plano de Ofício 1.png")
         if os.path.exists(bg_path):
             canvas.drawImage(bg_path, 0, 0, width=A4[0], height=A4[1], preserveAspectRatio=True, anchor='cm')
         canvas.restoreState()
