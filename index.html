@@ -310,6 +310,10 @@
         <option>Integralização de capital</option><option>Ata Notarial</option><option>Outro</option>
       </select>
     </div>
+    <div id="tipoOutroSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
+      <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Descreva o tipo do ato:</label>
+      <textarea id="tipoOutroTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+    </div>
     <div id="poderesSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
       <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Poderes solicitados na procuração:</label>
       <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Amplos Poderes"> Amplos Poderes</label>
@@ -537,6 +541,7 @@ function init() {
     }
   });
   $('estado').value = 'SP';
+  document.getElementById('tipo_ato_especifico').addEventListener('change', onTipoAtoChange);
   adicionarParte();
   adicionarParte();
   carregarHistorico();
@@ -544,8 +549,11 @@ function init() {
 
 function onTipoAtoChange() {
   const cat = document.getElementById('tipo_ato_categoria').value;
+  const escSub = document.getElementById('tipo_ato_especifico').value;
   document.getElementById('escrituraSection').style.display = cat === 'Escritura' ? 'block' : 'none';
   document.getElementById('poderesSection').style.display = cat === 'Procuração' ? 'block' : 'none';
+  const precisaOutro = cat === 'Protesto' || cat === 'Pessoa Jurídica' || (cat === 'Escritura' && escSub === 'Outro');
+  document.getElementById('tipoOutroSection').style.display = precisaOutro ? 'block' : 'none';
 }
 
 // Partes do ato
@@ -895,6 +903,7 @@ function coletarDados() {
     folha: $('folha').value.trim(),
     tipo_ato_categoria: $('tipo_ato_categoria').value,
     tipo_ato: $('tipo_ato_categoria').value === 'Escritura' ? 'Escritura - ' + $('tipo_ato_especifico').value : $('tipo_ato_categoria').value,
+    tipo_ato_outro: $('tipoOutroTexto').value.trim(),
     valor: parseValor($('valor').value),
     cidade: $('cidade').value,
     estado: $('estado').value,
@@ -1017,9 +1026,15 @@ function gerarPDF() {
   const cor = isCom ? '#CC0000' : '#006600';
   const txtRes = isCom ? 'COMUNICAR AO SISCOAF' : 'NÃO COMUNICAR AO SISCOAF';
 
+  const bgPath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'WhatsApp Image 2026-07-23 at 16.00.53.jpeg';
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório SISCOAF</title>
   <style>
-    body { font: 11px 'Segoe UI',sans-serif; margin: 20px; color: #1B1B1B; }
+    body { font: 11px 'Segoe UI',sans-serif; margin: 20px; color: #1B1B1B; position:relative; z-index:1; }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:-1;
+      background-image:url('${bgPath}');
+      background-size:cover; background-position:center; opacity:0.08; pointer-events:none;
+    }
     h1 { font-size: 16px; color: #2E7D32; text-align: center; margin-bottom: 4px; }
     h2 { font-size: 13px; margin: 14px 0 6px; border-bottom: 1px solid #DDD; padding-bottom: 3px; }
     .resultado { font-size: 18px; font-weight: 800; text-align: center; color: ${cor}; margin: 4px 0; }
@@ -1030,6 +1045,7 @@ function gerarPDF() {
     .sep { border-top: 1px dashed #CCC; margin: 10px 0; }
     ul { margin: 4px 0; padding-left: 18px; }
     .footer { margin-top: 20px; font-size: 10px; color: #888; text-align: center; }
+    @media print { body::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style></head><body>
   <h1>Análise de Comunicação ao SISCOAF</h1>
   <div class="resultado">${txtRes}</div>
@@ -1057,7 +1073,7 @@ function gerarPDF() {
   <table><tr><td class="label">Tipo do ato:</td><td>${dadosCorrentes.tipo_ato}</td></tr>
   <tr><td class="label">Valor:</td><td>${formatMoney(dadosCorrentes.valor)}</td></tr>
   <tr><td class="label">Cidade/Estado:</td><td>${dadosCorrentes.cidade}/${dadosCorrentes.estado}</td></tr>
-  <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr></table>
+  <tr><td class="label">Data:</td><td>${dadosCorrentes.data}</td></tr>${dadosCorrentes.tipo_ato_outro ? '<tr><td class="label">Descrição do ato:</td><td>' + dadosCorrentes.tipo_ato_outro + '</td></tr>' : ''}</table>
   ${dadosCorrentes.tipo_ato === 'Procuração' ? `<h2>Poderes da Procuração</h2><table><tr><td class="label">Poderes:</td><td>${(dadosCorrentes.poderes||[]).join(', ') || 'Nenhum selecionado'}</td></tr>${dadosCorrentes.poderes_outros ? `<tr><td class="label">Outros poderes:</td><td>${dadosCorrentes.poderes_outros}</td></tr>` : ''}</table>` : ''}
 
   <h2>3. Forma de pagamento</h2>
@@ -1155,6 +1171,7 @@ function preencherFormulario(d) {
     $('tipo_ato_especifico').value = stored || 'Compra e venda';
   }
   onTipoAtoChange();
+  $('tipoOutroTexto').value = d.tipo_ato_outro || '';
   $('valor').value = d.valor ? fmtNum(d.valor) : '';
   $('cidade').value = d.cidade || '';
   $('estado').value = d.estado || 'SP';
@@ -1202,6 +1219,7 @@ function limparFormulario() {
   $('folha').value = '';
   $('tipo_ato_categoria').value = 'Escritura';
   $('tipo_ato_especifico').value = 'Compra e venda';
+  $('tipoOutroTexto').value = '';
   onTipoAtoChange();
   $('valor').value = '';
   $('cidade').value = '';

@@ -76,6 +76,9 @@ def gerar_relatorio(
     _adicionar_campo(elementos, "Estado", dados.get("estado", ""), estilo_normal)
     _adicionar_campo(elementos, "Data", dados.get("data", ""), estilo_normal)
 
+    if dados.get("tipo_ato_outro"):
+        _adicionar_campo(elementos, "Descricao do ato", dados["tipo_ato_outro"], estilo_normal)
+
     if dados.get("tipo_ato") == "Procuração":
         elementos.append(Paragraph("Poderes da Procuração", estilo_subtitulo))
         poderes = dados.get("poderes", [])
@@ -172,7 +175,15 @@ def gerar_relatorio(
         topMargin=20 * mm,
         bottomMargin=20 * mm,
     )
-    doc.build(elementos)
+
+    def _add_bg(canvas, doc):
+        canvas.saveState()
+        bg_path = os.path.join(os.path.dirname(__file__), "WhatsApp Image 2026-07-23 at 16.00.53.jpeg")
+        if os.path.exists(bg_path):
+            canvas.drawImage(bg_path, 0, 0, width=A4[0], height=A4[1], preserveAspectRatio=True, anchor='cm')
+        canvas.restoreState()
+
+    doc.build(elementos, onFirstPage=_add_bg, onLaterPages=_add_bg)
 
     return caminho
 
