@@ -136,9 +136,9 @@ def gerar_relatorio(
         _adicionar_campo(elementos, "Cidade PEP", dados.get("pep_cidade", ""), estilo_normal)
 
     elementos.append(Paragraph("Forma de Pagamento", estilo_subtitulo))
-    _adicionar_campo(elementos, "Pagamento em espécie", "Sim" if dados.get("pagamento_especie", False) else "Não", estilo_normal)
-    if dados.get("pagamento_especie", False):
-        _adicionar_campo(elementos, "Valor em espécie", formatar_moeda(dados.get("valor_especie", 0.0)), estilo_normal)
+    _adicionar_campo(elementos, "Forma de pagamento", dados.get("forma_pagamento", ""), estilo_normal)
+    if dados.get("pagamento_outro"):
+        _adicionar_campo(elementos, "Descricao do pagamento", dados["pagamento_outro"], estilo_normal)
 
     elementos.append(Paragraph("Indícios de Suspeita (Provimento CN n. 149/2023)", estilo_subtitulo))
     tem_marcados = False

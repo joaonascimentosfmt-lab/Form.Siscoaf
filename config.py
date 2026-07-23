@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-LIMITE_ESPECIE = 50000.0
 
 @dataclass
 class ScoringConfig:
     pep: int = 3
-    especie: int = 2
     sem_origem: int = 3
     fraude: int = 5
     fracionamento: int = 3
@@ -95,7 +93,7 @@ FORMA_PAGAMENTO_OPCOES = [
     "TED",
     "Dinheiro",
     "Cheque",
-    "Espécie",
+    "Boleto bancário",
     "Mista",
     "Outro",
 ]

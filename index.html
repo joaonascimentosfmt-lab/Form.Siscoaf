@@ -111,8 +111,8 @@
     font-size: 14px; padding: 3px 0; cursor: pointer;
   }
   .checkbox-item input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
-  .pep-details, .especie-details { display: none; margin-top: 8px; }
-  .pep-details.show, .especie-details.show { display: block; }
+  .pep-details { display: none; margin-top: 8px; }
+  .pep-details.show { display: block; }
   .btn-analyze {
     width: 100%; padding: 14px; border: none; border-radius: 10px;
     background: var(--primary); color: #fff; font-size: 17px; font-weight: 700;
@@ -351,20 +351,13 @@
     <h2>3. Forma de pagamento</h2>
     <div class="field">
       <label>Como será realizado o pagamento?</label>
-      <select id="forma_pagamento">
+      <select id="forma_pagamento" onchange="onFormaPagChange()">
         <option>PIX</option><option>TED</option><option>Dinheiro</option>
-        <option>Cheque</option><option>Espécie</option><option>Mista</option><option>Outro</option>
+        <option>Cheque</option><option>Boleto bancário</option><option>Mista</option><option>Outro</option>
       </select>
     </div>
-    <div class="field">
-      <label>Existe pagamento em espécie?</label>
-      <div class="radio-group">
-        <label><input type="radio" name="especie" value="Sim" onchange="toggleEspecie()"> Sim</label>
-        <label><input type="radio" name="especie" value="Não" checked onchange="toggleEspecie()"> Não</label>
-      </div>
-    </div>
-    <div class="especie-details" id="especieDetails">
-      <div class="field"><label>Qual o valor pago em espécie? (R$)</label><input type="text" id="valor_especie" placeholder="0,00"></div>
+    <div id="pagamentoOutroSection" style="display:none;margin-top:8px;">
+      <div class="field"><label>Descreva a forma de pagamento:</label><textarea id="pagamentoOutroTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea></div>
     </div>
   </div>
 
@@ -453,9 +446,8 @@ function _carregarConfig() {
   return { limite_especie: 50000, limite_comunicacao: 8, scoring: {} };
 }
 const _cfg = _carregarConfig();
-const LIMITE_ESPECIE = _cfg.limite_especie;
 const SCORING = Object.assign({
-  pep: 3, especie: 2, sem_origem: 3, fraude: 5,
+  pep: 3, sem_origem: 3, fraude: 5,
   fracionamento: 3, lavagem: 5, ocultacao: 4,
   terceiros: 2, valor_incompativel: 2, operacoes_relacionadas: 3,
   docs_incompletas: 2,
@@ -560,6 +552,11 @@ function precarregarBg() {
     } catch (e) {}
   };
   img.src = 'Plano de Ofício 1.png';
+}
+
+function onFormaPagChange() {
+  const el = document.getElementById('pagamentoOutroSection');
+  el.style.display = document.getElementById('forma_pagamento').value === 'Outro' ? 'block' : 'none';
 }
 
 function onTipoAtoChange() {
@@ -886,11 +883,6 @@ function togglePep() {
 
 // togglePJ removido — PF/PJ agora é por parte
 
-function toggleEspecie() {
-  const sim = document.querySelector('input[name="especie"]:checked').value === 'Sim';
-  $('especieDetails').classList.toggle('show', sim);
-}
-
 function formatarMoeda(input) {
   let val = input.value.replace(/\D/g, '');
   if (!val) { input.value = ''; return; }
@@ -924,8 +916,7 @@ function coletarDados() {
     estado: $('estado').value,
     data: $('data').value,
     forma_pagamento: $('forma_pagamento').value,
-    pagamento_especie: r('especie'),
-    valor_especie: parseValor($('valor_especie').value),
+    pagamento_outro: $('pagamentoOutroTexto').value.trim(),
     pep: r('pep'),
     pep_nome: $('pep_nome').value,
     pep_cargo: $('pep_cargo').value,
@@ -948,7 +939,7 @@ function validar(d) {
   if (!d.data.trim()) return 'Informe a data do ato.';
   if (d.valor <= 0) return 'Informe um valor válido para o negócio.';
   if (d.pep && !d.pep_nome.trim()) return 'Informe o nome do PEP.';
-  if (d.pagamento_especie && d.valor_especie <= 0) return 'Informe o valor pago em espécie.';
+
   return null;
 }
 
@@ -964,11 +955,6 @@ function aplicarRegras(d) {
   }
 
   if (d.pep) pts += SCORING.pep;
-
-  if (d.pagamento_especie && d.valor_especie > LIMITE_ESPECIE) {
-    pts += SCORING.especie;
-    motivos.push(`Pagamento em espécie de ${formatMoney(d.valor_especie)} acima do limite de ${formatMoney(LIMITE_ESPECIE)}`);
-  }
 
   const partes = d.partes || [];
   const chavesMap = {
@@ -1090,7 +1076,7 @@ function gerarPDF() {
 
   <h2>3. Forma de pagamento</h2>
   <table><tr><td class="label">Forma de pagamento:</td><td>${dadosCorrentes.forma_pagamento}</td></tr>
-  <tr><td class="label">Pagamento em espécie:</td><td>${dadosCorrentes.pagamento_especie ? 'Sim (' + formatMoney(dadosCorrentes.valor_especie) + ')' : 'Não'}</td></tr></table>
+  ${dadosCorrentes.pagamento_outro ? '<tr><td class="label">Descrição do pagamento:</td><td>' + dadosCorrentes.pagamento_outro + '</td></tr>' : ''}</table>
 
   <h2>4. Indícios de suspeita</h2>
   <table>`;
@@ -1189,9 +1175,8 @@ function preencherFormulario(d) {
   $('estado').value = d.estado || 'SP';
   $('data').value = d.data || '';
   $('forma_pagamento').value = d.forma_pagamento || 'PIX';
-  setRadio('especie', d.pagamento_especie);
-  toggleEspecie();
-  $('valor_especie').value = d.valor_especie ? fmtNum(d.valor_especie) : '';
+  $('pagamentoOutroTexto').value = d.pagamento_outro || '';
+  onFormaPagChange();
   setRadio('pep', d.pep);
   togglePep();
   $('pep_nome').value = d.pep_nome || '';
@@ -1238,9 +1223,8 @@ function limparFormulario() {
   $('estado').value = 'SP';
   $('data').value = '';
   $('forma_pagamento').value = 'PIX';
-  resetRadio('especie', 'Não');
-  toggleEspecie();
-  $('valor_especie').value = '';
+  $('pagamentoOutroTexto').value = '';
+  onFormaPagChange();
   resetRadio('pep', 'Não');
   togglePep();
   $('pep_nome').value = '';
@@ -1293,7 +1277,7 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
 
 // Formatação automática de valores monetários
-['valor', 'valor_especie'].forEach(id => {
+['valor'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('input', function() {

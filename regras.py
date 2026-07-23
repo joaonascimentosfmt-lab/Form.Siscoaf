@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from config import ScoringConfig, LIMITE_ESPECIE, obter_situacoes, SituacaoItem
+from config import ScoringConfig, obter_situacoes, SituacaoItem
 
 PONTOS = ScoringConfig()
 
@@ -24,11 +24,6 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
     if dados.get("pep", False):
         pontuacao_total += PONTOS.pep
 
-    comunicar, motivo, pontos = _regra_especie_acima_limite(dados)
-    if comunicar:
-        motivos.append(motivo)
-    pontuacao_total += pontos
-
     comunicar, motivo, pontos = _regra_docs_partes(dados)
     if comunicar:
         motivos.append(motivo)
@@ -40,15 +35,6 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
         resultado = "NAO_COMUNICAR"
 
     return resultado, motivos, pontuacao_total
-
-
-def _regra_especie_acima_limite(dados: Dict) -> Tuple[bool, str, int]:
-    especie = dados.get("pagamento_especie", False)
-    valor_especie = dados.get("valor_especie", 0.0) or 0.0
-    if especie and valor_especie > LIMITE_ESPECIE:
-        pontos = PONTOS.especie
-        return True, f"Pagamento em espécie de R$ {valor_especie:,.2f} acima do limite de R$ {LIMITE_ESPECIE:,.2f}", pontos
-    return False, "", 0
 
 
 def _regra_docs_partes(dados: Dict) -> Tuple[bool, str, int]:

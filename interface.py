@@ -534,30 +534,28 @@ class AnalisadorSISCOAF(ctk.CTk):
         card = self._card(parent, "Forma de pagamento", linha)
         r = 1
 
-        ctk.CTkLabel(card, text="Pagamento em espécie?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
+        ctk.CTkLabel(card, text="Como sera realizado o pagamento?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
         r += 1
-        self._especie_var = ctk.StringVar(value="Não")
-        frm_esp = ctk.CTkFrame(card, fg_color="transparent")
-        frm_esp.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
-        ctk.CTkRadioButton(frm_esp, text="Sim", variable=self._especie_var, value="Sim", command=self._toggle_especie).pack(side="left", padx=(0, 20))
-        ctk.CTkRadioButton(frm_esp, text="Não", variable=self._especie_var, value="Não", command=self._toggle_especie).pack(side="left")
+        self._forma_pagamento_combo = ctk.CTkComboBox(card, values=FORMA_PAGAMENTO_OPCOES, state="readonly", width=250, command=self._ao_forma_pag)
+        self._forma_pagamento_combo.set("PIX")
+        self._forma_pagamento_combo.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 6))
         r += 1
 
-        self._especie_frame = ctk.CTkFrame(card, fg_color="transparent")
-        self._especie_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
-        ctk.CTkLabel(self._especie_frame, text="Valor pago em espécie (R$):", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
-        self._valor_especie = ctk.CTkEntry(self._especie_frame, placeholder_text="0,00", width=200)
-        self._valor_especie.grid(row=1, column=0, sticky="w")
-        self._especie_frame.grid_remove()
+        self._pag_outro_frame = ctk.CTkFrame(card, fg_color="transparent")
+        self._pag_outro_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
+        ctk.CTkLabel(self._pag_outro_frame, text="Descreva a forma de pagamento:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        self._pagamento_outro = ctk.CTkTextbox(self._pag_outro_frame, height=40, width=400, corner_radius=6)
+        self._pagamento_outro.grid(row=1, column=0, sticky="ew")
+        self._pag_outro_frame.grid_remove()
         r += 1
 
         return linha + 1
 
-    def _toggle_especie(self):
-        if self._especie_var.get() == "Sim":
-            self._especie_frame.grid()
+    def _ao_forma_pag(self, escolha: str):
+        if escolha == "Outro":
+            self._pag_outro_frame.grid()
         else:
-            self._especie_frame.grid_remove()
+            self._pag_outro_frame.grid_remove()
 
     def _secao_situacoes_suspeitas(self, parent, linha: int) -> int:
         card = self._card(parent, "4. Indícios de suspeita", linha)
@@ -664,7 +662,8 @@ class AnalisadorSISCOAF(ctk.CTk):
             "tipo_ato": self._tipo_ato_categoria.get() + (" - " + self._tipo_ato_especifico.get() if self._tipo_ato_categoria.get() == "Escritura" else ""),
             "tipo_ato_outro": self._tipo_outro_text.get("1.0", "end-1c").strip(),
             "valor": validar_valor(self._valor.get()) or 0.0,
-            "forma_pagamento": self._forma_pagamento.get(),
+            "forma_pagamento": self._forma_pagamento_combo.get(),
+            "pagamento_outro": self._pagamento_outro.get("1.0", "end-1c").strip(),
             "cidade": self._cidade.get(),
             "estado": self._estado.get(),
             "data": self._data.get(),
@@ -672,8 +671,6 @@ class AnalisadorSISCOAF(ctk.CTk):
             "pep_nome": self._pep_nome.get(),
             "pep_cargo": self._pep_cargo.get(),
             "pep_cidade": self._pep_cidade.get(),
-            "pagamento_especie": self._especie_var.get() == "Sim",
-            "valor_especie": validar_valor(self._valor_especie.get()) if self._especie_var.get() == "Sim" else 0.0,
             "observacoes": self._observacoes.get("1.0", "end-1c"),
         }
         if result["tipo_ato"] == "Procuração":
@@ -725,7 +722,8 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._valor.delete(0, "end")
             self._valor.insert(0, f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if isinstance(val, float) else str(val))
         if "forma_pagamento" in dados:
-            self._forma_pagamento.set(dados["forma_pagamento"])
+            self._forma_pagamento_combo.set(dados["forma_pagamento"])
+            self._ao_forma_pag(dados["forma_pagamento"])
         if "cidade" in dados:
             self._cidade.delete(0, "end")
             self._cidade.insert(0, dados["cidade"])
@@ -746,13 +744,9 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "pep_cidade" in dados:
             self._pep_cidade.delete(0, "end")
             self._pep_cidade.insert(0, dados["pep_cidade"])
-        if "pagamento_especie" in dados:
-            self._especie_var.set("Sim" if dados["pagamento_especie"] else "Não")
-            self._toggle_especie()
-        if "valor_especie" in dados and dados["valor_especie"]:
-            val = dados["valor_especie"]
-            self._valor_especie.delete(0, "end")
-            self._valor_especie.insert(0, f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        if "pagamento_outro" in dados:
+            self._pagamento_outro.delete("1.0", "end")
+            self._pagamento_outro.insert("1.0", dados["pagamento_outro"])
         for s in obter_situacoes():
             chave = f"suspeita_{s.chave}"
             if chave in dados:
@@ -781,8 +775,6 @@ class AnalisadorSISCOAF(ctk.CTk):
             return "Informe um valor válido para o negócio."
         if dados["pep"] and not dados.get("pep_nome", "").strip():
             return "Informe o nome do PEP."
-        if dados["pagamento_especie"] and dados["valor_especie"] <= 0:
-            return "Informe o valor pago em espécie."
         return None
 
     def _analisar(self):
@@ -828,9 +820,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_nome.delete(0, "end")
         self._pep_cargo.delete(0, "end")
         self._pep_cidade.delete(0, "end")
-        self._especie_var.set("Não")
-        self._toggle_especie()
-        self._valor_especie.delete(0, "end")
+        self._pagamento_outro.delete("1.0", "end")
         for var in self._suspeitas_vars.values():
             var.set("Não")
         while self._partes:
