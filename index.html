@@ -545,6 +545,21 @@ function init() {
   adicionarParte();
   adicionarParte();
   carregarHistorico();
+  precarregarBg();
+}
+
+function precarregarBg() {
+  const img = new Image();
+  img.onload = function() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      window._bgBase64 = canvas.toDataURL('image/jpeg');
+    } catch (e) {}
+  };
+  img.src = 'WhatsApp Image 2026-07-23 at 16.00.53.jpeg';
 }
 
 function onTipoAtoChange() {
@@ -1022,12 +1037,14 @@ function gerarPDF() {
   const txtRes = isCom ? 'COMUNICAR AO SISCOAF' : 'NÃO COMUNICAR AO SISCOAF';
 
   const bgPath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'WhatsApp Image 2026-07-23 at 16.00.53.jpeg';
+  const bgData = window._bgBase64 || bgPath;
+  const bgStyle = `background-image:url('${bgData}');`;
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório SISCOAF</title>
   <style>
     body { font: 11px 'Segoe UI',sans-serif; margin: 20px; color: #1B1B1B; position:relative; z-index:1; }
     body::before {
       content:''; position:fixed; inset:0; z-index:-1;
-      background-image:url('${bgPath}');
+      ${bgStyle}
       background-size:cover; background-position:center; opacity:0.08; pointer-events:none;
     }
     h1 { font-size: 16px; color: #2E7D32; text-align: center; margin-bottom: 4px; }
