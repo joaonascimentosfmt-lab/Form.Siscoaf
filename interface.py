@@ -95,6 +95,18 @@ class AnalisadorSISCOAF(ctk.CTk):
             command=self._limpar_formulario,
         ).grid(row=0, column=2, padx=4, pady=10, sticky="w")
 
+        ctk.CTkButton(
+            toolbar,
+            text="Sair",
+            font=("Segoe UI", 12),
+            fg_color="#CC0000",
+            hover_color="#990000",
+            height=32,
+            corner_radius=8,
+            width=60,
+            command=self._logout,
+        ).grid(row=0, column=3, padx=(4, 16), pady=10)
+
         # scroll principal
         scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
         scroll.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 5))
@@ -907,6 +919,11 @@ class AnalisadorSISCOAF(ctk.CTk):
         except Exception as e:
             self._set_status(f"Análise realizada (erro ao salvar: {e})")
         ResultadoWindow(self, dados, resultado, motivos, pontuacao)
+
+    def _logout(self):
+        self.destroy()
+        import main
+        main.main()
 
     def _limpar_formulario(self):
         self._funcionario.delete(0, "end")
