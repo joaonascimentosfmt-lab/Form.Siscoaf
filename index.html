@@ -507,6 +507,7 @@ const SITUACOES_RAW = [
   { chave: 'cod_1396', codigo: '1396', artigo: 'Art. 172 c/c art. 162, V', texto: 'Art. 172 c/c art. 162, V: Art. 172. O tabelião de notas, ou seu oficial de cumprimento, deve analisar com especial atenção, para fins de eventual comunicação à UIF na forma do art. 151, I, operações, propostas de operação ou situações relacionadas a quaisquer das hipóteses listadas no art. 162, quando envolverem escritura pública. Art. 162. [...] V - registro de transmissões sucessivas do mesmo bem em período e com diferença de valor anormais;', pts: 2 },
   { chave: 'cod_1397', codigo: '1397', artigo: 'Art. 172 c/c art. 162, VI', texto: 'Art. 172 c/c art. 162, VI: Art. 172. O tabelião de notas, ou seu oficial de cumprimento, deve analisar com especial atenção, para fins de eventual comunicação à UIF na forma do art. 151, I, operações, propostas de operação ou situações relacionadas a quaisquer das hipóteses listadas no art. 162, quando envolverem escritura pública. Art. 162. [...] VI - registro de título no qual conste valor declarado de bem com diferença anormal em relação a outros valores a ele associados, como o de sua avaliação fiscal ou o valor patrimonial pelo qual tenha sido considerado para fins sucessórios ou de integralização de capital de sociedade, por exemplo.', pts: 2 },
 ];
+function _addSetor(s) { return Object.assign({}, s, { setor: obterSetorPorCodigo(s.codigo) }); }
 const SITUACOES = SITUACOES_RAW.map(_addSetor);
 
 const SETOR_GERAL = 'Disposições Gerais';
