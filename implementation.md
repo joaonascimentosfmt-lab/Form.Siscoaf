@@ -170,83 +170,188 @@ Plataforma desktop para análise de comunicações ao SISCOAF/COAF por notários
 
 ---
 
-## Sprint 10 (Futuro) — Autenticação e Serventia
+## Sprint 10 — Autenticação e Serventia
 
 **Objetivo:** Adicionar controle de acesso e configuração de serventia ao sistema.
 
-**Tarefas planejadas:**
+**Tarefas realizadas:**
 
 ### 10.1. Tela de Login (Web)
-- [ ] Criar `login.html` com formulário de autenticação (usuário + senha)
-- [ ] Implementar sistema de sessão mockada via `localStorage` / `sessionStorage`
-- [ ] Redirecionar usuários não autenticados para a tela de login
-- [ ] Proteger rotas: `admin.html`, `historico.html`, `configuracoes.html`, `usuarios.html` exigem login
-- [ ] `index.html` (nova análise) permanece acessível sem autenticação
-- [ ] Botão de logout na topbar dos painéis protegidos
-- [ ] Indicar usuário logado na topbar (nome, avatar)
+- [x] Criar `login.html` com formulário de autenticação (usuário + senha)
+- [x] Implementar sistema de sessão mockada via `sessionStorage`
+- [x] Redirecionar usuários não autenticados para a tela de login
+- [x] Proteger rotas: `admin.html`, `historico.html`, `configuracoes.html`, `usuarios.html` exigem login
+- [x] `index.html` (nova análise) permanece acessível sem autenticação
+- [x] Botão de logout na topbar dos painéis protegidos
+- [x] Indicar usuário logado na topbar (nome, avatar)
 
 ### 10.2. Tela de Login (Desktop)
-- [ ] Implementar `LoginWindow` (CTkToplevel) no `interface.py`
-- [ ] Autenticação local (usuário/senha em config ou SQLite)
-- [ ] Abrir formulário principal somente após autenticação
+- [x] Implementar `LoginWindow` (CTkToplevel) no `interface.py`
+- [x] Autenticação local (usuário/senha em config)
+- [x] Abrir formulário principal somente após autenticação
 
 ### 10.3. Seleção de Serventia
-- [ ] Adicionar campo "Serventia" no formulário (seleção entre duas opções):
+- [x] Adicionar campo "Serventia" no formulário (seleção entre duas opções):
   - **Cartório Coxipó do Ouro**
   - **Cartório 2º Ofício de Várzea Grande**
-- [ ] Persistir serventia selecionada nas análises salvas
-- [ ] Exibir serventia no relatório PDF e no histórico
-- [ ] Tornar serventia um campo obrigatório na validação
-- [ ] Adicionar "Serventia" como filtro no histórico
+- [x] Persistir serventia selecionada nas análises salvas
+- [x] Exibir serventia no relatório PDF e no histórico
+- [x] Tornar serventia um campo obrigatório na validação
+- [x] Adicionar "Serventia" como filtro no histórico
 
 **Entregáveis:** Autenticação funcional (web + desktop), seleção de serventia integrada ao fluxo de análise.
 
 ---
 
-## Sprint 11 (Futuro) — Qualificação "Cedente" nas Partes
+## Sprint 11 — Qualificação "Cedente" nas Partes
 
 **Objetivo:** Adicionar a qualificação "Cedente" à lista de papéis das partes do ato.
 
-**Tarefas planejadas:**
+**Tarefas realizadas:**
 
 ### 11.1. Desktop (`interface.py`)
-- [ ] Adicionar "Cedente" na lista de papéis do `CTkOptionMenu` de cada parte
-- [ ] Posicionar "Cedente" abaixo de "Anuente" na ordem do seletor
+- [x] Adicionar "Cedente" na lista de papéis do `CTkOptionMenu` de cada parte
+- [x] Posicionar "Cedente" abaixo de "Anuente" na ordem do seletor
 
 ### 11.2. Web (`index.html`)
-- [ ] Adicionar `<option value="Cedente">Cedente</option>` no `<select>` de papel de cada parte
-- [ ] Posicionar "Cedente" abaixo de "Anuente"
+- [x] Adicionar `<option value="Cedente">Cedente</option>` no `<select>` de papel de cada parte
+- [x] Posicionar "Cedente" abaixo de "Anuente"
 
 ### 11.3. Relatório (`relatorio.py`)
-- [ ] Garantir que "Cedente" seja exibido corretamente no PDF (já funciona genericamente, apenas verificar)
+- [x] Garantir que "Cedente" seja exibido corretamente no PDF (já funciona genericamente, apenas verificar)
 
 ### 11.4. Modelo de dados
-- [ ] Nenhuma alteração estrutural necessária — "Cedente" já é coberto pelo campo `papel` (string livre)
+- [x] Nenhuma alteração estrutural necessária — "Cedente" já é coberto pelo campo `papel` (string livre)
 
 **Entregáveis:** Qualificação "Cedente" disponível em todas as interfaces (desktop, web, PDF).
 
 ---
 
-## Sprint 12 (Futuro) — Consulta PEP por Nome Completo
+## Sprint 12 — Consulta PEP por Nome Completo
 
 **Objetivo:** Melhorar o algoritmo de consulta PEP para identificar correspondências por nome completo, não apenas por CPF.
 
-**Tarefas planejadas:**
+**Tarefas realizadas:**
 
 ### 12.1. Desktop (`pep_consulta.py`)
-- [ ] Substituir lógica atual de consulta por CPF (6 dígitos centrais) por busca por nome completo
+- [x] Substituir lógica atual de consulta por CPF (6 dígitos centrais) por busca por nome completo
   - Comparação exata do nome completo (case-insensitive, sem acentos)
   - Fallback para substring do nome completo quando não houver match exato
-- [ ] Manter consulta por CPF como fallback secundário (não primário)
-- [ ] Atualizar `consultar_pep()` para priorizar nome completo sobre CPF
-- [ ] Atualizar `consultar_por_nome()` para suportar match de nome completo (nome + sobrenome)
+- [x] Manter consulta por CPF como fallback secundário (não primário)
+- [x] Atualizar `consultar_pep()` para priorizar nome completo sobre CPF
+- [x] Atualizar `consultar_por_nome()` para suportar match de nome completo (nome + sobrenome)
 
 ### 12.2. Web (`index.html`)
-- [ ] Atualizar `consultarPEPLocal()` para priorizar nome completo
-- [ ] Match exato do nome completo (case-insensitive) antes de substring
+- [x] Atualizar `consultarPEPLocal()` para priorizar nome completo
+- [x] Match exato do nome completo (case-insensitive) antes de substring
 
 ### 12.3. Testes
 - [ ] Verificar casos de homônimos (mesmo nome, pessoas diferentes)
 - [ ] Verificar falsos positivos com substring parcial (ex.: "Maria" não deve match "Maria José" se nome completo for diferente)
 
 **Entregáveis:** Consulta PEP mais precisa, baseada em nome completo como critério principal.
+
+---
+
+## Sprint 13 — Artigos por Setor/Serventia
+
+**Objetivo:** Separar os 37 indicadores de suspeita por setor/serventia, exibindo apenas os artigos aplicáveis conforme o tipo de ato selecionado, mais os artigos de disposições gerais.
+
+**Tarefas realizadas:**
+
+### 13.1. Modelo de Dados — Setores no `config.py`
+- [x] Adicionar enum ou constante `SETORES` com as categorias:
+  - `Tabelionato de Protesto`
+  - `Registro Civil das Pessoas Jurídicas (RCPJ)`
+  - `Tabelionato de Notas`
+  - `Registro de Imóveis`
+- [x] Adicionar campo `setor` em `SituacaoItem` para indicar a quais setores cada artigo pertence
+- [x] Mapear cada código aos seus setores conforme abaixo:
+
+#### Tabelionato de Protesto (códigos exclusivos)
+| Código | Artigo | Descrição resumida |
+|---|---|---|
+| 1376 | Art. 159 | Pagamento/recebimento em espécie ou título ao portador ≥ R$ 100.000,00 |
+| 1377 | Art. 160, I | Devedor PF ≥ R$ 100.000,00 |
+| 1378 | Art. 160, II | Devedor PJ ≥ R$ 500.000,00 |
+
+#### Registro Civil das Pessoas Jurídicas — RCPJ (códigos exclusivos)
+| Código | Artigo | Descrição resumida |
+|---|---|---|
+| 1386 | Art. 163 | Pagamento/recebimento em espécie ou título ao portador ≥ R$ 100.000,00 |
+| 1387 | Art. 164, I | Transferência de cotas/participações ou bens móveis > R$ 100.000,00 |
+| 1388 | Art. 164, II | Mútuos ou doações > R$ 100.000,00 |
+| 1389 | Art. 164, III | Participações em entidades estrangeiras (trusts, fundações) |
+| 1390 | Art. 164, IV | Cessão de títulos de crédito/públicos ≥ R$ 500.000,00 |
+
+#### Tabelionato de Notas (códigos exclusivos)
+| Código | Artigo | Descrição resumida |
+|---|---|---|
+| 1371 | Art. 155-A, XVI | Procurações com amplos poderes de gestão/administração |
+| 1391 | Art. 171 | Pagamento/recebimento em espécie ou título ao portador ≥ R$ 100.000,00 |
+| 1392 | Art. 172 c/c 162, I | Doação de imóvel ≥ R$ 100.000,00 a terceiro sem vínculo |
+| 1393 | Art. 172 c/c 162, II | Empréstimo hipotecário/alienação fiduciária entre particulares |
+| 1394 | Art. 172 c/c 162, III | Negócios de sociedade dissolvida que retornou à atividade |
+| 1395 | Art. 172 c/c 162, IV | Aquisição de imóveis por fundações/associações fora da finalidade |
+| 1396 | Art. 172 c/c 162, V | Transmissões sucessivas do mesmo bem com diferença anormal |
+| 1397 | Art. 172 c/c 162, VI | Valor declarado com diferença anormal da avaliação fiscal |
+
+#### Registro de Imóveis (códigos exclusivos)
+| Código | Artigo | Descrição resumida |
+|---|---|---|
+| 1379 | Art. 161 | Pagamento em espécie ou título ao portador ≥ R$ 100.000,00 |
+| 1380 | Art. 162, I | Doação de imóvel ≥ R$ 100.000,00 a terceiro sem vínculo |
+| 1381 | Art. 162, II | Empréstimo hipotecário/alienação fiduciária entre particulares |
+| 1382 | Art. 162, III | Negócios de sociedade dissolvida que retornou à atividade |
+| 1383 | Art. 162, IV | Aquisição de imóveis por fundações/associações fora da finalidade |
+| 1384 | Art. 162, V | Transmissões sucessivas do mesmo bem com diferença anormal |
+| 1385 | Art. 162, VI | Valor declarado com diferença anormal da avaliação fiscal |
+
+#### Disposições Gerais (aplicam-se a TODOS os setores)
+| Código | Artigo | Descrição resumida |
+|---|---|---|
+| 1356 | Art. 155-A, I | Operações fora dos negócios usuais do cliente |
+| 1357 | Art. 155-A, II | Origem/fundamentação econômica não aferível |
+| 1358 | Art. 155-A, III | Incompatibilidade com patrimônio/capacidade financeira |
+| 1359 | Art. 155-A, IV | Difícil identificação de beneficiário final |
+| 1360 | Art. 155-A, V | PJ em jurisdição de alto risco (Gafi) |
+| 1361 | Art. 155-A, VI | Países de tributação favorecida/regime fiscal privilegiado |
+| 1362 | Art. 155-A, VII | Sócios/administradores em jurisdição de alto risco |
+| 1363 | Art. 155-A, VIII | Resistência ao fornecimento de documentação |
+| 1364 | Art. 155-A, IX | Informação/documentação falsa ou de difícil verificação |
+| 1365 | Art. 155-A, X | Operações mais complexas/onerosas que o ordinário |
+| 1366 | Art. 155-A, XI | Sinais de caráter fictício ou valores fora do mercado |
+| 1367 | Art. 155-A, XII | Cláusulas com condições fora do mercado |
+| 1368 | Art. 155-A, XIII | Tentativa de burlar controles (fracionamento, espécie) |
+| 1369 | Art. 155-A, XIV | Documento estrangeiro de difícil compreensão jurídica |
+| 1370 | Art. 155-A, XV | Ganho de capital substancial em curto período |
+| 1373 | Art. 155-A, XVIII | Outras operações com sérios indícios de LD/FTP |
+| 1374 | Art. 155-A, Par. único, I | Emprego não usual de meio de pagamento (ativo virtual, espécie) |
+| 1375 | Art. 155-A, Par. único, II | Possível relação com terrorismo ou armas de destruição em massa |
+
+### 13.2. Filtro por Tipo de Ato na Interface Desktop (`interface.py`)
+- [x] Ao selecionar o tipo de ato (Escritura, Procuração, Protesto, PJ), filtrar automaticamente os artigos exibidos:
+  - **Escritura** → Disposições Gerais + Tabelionato de Notas
+  - **Procuração** → Disposições Gerais + Tabelionato de Notas
+  - **Protesto** → Disposições Gerais + Tabelionato de Protesto
+  - **Pessoa Jurídica** → Disposições Gerais + RCPJ
+- [ ] Adicionar seção "Registro de Imóveis" como tipo de ato ou associar a um subtipo
+- [x] Atualizar `_secao_situacoes_suspeitas()` para renderizar apenas os artigos do setor ativo
+- [x] Manter agrupamento visual por setor com cabeçalho separador (ex.: "Disposições Gerais", "Artigos específicos - Tabelionato de Notas")
+
+### 13.3. Filtro por Tipo de Ato na Interface Web (`index.html`)
+- [x] Atualizar `onTipoAtoChange()` para também filtrar os artigos exibidos
+- [x] Re-renderizar lista de suspeitas dinamicamente ao trocar o tipo de ato
+
+### 13.4. Motor de Regras (`regras.py`)
+- [x] Atualizar `aplicar_regras()` para considerar apenas os artigos visíveis no setor atual
+
+### 13.5. Relatório PDF (`relatorio.py`)
+- [x] Exibir apenas os artigos do setor selecionado no relatório
+- [x] Adicionar seção "Setor/Serventia" no cabeçalho do relatório
+
+### 13.6. Histórico
+- [x] Garantir que análises salvas anteriormente (sem setor) continuem funcionando
+- [x] Adicionar fallback: se não houver setor salvo, exibir todos os artigos (comportamento legado)
+
+**Entregáveis:** Artigos filtrados dinamicamente por setor/serventia, exibindo apenas os relevantes + disposições gerais.

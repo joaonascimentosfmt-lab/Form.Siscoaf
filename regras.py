@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from config import ScoringConfig, obter_situacoes, SituacaoItem
+from config import ScoringConfig, obter_situacoes, SituacaoItem, CATEGORIA_SETORES
 
 PONTOS = ScoringConfig()
 
@@ -9,14 +9,17 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
     motivos: List[str] = []
     pontuacao_total = 0
 
+    categoria = dados.get("tipo_ato_categoria", "")
+    situacoes = obter_situacoes(categoria) if categoria in CATEGORIA_SETORES else obter_situacoes()
+
     tem_situacao_marcada = False
-    for situacao in obter_situacoes():
+    for situacao in situacoes:
         if dados.get(f"suspeita_{situacao.chave}") == "Sim":
             tem_situacao_marcada = True
             pontuacao_total += situacao.pontuacao
 
     if tem_situacao_marcada:
-        marcadas = sum(1 for s in obter_situacoes() if dados.get(f"suspeita_{s.chave}") == "Sim")
+        marcadas = sum(1 for s in situacoes if dados.get(f"suspeita_{s.chave}") == "Sim")
         motivos.append(f"{marcadas} indicio(s) de suspeita assinalado(s)")
         resultado = "COMUNICAR"
         return resultado, motivos, pontuacao_total

@@ -83,16 +83,19 @@ def consultar_por_nome(nome: str) -> List[Dict]:
     if not registros or not nome.strip():
         return []
     termo = nome.strip().upper()
+    exatos = [r for r in registros if r["nome"] == termo]
+    if exatos:
+        return exatos
     return [r for r in registros if termo in r["nome"]]
 
 
 def consultar_pep(nome: str = "", cpf: str = "") -> Tuple[bool, List[Dict]]:
-    if cpf:
-        resultados = consultar_por_cpf(cpf)
-        if resultados:
-            return True, resultados
     if nome:
         resultados = consultar_por_nome(nome)
+        if resultados:
+            return True, resultados
+    if cpf:
+        resultados = consultar_por_cpf(cpf)
         if resultados:
             return True, resultados
     return False, []

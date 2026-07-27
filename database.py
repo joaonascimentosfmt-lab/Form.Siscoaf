@@ -27,6 +27,10 @@ def inicializar():
                 usuario TEXT DEFAULT 'Colaborador'
             )
         """)
+        try:
+            conn.execute("ALTER TABLE analises ADD COLUMN serventia TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass
 
 
 def salvar_analise(
@@ -36,11 +40,12 @@ def salvar_analise(
     pontuacao: int,
     usuario: str = "Colaborador",
 ) -> int:
+    serventia = dados.get("serventia", "")
     with _conectar() as conn:
         cur = conn.execute(
             """
-            INSERT INTO analises (data_hora, resultado, pontuacao, motivos, dados_json, usuario)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO analises (data_hora, resultado, pontuacao, motivos, dados_json, usuario, serventia)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 datetime.now().isoformat(),
@@ -49,6 +54,7 @@ def salvar_analise(
                 json.dumps(motivos, ensure_ascii=False),
                 json.dumps(dados, ensure_ascii=False),
                 usuario,
+                serventia,
             ),
         )
         return cur.lastrowid
@@ -58,7 +64,7 @@ def listar_analises(limite: int = 50) -> List[Dict]:
     with _conectar() as conn:
         rows = conn.execute(
             """
-            SELECT id, data_hora, resultado, pontuacao, motivos, usuario
+            SELECT id, data_hora, resultado, pontuacao, motivos, usuario, serventia
             FROM analises
             ORDER BY id DESC
             LIMIT ?
@@ -72,13 +78,13 @@ def buscar_analises(termo: str, limite: int = 50) -> List[Dict]:
     with _conectar() as conn:
         rows = conn.execute(
             """
-            SELECT id, data_hora, resultado, pontuacao, motivos, usuario
+            SELECT id, data_hora, resultado, pontuacao, motivos, usuario, serventia
             FROM analises
-            WHERE resultado LIKE ? OR motivos LIKE ? OR usuario LIKE ?
+            WHERE resultado LIKE ? OR motivos LIKE ? OR usuario LIKE ? OR serventia LIKE ?
             ORDER BY id DESC
             LIMIT ?
             """,
-            (f"%{termo}%", f"%{termo}%", f"%{termo}%", limite),
+            (f"%{termo}%", f"%{termo}%", f"%{termo}%", f"%{termo}%", limite),
         ).fetchall()
         return [dict(r) for r in rows]
 

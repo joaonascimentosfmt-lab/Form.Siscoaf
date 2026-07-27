@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Analisador SISCOAF</title>
+<link rel="icon" type="image/x-icon" href="assets/icon.ico">
+<link rel="icon" type="image/png" sizes="256x256" href="assets/icon.png">
+<style>
+  :root {
+    --primary: #2E7D32;
+    --primary-hover: #1B5E20;
+    --bg: #FAFAFA;
+    --card: #FFFFFF;
+    --text: #1B1B1B;
+    --muted: #555;
+    --border: #DDD;
+    --danger: #CC0000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .login-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    border: 1px solid var(--border);
+  }
+  .login-card h1 {
+    font-size: 22px;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .login-card p {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 600;
+    margin-bottom: 4px; color: var(--text);
+  }
+  .field input {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; transition: .15s;
+  }
+  .field input:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(46,125,50,.15);
+  }
+  .btn-login {
+    width: 100%; padding: 12px;
+    border: none; border-radius: 8px;
+    background: var(--primary); color: #fff;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: .15s;
+  }
+  .btn-login:hover { background: var(--primary-hover); }
+  .error-msg {
+    color: var(--danger); font-size: 13px;
+    text-align: center; margin-top: 12px;
+    display: none;
+  }
+  .footer {
+    text-align: center; margin-top: 20px;
+    font-size: 11px; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>SISCOAF</h1>
+    <p>Analisador de Comunicações</p>
+    <div class="field">
+      <label for="username">Usuário</label>
+      <input type="text" id="username" placeholder="Digite seu usuário" autofocus>
+    </div>
+    <div class="field">
+      <label for="password">Senha</label>
+      <input type="password" id="password" placeholder="Digite sua senha">
+    </div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="error-msg" id="errorMsg">Usuário ou senha inválidos.</div>
+    <div class="footer">v2.0 &middot; 2026</div>
+  </div>
+
+<script>
+function fazerLogin() {
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const errorEl = document.getElementById('errorMsg');
+  if ((user === 'admin' && pass === 'admin') || (user === 'operador' && pass === '123456')) {
+    const nome = user === 'admin' ? 'Admin' : 'Operador';
+    sessionStorage.setItem('siscoaf_user', JSON.stringify({ nome: nome, login: user }));
+    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'admin.html';
+    window.location.href = redirect;
+  } else {
+    errorEl.style.display = 'block';
+  }
+}
+document.getElementById('username').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+document.getElementById('password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') fazerLogin();
+});
+</script>
+</body>
+</html>

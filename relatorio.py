@@ -7,7 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
-from config import obter_situacoes
+from config import obter_situacoes, CATEGORIA_SETORES
 from utils import formatar_moeda
 
 
@@ -60,8 +60,9 @@ def gerar_relatorio(
     elementos.append(Paragraph(f"Pontuação total: {pontuacao}", estilo_normal))
     elementos.append(Spacer(1, 10 * mm))
 
-    if any(dados.get(k) for k in ["funcionario", "protocolo", "ordem_servico", "livro", "folha"]):
+    if any(dados.get(k) for k in ["funcionario", "protocolo", "ordem_servico", "livro", "folha", "serventia"]):
         elementos.append(Paragraph("Identificação do Atendimento", estilo_subtitulo))
+        _adicionar_campo(elementos, "Serventia", dados.get("serventia", ""), estilo_normal)
         _adicionar_campo(elementos, "Funcionário", dados.get("funcionario", ""), estilo_normal)
         _adicionar_campo(elementos, "Protocolo", dados.get("protocolo", ""), estilo_normal)
         _adicionar_campo(elementos, "Ordem de serviço", dados.get("ordem_servico", ""), estilo_normal)
@@ -141,8 +142,10 @@ def gerar_relatorio(
         _adicionar_campo(elementos, "Descricao do pagamento", dados["pagamento_outro"], estilo_normal)
 
     elementos.append(Paragraph("Indícios de Suspeita (Provimento CN n. 149/2023)", estilo_subtitulo))
+    categoria = dados.get("tipo_ato_categoria", "")
+    situacoes = obter_situacoes(categoria) if categoria in CATEGORIA_SETORES else obter_situacoes()
     tem_marcados = False
-    for situacao in obter_situacoes():
+    for situacao in situacoes:
         if dados.get(f"suspeita_{situacao.chave}") == "Sim":
             tem_marcados = True
             texto = f"✔ [{situacao.codigo}] {situacao.artigo}: {situacao.texto}"

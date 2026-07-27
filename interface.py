@@ -9,6 +9,9 @@ from config import (
     ESCRITURA_OPCOES,
     FORMA_PAGAMENTO_OPCOES,
     ESTADOS,
+    SERVENTIA_OPCOES,
+    CATEGORIA_SETORES,
+    SETOR_GERAL,
 )
 from regras import aplicar_regras
 from relatorio import gerar_relatorio
@@ -164,6 +167,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._poderes_frame.grid_remove()
             self._escritura_frame.grid_remove()
             self._tipo_outro_frame.grid()
+        self._recriar_situacoes_suspeitas(escolha)
 
     def _secao_cabecalho(self, parent, linha: int) -> int:
         card = self._card(parent, "Identificação do atendimento", linha)
@@ -191,6 +195,14 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._livro.grid(row=1, column=0, sticky="w", padx=(0, 10))
         self._folha = ctk.CTkEntry(self._livro_folha_frame, placeholder_text="Nº da folha", width=120)
         self._folha.grid(row=1, column=1, sticky="w")
+        r += 1
+
+        frm_serv = ctk.CTkFrame(card, fg_color="transparent")
+        frm_serv.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 10))
+        ctk.CTkLabel(frm_serv, text="Serventia:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        self._serventia = ctk.CTkComboBox(frm_serv, values=SERVENTIA_OPCOES, state="readonly", width=300)
+        self._serventia.set(SERVENTIA_OPCOES[0])
+        self._serventia.grid(row=1, column=0, sticky="w")
 
         return linha + 1
 
@@ -369,7 +381,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         papel_var = ctk.StringVar(value=dados.get("papel", "Outorgante") if dados else "Outorgante")
         frm_papel = ctk.CTkFrame(frm, fg_color="transparent")
         frm_papel.grid(row=0, column=3, sticky="w", padx=2, pady=6)
-        ctk.CTkOptionMenu(frm_papel, variable=papel_var, values=["Outorgante","Outorgado","Devedor","Credor","Anuente"], font=("Segoe UI", 9), width=75).pack(side="left", padx=(0,4))
+        ctk.CTkOptionMenu(frm_papel, variable=papel_var, values=["Outorgante","Outorgado","Devedor","Credor","Anuente","Cedente"], font=("Segoe UI", 9), width=75).pack(side="left", padx=(0,4))
         representado_var = ctk.BooleanVar(value=dados.get("representado", False) if dados else False)
         ctk.CTkCheckBox(frm_papel, text="Rep. Proc.", variable=representado_var, font=("Segoe UI", 9), fg_color=COR_PRIMARIA).pack(side="left")
 
@@ -560,24 +572,56 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _secao_situacoes_suspeitas(self, parent, linha: int) -> int:
         card = self._card(parent, "4. Indícios de suspeita", linha)
-        r = 1
+        self._suspeitas_card = card
+        self._suspeitas_parent = parent
+        self._suspeitas_linha = linha
+        self._suspeitas_container_start = 1
 
         ctk.CTkLabel(
             card,
             text="Selecione Sim ou Não para cada situação (Provimento CN n. 149/2023, incluído pelo Provimento CN n. 161/2024):",
             font=("Segoe UI", 11),
             text_color=COR_SUBTEXTO,
-        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
-        r += 1
+        ).grid(row=1, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
 
         self._suspeitas_vars: Dict[str, ctk.StringVar] = {}
-        for situacao in obter_situacoes():
+        self._suspeitas_frames: Dict[str, ctk.CTkFrame] = {}
+        self._recriar_situacoes_suspeitas(self._tipo_ato_categoria.get() if hasattr(self, '_tipo_ato_categoria') else "Escritura")
+
+        return linha + 1
+
+    def _recriar_situacoes_suspeitas(self, categoria: str):
+        for f in getattr(self, '_suspeitas_frames', {}).values():
+            f.destroy()
+        self._suspeitas_vars.clear()
+        self._suspeitas_frames.clear()
+
+        card = self._suspeitas_card
+        setores = CATEGORIA_SETORES.get(categoria, [SETOR_GERAL])
+        situacoes = obter_situacoes(categoria)
+        r = 2
+        ultimo_setor = None
+        for situacao in situacoes:
+            if situacao.setor != ultimo_setor:
+                ultimo_setor = situacao.setor
+                cab = ctk.CTkLabel(
+                    card,
+                    text=f"── {situacao.setor} ──",
+                    font=("Segoe UI", 11, "bold"),
+                    text_color=COR_PRIMARIA,
+                    anchor="w",
+                )
+                cab.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(6, 2))
+                self._suspeitas_frames[f"_setor_{situacao.setor}"] = cab
+                r += 1
+
             var = ctk.StringVar(value="Não")
             self._suspeitas_vars[situacao.chave] = var
 
             frame = ctk.CTkFrame(card, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
             frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=4)
             frame.grid_columnconfigure(0, weight=1)
+            self._suspeitas_frames[situacao.chave] = frame
 
             top = ctk.CTkFrame(frame, fg_color="transparent")
             top.grid(row=0, column=0, sticky="ew", padx=10, pady=(8, 0))
@@ -641,8 +685,6 @@ class AnalisadorSISCOAF(ctk.CTk):
 
             r += 1
 
-        return linha + 1
-
     def _secao_observacoes(self, parent, linha: int) -> int:
         card = self._card(parent, "Observações", linha)
         r = 1
@@ -659,6 +701,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "ordem_servico": self._ordem_servico.get().strip(),
             "livro": self._livro.get().strip(),
             "folha": self._folha.get().strip(),
+            "serventia": self._serventia.get(),
             "tipo_ato_categoria": self._tipo_ato_categoria.get(),
             "tipo_ato": self._tipo_ato_categoria.get() + (" - " + self._tipo_ato_especifico.get() if self._tipo_ato_categoria.get() == "Escritura" else ""),
             "tipo_ato_outro": self._tipo_outro_text.get("1.0", "end-1c").strip(),
@@ -677,8 +720,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         if result["tipo_ato"] == "Procuração":
             result["poderes"] = [v.get() for v in self._poderes_vars.values() if v.get()]
             result["poderes_outros"] = self._poderes_outros.get("1.0", "end-1c").strip()
-        for s in obter_situacoes():
-            result[f"suspeita_{s.chave}"] = self._suspeitas_vars[s.chave].get()
+        for s in self._suspeitas_vars:
+            result[f"suspeita_{s}"] = self._suspeitas_vars[s].get()
         result["partes"] = self._coletar_partes()
         return result
 
@@ -699,6 +742,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "folha" in dados:
             self._folha.delete(0, "end")
             self._folha.insert(0, dados["folha"])
+        if "serventia" in dados and dados["serventia"] in SERVENTIA_OPCOES:
+            self._serventia.set(dados["serventia"])
         if "tipo_ato" in dados:
             stored = dados.get("tipo_ato", "")
             if stored.startswith("Escritura - "):
@@ -748,13 +793,12 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "pagamento_outro" in dados:
             self._pagamento_outro.delete("1.0", "end")
             self._pagamento_outro.insert("1.0", dados["pagamento_outro"])
-        for s in obter_situacoes():
-            chave = f"suspeita_{s.chave}"
-            if chave in dados:
-                val = dados[chave]
-                if isinstance(val, bool):
-                    val = "Sim" if val else "Não"
-                self._suspeitas_vars[s.chave].set(val)
+        for chave, val in dados.items():
+            if chave.startswith("suspeita_") and chave in self._suspeitas_vars:
+                v = val
+                if isinstance(v, bool):
+                    v = "Sim" if v else "Não"
+                self._suspeitas_vars[chave].set(v)
         if "observacoes" in dados:
             self._observacoes.delete("1.0", "end")
             self._observacoes.insert("1.0", dados["observacoes"])
@@ -768,6 +812,8 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _validar(self) -> Optional[str]:
         dados = self._coletar_dados()
+        if not dados.get("serventia", "").strip():
+            return "Selecione a serventia."
         if not dados.get("cidade", "").strip():
             return "Informe a cidade do ato."
         if not dados.get("data", "").strip():
@@ -807,6 +853,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._ordem_servico.delete(0, "end")
         self._livro.delete(0, "end")
         self._folha.delete(0, "end")
+        self._serventia.set(SERVENTIA_OPCOES[0])
         self._tipo_ato_categoria.set("Escritura")
         self._tipo_ato_especifico.set("Compra e venda")
         self._tipo_outro_text.delete("1.0", "end")
@@ -917,6 +964,7 @@ class HistoricoWindow(ctk.CTkToplevel):
             frm.grid(row=i, column=0, sticky="ew", padx=8, pady=3)
             frm.grid_columnconfigure(1, weight=1)
 
+            serv = a.get("serventia", "")
             lbl_data = ctk.CTkLabel(
                 frm, text=a["data_hora"][:19].replace("T", " "),
                 font=("Segoe UI", 11), text_color=COR_SUBTEXTO, width=150, anchor="w",
@@ -934,6 +982,12 @@ class HistoricoWindow(ctk.CTkToplevel):
                 font=("Segoe UI", 10), text_color=COR_SUBTEXTO, width=50, anchor="w",
             )
             lbl_pts.grid(row=0, column=2, sticky="w", padx=4, pady=6)
+
+            if serv:
+                ctk.CTkLabel(
+                    frm, text=serv,
+                    font=("Segoe UI", 9), text_color=COR_SUBTEXTO, width=120, anchor="w",
+                ).grid(row=0, column=4, sticky="w", padx=4, pady=6)
 
             ctk.CTkButton(
                 frm, text="Carregar",
@@ -1076,3 +1130,75 @@ class ResultadoWindow(ctk.CTkToplevel):
             usuario="Colaborador",
         )
         subprocess.Popen(["start", "", caminho], shell=True)
+
+
+class LoginWindow(ctk.CTkToplevel):
+    def __init__(self, on_success):
+        super().__init__()
+        self._on_success = on_success
+        self.title("Login - Analisador SISCOAF")
+        self.geometry("380x320")
+        self.resizable(False, False)
+        self.configure(fg_color=COR_BG)
+        _aplicar_icon(self)
+
+        self.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            self,
+            text="Analisador SISCOAF",
+            font=("Segoe UI", 20, "bold"),
+            text_color=COR_PRIMARIA,
+        ).grid(row=0, column=0, pady=(30, 4))
+
+        ctk.CTkLabel(
+            self,
+            text="Faça login para continuar",
+            font=("Segoe UI", 12),
+            text_color=COR_SUBTEXTO,
+        ).grid(row=1, column=0, pady=(0, 20))
+
+        frm = ctk.CTkFrame(self, fg_color="transparent")
+        frm.grid(row=2, column=0, padx=40, sticky="ew")
+        frm.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(frm, text="Usuário:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        self._username = ctk.CTkEntry(frm, placeholder_text="Digite seu usuário")
+        self._username.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        self._username.focus()
+
+        ctk.CTkLabel(frm, text="Senha:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=2, column=0, sticky="w")
+        self._password = ctk.CTkEntry(frm, placeholder_text="Digite sua senha", show="*")
+        self._password.grid(row=3, column=0, sticky="ew", pady=(0, 6))
+        self._password.bind("<Return>", lambda e: self._login())
+
+        self._error_label = ctk.CTkLabel(
+            frm, text="", font=("Segoe UI", 11),
+            text_color="#CC0000", anchor="w",
+        )
+        self._error_label.grid(row=4, column=0, sticky="w", pady=(0, 4))
+
+        ctk.CTkButton(
+            frm,
+            text="Entrar",
+            font=("Segoe UI", 14, "bold"),
+            fg_color=COR_PRIMARIA,
+            hover_color="#1B5E20",
+            height=40,
+            corner_radius=8,
+            command=self._login,
+        ).grid(row=5, column=0, sticky="ew", pady=(6, 0))
+
+        self.protocol("WM_DELETE_WINDOW", self._fechar)
+
+    def _login(self):
+        user = self._username.get().strip()
+        pwd = self._password.get().strip()
+        if (user == "admin" and pwd == "admin") or (user == "operador" and pwd == "123456"):
+            self._on_success(user)
+            self.destroy()
+        else:
+            self._error_label.configure(text="Usuário ou senha inválidos.")
+
+    def _fechar(self):
+        self.master.destroy() if self.master else self.destroy()
