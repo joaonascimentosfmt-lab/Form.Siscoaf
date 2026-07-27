@@ -9,7 +9,6 @@ from config import (
     ESCRITURA_OPCOES,
     FORMA_PAGAMENTO_OPCOES,
     ESTADOS,
-    SERVENTIA_OPCOES,
     CATEGORIA_SETORES,
     SETOR_GERAL,
 )
@@ -39,7 +38,7 @@ def _aplicar_icon(widget):
 
 
 class AnalisadorSISCOAF(ctk.CTk):
-    def __init__(self, usuario="", role="admin"):
+    def __init__(self, usuario="", role="admin", serventia="Ambos"):
         super().__init__()
 
         self.title("Analisador SISCOAF")
@@ -49,6 +48,7 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         self._usuario = usuario
         self._user_role = role
+        self._user_serventia = serventia
         self._carregando = False
         self._construir_tela()
         _aplicar_icon(self)
@@ -201,13 +201,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._folha = ctk.CTkEntry(self._livro_folha_frame, placeholder_text="Nº da folha", width=120)
         self._folha.grid(row=1, column=1, sticky="w")
         r += 1
-
-        frm_serv = ctk.CTkFrame(card, fg_color="transparent")
-        frm_serv.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 10))
-        ctk.CTkLabel(frm_serv, text="Serventia:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
-        self._serventia = ctk.CTkComboBox(frm_serv, values=SERVENTIA_OPCOES, state="readonly", width=300)
-        self._serventia.set(SERVENTIA_OPCOES[0])
-        self._serventia.grid(row=1, column=0, sticky="w")
 
         return linha + 1
 
@@ -706,7 +699,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "ordem_servico": self._ordem_servico.get().strip(),
             "livro": self._livro.get().strip(),
             "folha": self._folha.get().strip(),
-            "serventia": self._serventia.get(),
+            "serventia": getattr(self, '_user_serventia', 'Ambos'),
             "tipo_ato_categoria": self._tipo_ato_categoria.get(),
             "tipo_ato": self._tipo_ato_categoria.get() + (" - " + self._tipo_ato_especifico.get() if self._tipo_ato_categoria.get() == "Escritura" else ""),
             "tipo_ato_outro": self._tipo_outro_text.get("1.0", "end-1c").strip(),
@@ -747,8 +740,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         if "folha" in dados:
             self._folha.delete(0, "end")
             self._folha.insert(0, dados["folha"])
-        if "serventia" in dados and dados["serventia"] in SERVENTIA_OPCOES:
-            self._serventia.set(dados["serventia"])
         if "tipo_ato" in dados:
             stored = dados.get("tipo_ato", "")
             if stored.startswith("Escritura - "):
@@ -817,8 +808,6 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _validar(self) -> Optional[str]:
         dados = self._coletar_dados()
-        if not dados.get("serventia", "").strip():
-            return "Selecione a serventia."
         if not dados.get("cidade", "").strip():
             return "Informe a cidade do ato."
         if not dados.get("data", "").strip():
@@ -858,7 +847,6 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._ordem_servico.delete(0, "end")
         self._livro.delete(0, "end")
         self._folha.delete(0, "end")
-        self._serventia.set(SERVENTIA_OPCOES[0])
         self._tipo_ato_categoria.set("Escritura")
         self._tipo_ato_especifico.set("Compra e venda")
         self._tipo_outro_text.delete("1.0", "end")
@@ -1201,7 +1189,8 @@ class LoginWindow(ctk.CTkToplevel):
         pwd = self._password.get().strip()
         if (user == "João Nascimento" and pwd == "123456") or (user == "João Nascimento2" and pwd == "123456"):
             role = "admin" if user == "João Nascimento" else "restrito"
-            self._on_success(user, role)
+            serventia = "Ambos" if user == "João Nascimento" else "Cartório Coxipó do Ouro"
+            self._on_success(user, role, serventia)
             self.destroy()
         else:
             self._error_label.configure(text="Usuário ou senha inválidos.")

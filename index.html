@@ -264,14 +264,6 @@
         <div class="field"><label>Folha</label><input type="text" id="folha" placeholder="Nº da folha"></div>
       </div>
     </div>
-    <div style="margin-top:8px;">
-      <div class="field"><label>Serventia</label>
-        <select id="serventia">
-          <option>Cartório Coxipó do Ouro</option>
-          <option>Cartório 2º Ofício de Várzea Grande</option>
-        </select>
-      </div>
-    </div>
   </div>
 
   <!-- 1. Identificação dos envolvidos -->
@@ -750,12 +742,14 @@ function processarPEPCSV(csv) {
     const cpfRaw = cols[0] || '';
     const partes = cpfRaw.split('.');
     let cpfDig = '';
+    let cpfFull = '';
     if (partes.length >= 3) {
       cpfDig = (partes[1]||'').replace(/\D/g,'') + (partes[2]||'').split('-')[0].replace(/\D/g,'');
+      cpfFull = partes.join('').replace(/\D/g,'');
     }
-    const orgao = (cols[5]||'').trim();
     pepDB.push({
       cpfDig,
+      cpfFull,
       nome: (cols[1]||'').toUpperCase(),
       funcao: (cols[3]||'').trim(),
       orgao: orgao,
@@ -796,18 +790,15 @@ function atualizarStatusPEP(msg) {
 function consultarPEPLocal(nome, cpf) {
   if (!pepDB || pepDB.length === 0) return null;
   const cpfLimpo = cpf.replace(/\D/g,'');
-  const cpfDig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
   const nomeUp = nome.toUpperCase();
-  let results = [];
-  if (nomeUp) {
-    results = pepDB.filter(r => r.nome === nomeUp);
-  }
-  if (results.length === 0 && nomeUp) {
-    results = pepDB.filter(r => r.nome.includes(nomeUp));
-  }
-  if (results.length === 0 && cpfDig) {
-    results = pepDB.filter(r => r.cpfDig === cpfDig);
-  }
+  if (!nomeUp || cpfLimpo.length < 6) return [];
+  let results = pepDB.filter(r => {
+    if (r.nome !== nomeUp) return false;
+    if (!r.cpfFull) return false;
+    if (r.cpfFull.length >= 9) return r.cpfFull === cpfLimpo;
+    var dig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
+    return r.cpfFull === dig;
+  });
   if (results.length === 0) return [];
   // Consolidar por campos únicos
   const seen = new Set();
@@ -970,7 +961,7 @@ function coletarDados() {
     ordem_servico: $('ordem_servico').value.trim(),
     livro: $('livro').value.trim(),
     folha: $('folha').value.trim(),
-    serventia: $('serventia').value,
+    serventia: (function(){ try { var u = JSON.parse(sessionStorage.getItem('siscoaf_user')); return u && u.serventia ? u.serventia : 'Ambos'; } catch(e) { return 'Ambos'; } })(),
     tipo_ato_categoria: $('tipo_ato_categoria').value,
     tipo_ato: $('tipo_ato_categoria').value === 'Escritura' ? 'Escritura - ' + $('tipo_ato_especifico').value : $('tipo_ato_categoria').value,
     tipo_ato_outro: $('tipoOutroTexto').value.trim(),
@@ -998,7 +989,6 @@ function coletarDados() {
 }
 
 function validar(d) {
-  if (!d.serventia) return 'Selecione a serventia.';
   if (!d.cidade.trim()) return 'Informe a cidade do ato.';
   if (!d.data.trim()) return 'Informe a data do ato.';
   if (d.tipo_ato !== 'Procuração' && d.valor <= 0) return 'Informe um valor válido para o negócio.';
@@ -1229,7 +1219,6 @@ function preencherFormulario(d) {
   $('ordem_servico').value = d.ordem_servico || '';
   $('livro').value = d.livro || '';
   $('folha').value = d.folha || '';
-  $('serventia').value = d.serventia || 'Cartório Coxipó do Ouro';
   const stored = d.tipo_ato || '';
   if (stored.startsWith('Escritura - ')) {
     $('tipo_ato_categoria').value = 'Escritura';
@@ -1287,7 +1276,6 @@ function limparFormulario() {
   $('ordem_servico').value = '';
   $('livro').value = '';
   $('folha').value = '';
-  $('serventia').value = 'Cartório Coxipó do Ouro';
   $('tipo_ato_categoria').value = 'Escritura';
   $('tipo_ato_especifico').value = 'Compra e venda';
   $('tipoOutroTexto').value = '';

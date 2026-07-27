@@ -40,9 +40,11 @@ def _carregar_pep() -> List[Dict]:
             funcao = row.get(col_funcao, "").strip()
             orgao = row.get(col_orgao, "").strip()
             cpf_digits = _extrair_digitos_visiveis(cpf_raw)
+            cpf_full = _normalizar_cpf(cpf_raw)
             registros.append({
                 "cpf_raw": cpf_raw,
                 "cpf_digitos": cpf_digits,
+                "cpf_full": cpf_full,
                 "nome": nome.upper(),
                 "funcao": funcao,
                 "orgao": orgao,
@@ -90,14 +92,29 @@ def consultar_por_nome(nome: str) -> List[Dict]:
 
 
 def consultar_pep(nome: str = "", cpf: str = "") -> Tuple[bool, List[Dict]]:
-    if nome:
-        resultados = consultar_por_nome(nome)
-        if resultados:
-            return True, resultados
-    if cpf:
-        resultados = consultar_por_cpf(cpf)
-        if resultados:
-            return True, resultados
+    if not nome or not cpf:
+        return False, []
+    registros = _carregar_pep()
+    if not registros:
+        return False, []
+    termo = nome.strip().upper()
+    cpf_limpo = _normalizar_cpf(cpf)
+    if len(cpf_limpo) < 6:
+        return False, []
+    resultados = []
+    for r in registros:
+        if r["nome"] != termo:
+            continue
+        db_cpf = r["cpf_full"]
+        if len(db_cpf) >= 9:
+            if db_cpf == cpf_limpo:
+                resultados.append(r)
+        else:
+            cpf_digitado = cpf_limpo[3:9] if len(cpf_limpo) >= 9 else cpf_limpo
+            if db_cpf == cpf_digitado:
+                resultados.append(r)
+    if resultados:
+        return True, resultados
     return False, []
 
 
