@@ -629,43 +629,79 @@ class AnalisadorSISCOAF(ctk.CTk):
             frame.grid_columnconfigure(0, weight=1)
             self._suspeitas_frames[situacao.chave] = frame
 
-            top = ctk.CTkFrame(frame, fg_color="transparent")
-            top.grid(row=0, column=0, sticky="ew", padx=10, pady=(8, 0))
-            top.grid_columnconfigure(1, weight=1)
-            ctk.CTkLabel(
-                top,
-                text=f"{situacao.codigo}",
-                font=("Segoe UI", 9, "bold"),
-                text_color="#888",
-            ).grid(row=0, column=0, sticky="w", padx=(0, 6))
-            ctk.CTkLabel(
-                top,
-                text=situacao.artigo,
-                font=("Segoe UI", 11, "bold"),
-                text_color=COR_PRIMARIA,
-                anchor="w",
-            ).grid(row=0, column=1, sticky="w")
-
+            pergunta_texto = situacao.pergunta or situacao.texto
             ctk.CTkLabel(
                 frame,
-                text=situacao.texto,
-                font=("Segoe UI", 10),
+                text=f"{situacao.codigo} — {pergunta_texto}",
+                font=("Segoe UI", 11, "bold"),
                 text_color=COR_TEXTO,
                 anchor="w",
                 wraplength=500,
                 justify="left",
-            ).grid(row=1, column=0, sticky="w", padx=10, pady=(2, 2))
+            ).grid(row=0, column=0, sticky="w", padx=10, pady=(8, 0))
 
-            ctk.CTkLabel(
+            if situacao.exemplo:
+                ctk.CTkLabel(
+                    frame,
+                    text=situacao.exemplo,
+                    font=("Segoe UI", 10, "italic"),
+                    text_color="#888",
+                    anchor="w",
+                    wraplength=500,
+                    justify="left",
+                ).grid(row=1, column=0, sticky="w", padx=10, pady=(1, 0))
+
+            frm_legal_toggle = ctk.CTkFrame(frame, fg_color="transparent")
+            frm_legal_toggle.grid(row=2, column=0, sticky="w", padx=10, pady=(4, 0))
+
+            mostrar_legal = [False]
+            legal_label = ctk.CTkLabel(
+                frame,
+                text=situacao.texto,
+                font=("Segoe UI", 9),
+                text_color="#666",
+                anchor="w",
+                wraplength=500,
+                justify="left",
+            )
+            src_label = ctk.CTkLabel(
                 frame,
                 text="CNJ - Provimento CN n. 149/2023 (incluído pelo Provimento CN n. 161, de 11.3.2024)",
                 font=("Segoe UI", 8),
                 text_color="#999",
                 anchor="w",
-            ).grid(row=2, column=0, sticky="w", padx=10, pady=(0, 4))
+            )
+
+            btn_legal = ctk.CTkButton(
+                frm_legal_toggle,
+                text="🔍 Ver texto legal ▾",
+                font=("Segoe UI", 9),
+                fg_color="transparent",
+                text_color="#2E7D32",
+                hover_color="#E8F5E9",
+                anchor="w",
+                width=160,
+                height=22,
+                corner_radius=4,
+                cursor="hand2",
+            )
+            btn_legal.pack(side="left")
+
+            def _toggle_legal(m=mostrar_legal, lb=legal_label, sl=src_label, bt=btn_legal):
+                m[0] = not m[0]
+                if m[0]:
+                    lb.grid(row=3, column=0, sticky="w", padx=10, pady=(4, 0))
+                    sl.grid(row=4, column=0, sticky="w", padx=10, pady=(0, 4))
+                    bt.configure(text="🔍 Ocultar texto legal ▴")
+                else:
+                    lb.grid_remove()
+                    sl.grid_remove()
+                    bt.configure(text="🔍 Ver texto legal ▾")
+
+            btn_legal.configure(command=_toggle_legal)
 
             frm_radio = ctk.CTkFrame(frame, fg_color="transparent")
-            frm_radio.grid(row=3, column=0, sticky="w", padx=10, pady=(0, 8))
+            frm_radio.grid(row=5, column=0, sticky="w", padx=10, pady=(0, 8))
 
             def _atualizar():
                 self._atualizar_contador_suspeitas()

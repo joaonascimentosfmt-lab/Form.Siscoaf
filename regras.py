@@ -25,10 +25,12 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
             continue
         if situacao.tipo == DECISAO_COMUNICAR:
             tem_comunicar_objetiva = True
-            motivos.append(f"{situacao.artigo} ({situacao.codigo}) — comunicação objetiva (art. 151, II)")
+            pergunta = situacao.pergunta or situacao.texto
+            motivos.append(f"{situacao.codigo} — {pergunta}")
         elif situacao.tipo == DECISAO_ATENCAO:
             tem_atencao_especial = True
-            motivos.append(f"{situacao.artigo} ({situacao.codigo}) — atenção especial (art. 151, I)")
+            pergunta = situacao.pergunta or situacao.texto
+            motivos.append(f"{situacao.codigo} — {pergunta}")
         else:
             pts_suspeita += situacao.pontuacao
             marcadas_suspeita += 1
