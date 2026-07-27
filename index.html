@@ -853,15 +853,18 @@ function atualizarStatusPEP(msg) {
 
 function consultarPEPLocal(nome, cpf) {
   if (!pepDB || pepDB.length === 0) return null;
-  const cpfLimpo = cpf.replace(/\D/g,'');
-  const nomeUp = nome.toUpperCase();
-  if (!nomeUp || cpfLimpo.length < 6) return [];
+  const cpfLimpo = cpf ? cpf.replace(/\D/g,'') : '';
+  const nomeUp = nome.toUpperCase().trim();
+  if (!nomeUp) return [];
   let results = pepDB.filter(r => {
-    if (r.nome !== nomeUp) return false;
+    if (!r.nome || r.nome.indexOf(nomeUp) === -1) return false;
     if (!r.cpfFull) return false;
-    if (r.cpfFull.length >= 9) return r.cpfFull === cpfLimpo;
-    var dig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
-    return r.cpfFull === dig;
+    if (cpfLimpo.length >= 6) {
+      if (r.cpfFull.length >= 9) return r.cpfFull === cpfLimpo;
+      var dig = cpfLimpo.length >= 9 ? cpfLimpo.substring(3,9) : cpfLimpo;
+      return r.cpfFull === dig;
+    }
+    return true;
   });
   if (results.length === 0) return [];
   // Consolidar por campos únicos

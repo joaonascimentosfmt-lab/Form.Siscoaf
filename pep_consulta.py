@@ -92,29 +92,29 @@ def consultar_por_nome(nome: str) -> List[Dict]:
 
 
 def consultar_pep(nome: str = "", cpf: str = "") -> Tuple[bool, List[Dict]]:
-    if not nome or not cpf:
+    if not nome:
         return False, []
     registros = _carregar_pep()
     if not registros:
         return False, []
     termo = nome.strip().upper()
-    cpf_limpo = _normalizar_cpf(cpf)
-    if len(cpf_limpo) < 6:
-        return False, []
+    cpf_limpo = _normalizar_cpf(cpf) if cpf else ""
     resultados = []
     for r in registros:
-        if r["nome"] != termo:
+        if termo not in r["nome"]:
             continue
-        db_cpf = r["cpf_full"]
-        if len(db_cpf) >= 9:
-            if db_cpf == cpf_limpo:
-                resultados.append(r)
-        else:
-            cpf_digitado = cpf_limpo[3:9] if len(cpf_limpo) >= 9 else cpf_limpo
-            if db_cpf == cpf_digitado:
-                resultados.append(r)
+        if cpf_limpo and len(cpf_limpo) >= 6:
+            db_cpf = r["cpf_full"]
+            if len(db_cpf) >= 9:
+                if db_cpf != cpf_limpo:
+                    continue
+            else:
+                cpf_digitado = cpf_limpo[3:9] if len(cpf_limpo) >= 9 else cpf_limpo
+                if db_cpf != cpf_digitado:
+                    continue
+        resultados.append(r)
     if resultados:
-        return True, resultados
+        return True, resultados[:5]
     return False, []
 
 
