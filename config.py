@@ -16,6 +16,18 @@ CATEGORIA_SETORES = {
     "Registro de Imóveis": [SETOR_GERAL, SETOR_IMOVEIS],
 }
 
+DECISAO_COMUNICAR = "comunicar_objetiva"
+DECISAO_ATENCAO = "atencao_especial"
+DECISAO_SUSPEITA = "indicio_suspeita"
+
+TIPO_DECISAO_POR_CODIGO = {
+    "1376": DECISAO_COMUNICAR, "1379": DECISAO_COMUNICAR, "1386": DECISAO_COMUNICAR, "1391": DECISAO_COMUNICAR,
+    "1377": DECISAO_ATENCAO, "1378": DECISAO_ATENCAO,
+    "1380": DECISAO_ATENCAO, "1381": DECISAO_ATENCAO, "1382": DECISAO_ATENCAO, "1383": DECISAO_ATENCAO, "1384": DECISAO_ATENCAO, "1385": DECISAO_ATENCAO,
+    "1387": DECISAO_ATENCAO, "1388": DECISAO_ATENCAO, "1389": DECISAO_ATENCAO, "1390": DECISAO_ATENCAO,
+    "1392": DECISAO_ATENCAO, "1393": DECISAO_ATENCAO, "1394": DECISAO_ATENCAO, "1395": DECISAO_ATENCAO, "1396": DECISAO_ATENCAO, "1397": DECISAO_ATENCAO,
+}
+
 CODIGOS_POR_SETOR = {
     SETOR_GERAL: {"1356","1357","1358","1359","1360","1361","1362","1363","1364","1365","1366","1367","1368","1369","1370","1372","1373","1374","1375"},
     SETOR_PROTESTO: {"1376","1377","1378"},
@@ -46,6 +58,7 @@ class SituacaoItem:
     texto: str
     pontuacao: int
     setor: str = SETOR_GERAL
+    tipo: str = DECISAO_SUSPEITA
 
 def obter_setor_por_codigo(codigo: str) -> str:
     for setor, codigos in CODIGOS_POR_SETOR.items():
@@ -98,6 +111,9 @@ def obter_situacoes(categoria: Optional[str] = None) -> List[SituacaoItem]:
         SituacaoItem(chave="cod_1396", codigo="1396", artigo="Art. 172 c/c art. 162, V", texto="Art. 172 c/c art. 162, V: Art. 172. O tabelião de notas, ou seu oficial de cumprimento, deve analisar com especial atenção, para fins de eventual comunicação à UIF na forma do art. 151, I, operações, propostas de operação ou situações relacionadas a quaisquer das hipóteses listadas no art. 162, quando envolverem escritura pública. Art. 162. [...] V - registro de transmissões sucessivas do mesmo bem em período e com diferença de valor anormais;", pontuacao=2, setor=SETOR_NOTAS),
         SituacaoItem(chave="cod_1397", codigo="1397", artigo="Art. 172 c/c art. 162, VI", texto="Art. 172 c/c art. 162, VI: Art. 172. O tabelião de notas, ou seu oficial de cumprimento, deve analisar com especial atenção, para fins de eventual comunicação à UIF na forma do art. 151, I, operações, propostas de operação ou situações relacionadas a quaisquer das hipóteses listadas no art. 162, quando envolverem escritura pública. Art. 162. [...] VI - registro de título no qual conste valor declarado de bem com diferença anormal em relação a outros valores a ele associados, como o de sua avaliação fiscal ou o valor patrimonial pelo qual tenha sido considerado para fins sucessórios ou de integralização de capital de sociedade, por exemplo.", pontuacao=2, setor=SETOR_NOTAS),
     ]
+    for s in todas:
+        if s.codigo in TIPO_DECISAO_POR_CODIGO:
+            s.tipo = TIPO_DECISAO_POR_CODIGO[s.codigo]
     if categoria:
         setores_permitidos = CATEGORIA_SETORES.get(categoria, [SETOR_GERAL])
         return [s for s in todas if s.setor in setores_permitidos]

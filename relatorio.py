@@ -56,7 +56,8 @@ def gerar_relatorio(
     elementos = []
 
     elementos.append(Paragraph("Análise de Comunicação ao SISCOAF", estilo_titulo))
-    elementos.append(Paragraph(f"Resultado: {'COMUNICAR AO SISCOAF' if resultado == 'COMUNICAR' else 'NÃO COMUNICAR AO SISCOAF'}", estilo_resultado))
+    mapa_res = {"COMUNICAR": "COMUNICAR AO SISCOAF", "ANALISAR": "ANALISAR — Exige decisão fundamentada", "NAO_COMUNICAR": "NÃO COMUNICAR AO SISCOAF"}
+    elementos.append(Paragraph(f"Resultado: {mapa_res.get(resultado, 'NÃO COMUNICAR AO SISCOAF')}", estilo_resultado))
     elementos.append(Paragraph(f"Pontuação total: {pontuacao}", estilo_normal))
     elementos.append(Spacer(1, 10 * mm))
 
@@ -199,4 +200,6 @@ def _cor_resultado(resultado: str):
     from reportlab.lib.colors import HexColor
     if resultado == "COMUNICAR":
         return HexColor("#CC0000")
+    if resultado == "ANALISAR":
+        return HexColor("#E65100")
     return HexColor("#006600")

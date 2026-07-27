@@ -143,6 +143,7 @@
     font-size: 24px; font-weight: 800; padding: 6px 24px; text-align: center;
   }
   .modal-result.comunicar { color: var(--danger); }
+  .modal-result.analisar { color: #E65100; }
   .modal-result.nao { color: var(--success); }
   .modal-score {
     text-align: center; font-size: 13px; color: var(--muted); padding: 2px 24px 12px;
@@ -365,6 +366,7 @@
   <div class="card">
     <h2>4. Indícios de suspeita</h2>
     <p style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">Selecione Sim ou Não para cada situação:</p>
+    <div id="suspeitasContador" style="font-size:13px;font-weight:700;margin-bottom:6px;"></div>
     <div id="suspeitasContainer"></div>
     <div id="outroIndicioContainer" style="display:none;margin-top:8px;">
       <div class="field">
@@ -526,7 +528,19 @@ function obterSetorPorCodigo(codigo) {
   }
   return SETOR_GERAL;
 }
-function _addSetor(s) { return Object.assign({}, s, { setor: obterSetorPorCodigo(s.codigo) }); }
+
+const DECISAO_COMUNICAR = 'comunicar_objetiva';
+const DECISAO_ATENCAO = 'atencao_especial';
+const DECISAO_SUSPEITA = 'indicio_suspeita';
+const TIPO_DECISAO_POR_CODIGO = {
+  '1376': DECISAO_COMUNICAR, '1379': DECISAO_COMUNICAR, '1386': DECISAO_COMUNICAR, '1391': DECISAO_COMUNICAR,
+  '1377': DECISAO_ATENCAO, '1378': DECISAO_ATENCAO,
+  '1380': DECISAO_ATENCAO, '1381': DECISAO_ATENCAO, '1382': DECISAO_ATENCAO, '1383': DECISAO_ATENCAO, '1384': DECISAO_ATENCAO, '1385': DECISAO_ATENCAO,
+  '1387': DECISAO_ATENCAO, '1388': DECISAO_ATENCAO, '1389': DECISAO_ATENCAO, '1390': DECISAO_ATENCAO,
+  '1392': DECISAO_ATENCAO, '1393': DECISAO_ATENCAO, '1394': DECISAO_ATENCAO, '1395': DECISAO_ATENCAO, '1396': DECISAO_ATENCAO, '1397': DECISAO_ATENCAO,
+};
+function _tipoDecisao(codigo) { return TIPO_DECISAO_POR_CODIGO[codigo] || DECISAO_SUSPEITA; }
+function _addSetor(s) { return Object.assign({}, s, { setor: obterSetorPorCodigo(s.codigo), tipo: _tipoDecisao(s.codigo) }); }
 const SITUACOES = SITUACOES_RAW.map(_addSetor);
 
 let dadosCorrentes = null;
@@ -535,6 +549,21 @@ let motivosCorrentes = null;
 let pontuacaoCorrente = 0;
 
 function $(id) { return document.getElementById(id); }
+
+function atualizarContadorSuspeitas() {
+  const total = SITUACOES.length;
+  const inputs = document.querySelectorAll('#suspeitasContainer input[type="radio"]:checked');
+  const respondidas = new Set();
+  inputs.forEach(i => respondidas.add(i.name));
+  const pendentes = total - respondidas.size;
+  const el = $('suspeitasContador');
+  if (pendentes > 0) {
+    el.textContent = '⚠ ' + pendentes + ' de ' + total + ' itens pendentes de resposta';
+    el.style.color = '#CC0000';
+  } else {
+    el.textContent = '';
+  }
+}
 
 function renderSuspeitas(categoria) {
   const container = $('suspeitasContainer');
@@ -560,8 +589,8 @@ function renderSuspeitas(categoria) {
       <div style="font-size:13px;color:var(--text);margin-bottom:6px;">${s.texto}</div>
       <div style="font-size:10px;color:#999;margin-bottom:6px;">CNJ - Provimento CN n. 149/2023 (incluído pelo Provimento CN n. 161, de 11.3.2024)</div>
       <div class="radio-group" style="gap:12px;">
-        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Sim"> <span style="color:#CC0000;font-weight:600;">Sim</span></label>
-        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Não" checked> <span style="color:var(--success);font-weight:600;">Não</span></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Sim" onchange="atualizarContadorSuspeitas()"> <span style="color:#CC0000;font-weight:600;">Sim</span></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;"><input type="radio" name="suspeita_${s.chave}" value="Não" onchange="atualizarContadorSuspeitas()"> <span style="color:var(--success);font-weight:600;">Não</span></label>
       </div>
     `;
     container.appendChild(div);
@@ -989,6 +1018,12 @@ function coletarDados() {
 }
 
 function validar(d) {
+  const totalInputs = document.querySelectorAll('#suspeitasContainer input[type="radio"]');
+  const respondidas = new Set();
+  totalInputs.forEach(i => { if (i.checked) respondidas.add(i.name); });
+  if (totalInputs.length > 0 && respondidas.size < new Set(Array.from(totalInputs).map(i => i.name)).size) {
+    return 'Responda todos os itens de indícios de suspeita antes de analisar.';
+  }
   if (!d.cidade.trim()) return 'Informe a cidade do ato.';
   if (!d.data.trim()) return 'Informe a data do ato.';
   if (d.tipo_ato !== 'Procuração' && d.valor <= 0) return 'Informe um valor válido para o negócio.';
@@ -1005,13 +1040,23 @@ function aplicarRegras(d) {
   const situacoes = SITUACOES.filter(s => setores.includes(s.setor));
 
   const marcadas = situacoes.filter(s => d['suspeita_' + s.chave] === 'Sim');
-  marcadas.forEach(s => pts += s.pts);
-  if (marcadas.length > 0) {
-    motivos.push(`${marcadas.length} indicio(s) de suspeita assinalado(s)`);
+  const objMarcadas = marcadas.filter(s => s.tipo === DECISAO_COMUNICAR);
+  const atencaoMarcadas = marcadas.filter(s => s.tipo === DECISAO_ATENCAO);
+  const suspeitaMarcadas = marcadas.filter(s => s.tipo === DECISAO_SUSPEITA);
+
+  suspeitaMarcadas.forEach(s => pts += s.pts);
+
+  if (objMarcadas.length > 0) {
+    objMarcadas.forEach(s => motivos.push(s.codigo + ' — ' + s.texto));
     return { resultado: 'COMUNICAR', motivos, pontuacao: pts };
   }
 
-  if (d.pep) pts += SCORING.pep;
+  if (atencaoMarcadas.length > 0) {
+    atencaoMarcadas.forEach(s => motivos.push(s.codigo + ' — ' + s.texto));
+    return { resultado: 'ANALISAR', motivos, pontuacao: pts };
+  }
+
+  if (d.pep) { pts += SCORING.pep; motivos.push('PEP identificado'); }
 
   const partes = d.partes || [];
   const chavesMap = {
@@ -1024,6 +1069,15 @@ function aplicarRegras(d) {
   if (partes.length > 0 && !todasDocsCompletas) {
     pts += SCORING.docs_incompletas || 2;
     motivos.push('Documentação de parte(s) do ato incompleta');
+  }
+
+  if (suspeitaMarcadas.length >= 2 || pts >= 4) {
+    suspeitaMarcadas.forEach(s => motivos.push(s.codigo + ' — ' + s.texto));
+    return { resultado: 'COMUNICAR', motivos, pontuacao: pts };
+  }
+  if (suspeitaMarcadas.length > 0) {
+    suspeitaMarcadas.forEach(s => motivos.push(s.codigo + ' — ' + s.texto));
+    return { resultado: 'ANALISAR', motivos, pontuacao: pts };
   }
 
   const resultado = motivos.length > 0 ? 'COMUNICAR' : 'NAO_COMUNICAR';
@@ -1056,9 +1110,10 @@ function analisar() {
   setStatus(`Análise salva. ${motivos.length} motivo(s) encontrado(s).`);
 
   // Mostrar modal
-  const isComunicar = resultado === 'COMUNICAR';
-  $('modalResultText').textContent = isComunicar ? 'COMUNICAR AO SISCOAF' : 'NÃO COMUNICAR AO SISCOAF';
-  $('modalResultText').className = 'modal-result ' + (isComunicar ? 'comunicar' : 'nao');
+  const mapaRes = { COMUNICAR: { texto: 'COMUNICAR AO SISCOAF', cls: 'comunicar' }, ANALISAR: { texto: 'ANALISAR — Exige decisão fundamentada', cls: 'analisar' }, NAO_COMUNICAR: { texto: 'NÃO COMUNICAR AO SISCOAF', cls: 'nao' } };
+  const rInfo = mapaRes[resultado] || mapaRes.NAO_COMUNICAR;
+  $('modalResultText').textContent = rInfo.texto;
+  $('modalResultText').className = 'modal-result ' + rInfo.cls;
   $('modalScore').textContent = `Pontuação total: ${pontuacao}`;
   const ul = $('modalMotivos');
   ul.innerHTML = '';
@@ -1075,9 +1130,10 @@ function gerarPDF() {
   const w = window.open('', '_blank');
   if (!w) { alert('Permita pop-ups para gerar o relatório.'); return; }
 
-  const isCom = resultadoCorrente === 'COMUNICAR';
-  const cor = isCom ? '#CC0000' : '#006600';
-  const txtRes = isCom ? 'COMUNICAR AO SISCOAF' : 'NÃO COMUNICAR AO SISCOAF';
+  const mapaPDF = { COMUNICAR: { cor: '#CC0000', txt: 'COMUNICAR AO SISCOAF' }, ANALISAR: { cor: '#E65100', txt: 'ANALISAR — Exige decisão fundamentada' }, NAO_COMUNICAR: { cor: '#006600', txt: 'NÃO COMUNICAR AO SISCOAF' } };
+  const pdfRes = mapaPDF[resultadoCorrente] || mapaPDF.NAO_COMUNICAR;
+  const cor = pdfRes.cor;
+  const txtRes = pdfRes.txt;
 
   const bgPath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + 'Plano de Ofício 1.png';
   const bgData = window._bgBase64 || bgPath;

@@ -125,6 +125,7 @@
     font-size: 11px; font-weight: 700;
   }
   .badge-comunicar { background: #FFEBEE; color: var(--danger); }
+  .badge-analisar { background: #FFF3E0; color: #E65100; }
   .badge-nao { background: #E8F5E9; color: var(--success); }
   .badge-pep { background: #FFF3E0; color: var(--warning); }
 
@@ -266,7 +267,9 @@ for (let i = 0; i < 150; i++) {
   if (Math.random() < 0.15) pontos += rand(2, 5);
   if (Math.random() < 0.1) pontos += 5;
   const comunicar = pontos >= 4 || (temPEP && Math.random() < 0.5) || Math.random() < 0.1;
-  analises.push({ id: i+1, data, tipo, valor, atendente: pick(nomes), partes, temPEP, pontos, resultado: comunicar ? 'COMUNICAR' : 'NAO_COMUNICAR' });
+  const rnd = Math.random();
+  const mockRes = rnd < 0.5 ? 'COMUNICAR' : rnd < 0.75 ? 'ANALISAR' : 'NAO_COMUNICAR';
+  analises.push({ id: i+1, data, tipo, valor, atendente: pick(nomes), partes, temPEP, pontos, resultado: mockRes });
 }
 analises.sort((a, b) => b.data - a.data);
 
@@ -306,7 +309,7 @@ function renderDashboard() {
       <div class="timeline-item ${cls}">
         <div class="timeline-time">${fmtDataHora(a.data)}</div>
         <div class="timeline-title">${a.tipo} - ${formatMoney(a.valor)}</div>
-        <div class="timeline-desc">${a.atendente} ${a.temPEP ? '- PEP identificado' : ''} <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : 'N\u00c3O COMUNICAR'}</span></div>
+        <div class="timeline-desc">${a.atendente} ${a.temPEP ? '- PEP identificado' : ''} <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : (a.resultado === 'ANALISAR' ? 'badge-analisar' : 'badge-nao')}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : (a.resultado === 'ANALISAR' ? 'ANALISAR' : 'N\u00c3O COMUNICAR')}</span></div>
       </div>
     `;
   }).join('');
@@ -322,7 +325,7 @@ function renderDashboard() {
       </div>
       <div style="text-align:right">
         <div style="font-size:14px;font-weight:700">${formatMoney(a.valor)}</div>
-        <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : 'N\u00c3O COMUNICAR'}</span>
+        <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : (a.resultado === 'ANALISAR' ? 'badge-analisar' : 'badge-nao')}">${a.resultado === 'COMUNICAR' ? 'COMUNICAR' : (a.resultado === 'ANALISAR' ? 'ANALISAR' : 'N\u00c3O COMUNICAR')}</span>
       </div>
     </div>
   `).join('');
@@ -357,7 +360,7 @@ function renderDashboard() {
   $('alertasPEP').innerHTML = pepCases.length
     ? pepCases.map(a => {
         const pepNames = a.partes.filter(p => p.pep).map(p => p.nome).join(', ');
-        return `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:12px;background:#FFFBF0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><div style="flex:1"><strong style="color:var(--warning);font-size:13px">${pepNames}</strong><span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDate(a.data)}</span></div><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado}</span></div>`;
+        return `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:12px;background:#FFFBF0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="var(--warning)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><div style="flex:1"><strong style="color:var(--warning);font-size:13px">${pepNames}</strong><span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDate(a.data)}</span></div><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : (a.resultado === 'ANALISAR' ? 'badge-analisar' : 'badge-nao')}">${a.resultado}</span></div>`;
       }).join('')
     : '<p style="color:var(--muted);padding:12px">Nenhum PEP identificado.</p>';
 }

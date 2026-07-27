@@ -577,10 +577,15 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         ctk.CTkLabel(
             card,
-            text="Selecione Sim ou Não para cada situação (Provimento CN n. 149/2023, incluído pelo Provimento CN n. 161/2024):",
+            text="Marque Sim ou Não para cada situação (Provimento CN n. 149/2023, incluído pelo Provimento CN n. 161/2024):",
             font=("Segoe UI", 11),
             text_color=COR_SUBTEXTO,
         ).grid(row=1, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 6))
+
+        self._suspeitas_contador = ctk.CTkLabel(
+            card, text="", font=("Segoe UI", 12, "bold"), text_color=COR_PRIMARIA,
+        )
+        self._suspeitas_contador.grid(row=2, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 4))
 
         self._suspeitas_vars: Dict[str, ctk.StringVar] = {}
         self._suspeitas_frames: Dict[str, ctk.CTkFrame] = {}
@@ -597,8 +602,11 @@ class AnalisadorSISCOAF(ctk.CTk):
         card = self._suspeitas_card
         setores = CATEGORIA_SETORES.get(categoria, [SETOR_GERAL])
         situacoes = obter_situacoes(categoria)
-        r = 2
+        r = 3
         ultimo_setor = None
+
+        self._suspeitas_contador.grid_remove()
+
         for situacao in situacoes:
             if situacao.setor != ultimo_setor:
                 ultimo_setor = situacao.setor
@@ -613,7 +621,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 self._suspeitas_frames[f"_setor_{situacao.setor}"] = cab
                 r += 1
 
-            var = ctk.StringVar(value="Não")
+            var = ctk.StringVar(value="")
             self._suspeitas_vars[situacao.chave] = var
 
             frame = ctk.CTkFrame(card, fg_color="#fff", corner_radius=8, border_width=1, border_color="#DDD")
@@ -659,6 +667,8 @@ class AnalisadorSISCOAF(ctk.CTk):
             frm_radio = ctk.CTkFrame(frame, fg_color="transparent")
             frm_radio.grid(row=3, column=0, sticky="w", padx=10, pady=(0, 8))
 
+            def _atualizar():
+                self._atualizar_contador_suspeitas()
             ctk.CTkRadioButton(
                 frm_radio,
                 text="Sim",
@@ -668,6 +678,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 fg_color="#CC0000",
                 text_color="#CC0000",
                 hover_color="#990000",
+                command=_atualizar,
             ).pack(side="left", padx=(0, 12))
 
             ctk.CTkRadioButton(
@@ -679,9 +690,25 @@ class AnalisadorSISCOAF(ctk.CTk):
                 fg_color=COR_PRIMARIA,
                 text_color=COR_PRIMARIA,
                 hover_color="#1B5E20",
+                command=_atualizar,
             ).pack(side="left")
 
             r += 1
+
+        self._atualizar_contador_suspeitas()
+
+    def _atualizar_contador_suspeitas(self):
+        total = len(self._suspeitas_vars)
+        respondidas = sum(1 for v in self._suspeitas_vars.values() if v.get() in ("Sim", "Não"))
+        pendentes = total - respondidas
+        if pendentes > 0:
+            self._suspeitas_contador.configure(text=f"⚠ {pendentes} de {total} itens pendentes de resposta", text_color="#CC0000")
+            self._suspeitas_contador.grid()
+        else:
+            self._suspeitas_contador.grid_remove()
+
+    def _todas_suspeitas_respondidas(self) -> bool:
+        return all(v.get() in ("Sim", "Não") for v in self._suspeitas_vars.values())
 
     def _secao_observacoes(self, parent, linha: int) -> int:
         card = self._card(parent, "Observações", linha)
@@ -795,6 +822,7 @@ class AnalisadorSISCOAF(ctk.CTk):
                 if isinstance(v, bool):
                     v = "Sim" if v else "Não"
                 self._suspeitas_vars[chave].set(v)
+        self._atualizar_contador_suspeitas()
         if "observacoes" in dados:
             self._observacoes.delete("1.0", "end")
             self._observacoes.insert("1.0", dados["observacoes"])
@@ -808,6 +836,8 @@ class AnalisadorSISCOAF(ctk.CTk):
 
     def _validar(self) -> Optional[str]:
         dados = self._coletar_dados()
+        if not self._todas_suspeitas_respondidas():
+            return "Responda todos os itens de indícios de suspeita antes de analisar."
         if not dados.get("cidade", "").strip():
             return "Informe a cidade do ato."
         if not dados.get("data", "").strip():
@@ -863,7 +893,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._pep_cidade.delete(0, "end")
         self._pagamento_outro.delete("1.0", "end")
         for var in self._suspeitas_vars.values():
-            var.set("Não")
+            var.set("")
+        self._atualizar_contador_suspeitas()
         while self._partes:
             p = self._partes.pop()
             p["frame"].destroy()
@@ -1035,8 +1066,12 @@ class ResultadoWindow(ctk.CTkToplevel):
             text_color=COR_TEXTO,
         ).grid(row=0, column=0, pady=(16, 8))
 
-        texto_resultado = "COMUNICAR AO SISCOAF" if self._resultado == "COMUNICAR" else "NÃO COMUNICAR AO SISCOAF"
-        cor_resultado = "#CC0000" if self._resultado == "COMUNICAR" else "#006600"
+        mapa = {
+            "COMUNICAR": ("COMUNICAR AO SISCOAF", "#CC0000"),
+            "ANALISAR": ("ANALISAR — Exige decisão fundamentada", "#E65100"),
+            "NAO_COMUNICAR": ("NÃO COMUNICAR AO SISCOAF", "#006600"),
+        }
+        texto_resultado, cor_resultado = mapa.get(self._resultado, ("NÃO COMUNICAR AO SISCOAF", "#006600"))
         ctk.CTkLabel(
             main,
             text=texto_resultado,

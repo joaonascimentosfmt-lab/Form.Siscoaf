@@ -1,6 +1,9 @@
 from typing import Dict, List, Tuple
 
-from config import ScoringConfig, obter_situacoes, SituacaoItem, CATEGORIA_SETORES
+from config import (
+    ScoringConfig, obter_situacoes, SituacaoItem, CATEGORIA_SETORES,
+    DECISAO_COMUNICAR, DECISAO_ATENCAO, DECISAO_SUSPEITA,
+)
 
 PONTOS = ScoringConfig()
 
@@ -12,17 +15,30 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
     categoria = dados.get("tipo_ato_categoria", "")
     situacoes = obter_situacoes(categoria) if categoria in CATEGORIA_SETORES else obter_situacoes()
 
-    tem_situacao_marcada = False
-    for situacao in situacoes:
-        if dados.get(f"suspeita_{situacao.chave}") == "Sim":
-            tem_situacao_marcada = True
-            pontuacao_total += situacao.pontuacao
+    tem_comunicar_objetiva = False
+    tem_atencao_especial = False
+    pts_suspeita = 0
+    marcadas_suspeita = 0
 
-    if tem_situacao_marcada:
-        marcadas = sum(1 for s in situacoes if dados.get(f"suspeita_{s.chave}") == "Sim")
-        motivos.append(f"{marcadas} indicio(s) de suspeita assinalado(s)")
-        resultado = "COMUNICAR"
-        return resultado, motivos, pontuacao_total
+    for situacao in situacoes:
+        if dados.get(f"suspeita_{situacao.chave}") != "Sim":
+            continue
+        if situacao.tipo == DECISAO_COMUNICAR:
+            tem_comunicar_objetiva = True
+            motivos.append(f"{situacao.artigo} ({situacao.codigo}) — comunicação objetiva (art. 151, II)")
+        elif situacao.tipo == DECISAO_ATENCAO:
+            tem_atencao_especial = True
+            motivos.append(f"{situacao.artigo} ({situacao.codigo}) — atenção especial (art. 151, I)")
+        else:
+            pts_suspeita += situacao.pontuacao
+            marcadas_suspeita += 1
+        pontuacao_total += situacao.pontuacao
+
+    if tem_comunicar_objetiva:
+        return "COMUNICAR", motivos, pontuacao_total
+
+    if marcadas_suspeita > 0:
+        motivos.append(f"{marcadas_suspeita} indicio(s) de suspeita assinalado(s)")
 
     if dados.get("pep", False):
         pontuacao_total += PONTOS.pep
@@ -32,12 +48,16 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
         motivos.append(motivo)
     pontuacao_total += pontos
 
-    if motivos:
-        resultado = "COMUNICAR"
-    else:
-        resultado = "NAO_COMUNICAR"
+    if tem_atencao_especial:
+        return "ANALISAR", motivos, pontuacao_total
 
-    return resultado, motivos, pontuacao_total
+    if pts_suspeita >= 4 or marcadas_suspeita >= 2:
+        return "COMUNICAR", motivos, pontuacao_total
+
+    if motivos:
+        return "COMUNICAR", motivos, pontuacao_total
+
+    return "NAO_COMUNICAR", [], pontuacao_total
 
 
 def _regra_docs_partes(dados: Dict) -> Tuple[bool, str, int]:

@@ -110,6 +110,7 @@
     font-size: 11px; font-weight: 700;
   }
   .badge-comunicar { background: #FFEBEE; color: var(--danger); }
+  .badge-analisar { background: #FFF3E0; color: #E65100; }
   .badge-nao { background: #E8F5E9; color: var(--success); }
   .badge-pep { background: #FFF3E0; color: var(--warning); }
   .field { margin-bottom: 10px; }
@@ -198,6 +199,7 @@
           <select id="filtroResultado">
             <option value="">Todos</option>
             <option value="COMUNICAR">COMUNICAR</option>
+            <option value="ANALISAR">ANALISAR</option>
             <option value="NAO_COMUNICAR">NÃO COMUNICAR</option>
           </select>
         </div>
@@ -457,13 +459,22 @@ function renderBarChart(dados) {
 function renderDonut(dados) {
   const total = dados.length;
   const comunic = dados.filter(a => a.resultado === 'COMUNICAR').length;
-  const nao = total - comunic;
-  const pct = total ? Math.round(comunic / total * 100) : 0;
-  const angle = pct / 100 * 360;
-  $('donutCenter').textContent = total > 0 ? pct + '%' : '—';
-  $('donutChart').style.background = total > 0 ? `conic-gradient(var(--danger) 0deg ${angle}deg, var(--primary) ${angle}deg 360deg)` : '#EEE';
+  const analisar = dados.filter(a => a.resultado === 'ANALISAR').length;
+  const nao = total - comunic - analisar;
+  const pctC = total ? Math.round(comunic / total * 100) : 0;
+  const pctA = total ? Math.round(analisar / total * 100) : 0;
+  const pctN = total ? Math.round(nao / total * 100) : 0;
+  const angleC = pctC / 100 * 360;
+  const angleA = angleC + (pctA / 100 * 360);
+  const stops = [];
+  if (comunic > 0) stops.push(`var(--danger) 0deg ${angleC}deg`);
+  if (analisar > 0) stops.push(`#E65100 ${angleC}deg ${angleA}deg`);
+  if (nao > 0) stops.push(`var(--primary) ${angleA}deg 360deg`);
+  $('donutCenter').textContent = total > 0 ? pctC + '%' : '—';
+  $('donutChart').style.background = total > 0 ? `conic-gradient(${stops.join(', ')})` : '#EEE';
   $('donutLegend').innerHTML = `
     <span><span class="dot" style="background:var(--danger)"></span> Comunicar (${comunic})</span>
+    <span><span class="dot" style="background:#E65100"></span> Analisar (${analisar})</span>
     <span><span class="dot" style="background:var(--primary)"></span> Não comunicar (${nao})</span>
   `;
 }
@@ -482,7 +493,7 @@ function renderTabela(dados) {
         <td>${formatMoney(a.valor)}</td>
         <td>${a.partes.map(p => p.nome.split(' ')[0] + (p.pep ? ' <svg viewBox="0 0 24 24" width="12" height="12" fill="var(--warning)" style="vertical-align:middle"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>' : '')).join(', ')}</td>
         <td><strong>${a.pontos}</strong></td>
-        <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado === 'COMUNICAR' ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--danger)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> COMUNICAR' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--success)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> NÃO COMUNICAR'}</span></td>
+        <td><span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : (a.resultado === 'ANALISAR' ? 'badge-analisar' : 'badge-nao')}">${a.resultado === 'COMUNICAR' ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--danger)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> COMUNICAR' : (a.resultado === 'ANALISAR' ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="#E65100" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> ANALISAR' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="var(--success)" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="8"/></svg> NÃO COMUNICAR')}</span></td>
       </tr>
     `).join('')
     : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma análise encontrada com os filtros atuais.</td></tr>';
@@ -532,7 +543,7 @@ function renderAlertasPEP(dados) {
               <strong style="color:var(--warning)">${pepNames}</strong>
               <span style="font-size:12px;color:var(--muted);display:block">${a.tipo} - ${formatMoney(a.valor)} - ${formatDateShort(a.data)}</span>
             </div>
-            <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : 'badge-nao'}">${a.resultado}</span>
+            <span class="badge ${a.resultado === 'COMUNICAR' ? 'badge-comunicar' : (a.resultado === 'ANALISAR' ? 'badge-analisar' : 'badge-nao')}">${a.resultado}</span>
           </div>
         `;
       }).join('')
