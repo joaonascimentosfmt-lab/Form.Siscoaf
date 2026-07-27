@@ -1160,6 +1160,7 @@ function gerarPDF() {
     .footer { margin-top: 20px; font-size: 10px; color: #888; text-align: center; }
     @media print { body::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style></head><body>
+  ${dadosCorrentes.serventia ? `<div style="font-size:14px;font-weight:700;color:#2E7D32;text-align:center;margin-bottom:2px;">${dadosCorrentes.serventia}</div>` : ''}
   <h1>Análise de Comunicação ao SISCOAF</h1>
   <div class="resultado">${txtRes}</div>
   <div class="score">Pontuação total: ${pontuacaoCorrente}</div>

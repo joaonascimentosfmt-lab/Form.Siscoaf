@@ -1258,13 +1258,18 @@ class LoginWindow(ctk.CTkToplevel):
     def _login(self):
         user = self._username.get().strip()
         pwd = self._password.get().strip()
-        if (user == "João Nascimento" and pwd == "123456") or (user == "João Nascimento2" and pwd == "123456"):
-            role = "admin" if user == "João Nascimento" else "restrito"
-            serventia = "Ambos" if user == "João Nascimento" else "Cartório Coxipó do Ouro"
-            self._on_success(user, role, serventia)
-            self.destroy()
-        else:
-            self._error_label.configure(text="Usuário ou senha inválidos.")
+        usuarios = [
+            ("João Nascimento", "123456", "admin", "Ambos", "João Nascimento"),
+            ("João Nascimento2", "123456", "restrito", "Cartório Coxipó do Ouro", "João Nascimento2"),
+            ("065136", "06797963125", "restrito", "Cartório 2º Ofício de Várzea Grande", "Pedro Lucas"),
+            ("065136", "88843769120", "restrito", "Cartório 2º Ofício de Várzea Grande", "Fabiane Brandão"),
+        ]
+        for login, senha, role, serventia, nome in usuarios:
+            if user == login and pwd == senha:
+                self._on_success(nome, role, serventia)
+                self.destroy()
+                return
+        self._error_label.configure(text="Usuário ou senha inválidos.")
 
     def _fechar(self):
         self.master.destroy() if self.master else self.destroy()

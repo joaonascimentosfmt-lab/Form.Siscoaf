@@ -55,6 +55,9 @@ def gerar_relatorio(
 
     elementos = []
 
+    serventia = dados.get("serventia", "")
+    if serventia:
+        elementos.append(Paragraph(serventia, estilo_titulo))
     elementos.append(Paragraph("Análise de Comunicação ao SISCOAF", estilo_titulo))
     mapa_res = {"COMUNICAR": "COMUNICAR AO SISCOAF", "ANALISAR": "ANALISAR — Exige decisão fundamentada", "NAO_COMUNICAR": "NÃO COMUNICAR AO SISCOAF"}
     elementos.append(Paragraph(f"Resultado: {mapa_res.get(resultado, 'NÃO COMUNICAR AO SISCOAF')}", estilo_resultado))
