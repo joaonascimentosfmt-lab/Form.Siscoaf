@@ -176,7 +176,10 @@
     <div class="kpi-grid" id="kpiGrid"></div>
 
     <div class="card" style="margin-bottom:16px">
-      <h3>Filtros</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin-bottom:0;">Filtros</h3>
+        <button onclick="abrirModalNovoUsuario()" style="padding:8px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">+ Novo Usuário</button>
+      </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
         <div class="field" style="flex:1;min-width:140px;">
           <label>Função</label>
@@ -193,6 +196,15 @@
             <option value="">Todos</option>
             <option value="Ativo">Ativo</option>
             <option value="Inativo">Inativo</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:120px;">
+          <label>Serventia</label>
+          <select id="filtroServentia">
+            <option value="">Todas</option>
+            <option value="Cartório Coxipó do Ouro">Cartório Coxipó do Ouro</option>
+            <option value="Cartório 2º Ofício de Várzea Grande">Cartório 2º Ofício de Várzea Grande</option>
+            <option value="Ambos">Ambos</option>
           </select>
         </div>
         <div class="field" style="flex:1;min-width:120px;">
@@ -233,6 +245,7 @@
               <th onclick="ordenarPor('nome')">Nome <span class="sort-arrow" id="sortArrowNome">▲</span></th>
               <th onclick="ordenarPor('email')">Email <span class="sort-arrow" id="sortArrowEmail">▲</span></th>
               <th onclick="ordenarPor('funcao')">Função <span class="sort-arrow" id="sortArrowFuncao">▲</span></th>
+              <th onclick="ordenarPor('serventia')">Serventia <span class="sort-arrow" id="sortArrowServentia">▲</span></th>
               <th onclick="ordenarPor('status')">Status <span class="sort-arrow" id="sortArrowStatus">▲</span></th>
               <th onclick="ordenarPor('analises')">Análises <span class="sort-arrow" id="sortArrowAnalises">▲</span></th>
               <th onclick="ordenarPor('ultimoAcesso')">Último acesso <span class="sort-arrow" id="sortArrowUltimoAcesso">▲</span></th>
@@ -242,6 +255,34 @@
         </table>
       </div>
       <div class="pagination" id="paginacao"></div>
+    </div>
+
+    <!-- Modal Novo Usuário -->
+    <div id="modalNovoUsuario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:12px;padding:28px;width:420px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <h3 style="margin-bottom:16px;">Cadastrar Usuário</h3>
+        <div class="field"><label>Nome completo</label><input type="text" id="novoNome" placeholder="Ex: Maria Souza"></div>
+        <div class="field"><label>Email</label><input type="email" id="novoEmail" placeholder="maria@siscoaf.gov.br"></div>
+        <div class="field"><label>Senha</label><input type="password" id="novoSenha" placeholder="Mínimo 6 caracteres"></div>
+        <div class="field"><label>Função</label>
+          <select id="novoFuncao">
+            <option value="Analista">Analista</option>
+            <option value="Admin">Admin</option>
+            <option value="Visualizador">Visualizador</option>
+          </select>
+        </div>
+        <div class="field"><label>Serventia (acesso restrito a)</label>
+          <select id="novoServentia">
+            <option value="Ambos">Ambos os cartórios</option>
+            <option value="Cartório Coxipó do Ouro">Cartório Coxipó do Ouro</option>
+            <option value="Cartório 2º Ofício de Várzea Grande">Cartório 2º Ofício de Várzea Grande</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+          <button onclick="fecharModalNovoUsuario()" style="padding:8px 18px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;">Cancelar</button>
+          <button onclick="salvarNovoUsuario()" style="padding:8px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Salvar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -281,8 +322,21 @@ for (let i = 0; i < 45; i++) {
   const analises = rand(0, 120);
   const ultimoAcesso = new Date(2026, rand(0,6), rand(1,28), rand(7,20), rand(0,59));
   const criadoEm = new Date(2024, rand(0,11), rand(1,28));
-  usuarios.push({ id: i+1, nome: nomeCompleto, email, funcao, status, analises, ultimoAcesso, criadoEm });
+  const serventias = ['Cartório Coxipó do Ouro', 'Cartório 2º Ofício de Várzea Grande', 'Ambos'];
+  usuarios.push({ id: i+1, nome: nomeCompleto, email, funcao, status, serventia: pick(serventias), analises, ultimoAcesso, criadoEm });
 }
+
+function carregarUsuariosRegistrados() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('siscoaf_usuarios') || '[]');
+    stored.forEach(u => {
+      if (!usuarios.some(ex => ex.email === u.email)) {
+        usuarios.push({ id: usuarios.length + 1, nome: u.nome, email: u.email, funcao: u.funcao, status: 'Ativo', serventia: u.serventia, analises: 0, ultimoAcesso: new Date(), criadoEm: new Date(u.criadoEm || Date.now()) });
+      }
+    });
+  } catch(e) {}
+}
+carregarUsuariosRegistrados();
 
 let paginaAtual = 1;
 const porPagina = 10;
@@ -294,13 +348,15 @@ function $(id) { return document.getElementById(id); }
 function getFilteredData() {
   const funcao = $('filtroFuncao').value;
   const status = $('filtroStatus').value;
+  const serventia = $('filtroServentia').value;
   const analisesMin = parseInt($('filtroAnalisesMin').value) || 0;
   const busca = $('filtroBusca').value.toLowerCase();
   return usuarios.filter(u => {
     if (funcao && u.funcao !== funcao) return false;
     if (status && u.status !== status) return false;
+    if (serventia && u.serventia !== serventia) return false;
     if (u.analises < analisesMin) return false;
-    if (busca && !u.nome.toLowerCase().includes(busca) && !u.email.toLowerCase().includes(busca) && !u.funcao.toLowerCase().includes(busca)) return false;
+    if (busca && !u.nome.toLowerCase().includes(busca) && !u.email.toLowerCase().includes(busca) && !u.funcao.toLowerCase().includes(busca) && !(u.serventia || '').toLowerCase().includes(busca)) return false;
     return true;
   });
 }
@@ -338,7 +394,7 @@ function aplicarFiltros() {
 }
 
 function limparFiltros() {
-  ['filtroFuncao','filtroStatus','filtroAnalisesMin','filtroBusca'].forEach(id => { const el = $(id); if (el) el.value = ''; });
+  ['filtroFuncao','filtroStatus','filtroServentia','filtroAnalisesMin','filtroBusca'].forEach(id => { const el = $(id); if (el) el.value = ''; });
   paginaAtual = 1;
   aplicarFiltros();
 }
@@ -416,13 +472,14 @@ function renderTabela(dados) {
             <td><strong>${u.nome}</strong></td>
             <td style="color:var(--muted)">${u.email}</td>
             <td><span class="badge ${badgeFuncao}">${u.funcao}</span></td>
+            <td><span style="font-size:12px;color:var(--muted)">${u.serventia || '—'}</span></td>
             <td><span class="badge ${badgeStatus}">${u.status}</span></td>
             <td><strong>${u.analises}</strong></td>
             <td>${formatDateShort(u.ultimoAcesso)}</td>
           </tr>
         `;
       }).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Nenhum usuário encontrado com os filtros atuais.</td></tr>';
+    : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhum usuário encontrado com os filtros atuais.</td></tr>';
   renderPaginacao(dados.length, totalPaginas);
 }
 
@@ -472,6 +529,39 @@ if (window._user) {
 }
 
 aplicarFiltros();
+
+// Modal de cadastro
+function abrirModalNovoUsuario() {
+  $('modalNovoUsuario').style.display = 'flex';
+  $('novoNome').value = '';
+  $('novoEmail').value = '';
+  $('novoSenha').value = '';
+  $('novoFuncao').value = 'Analista';
+  $('novoServentia').value = 'Ambos';
+  setTimeout(() => $('novoNome').focus(), 100);
+}
+function fecharModalNovoUsuario() {
+  $('modalNovoUsuario').style.display = 'none';
+}
+document.getElementById('modalNovoUsuario')?.addEventListener('click', function(e) {
+  if (e.target === this) fecharModalNovoUsuario();
+});
+function salvarNovoUsuario() {
+  const nome = $('novoNome').value.trim();
+  const email = $('novoEmail').value.trim();
+  const senha = $('novoSenha').value.trim();
+  const funcao = $('novoFuncao').value;
+  const serventia = $('novoServentia').value;
+  if (!nome || !email || !senha) { alert('Preencha nome, email e senha.'); return; }
+  if (senha.length < 6) { alert('A senha deve ter no mínimo 6 caracteres.'); return; }
+  const stored = JSON.parse(localStorage.getItem('siscoaf_usuarios') || '[]');
+  if (stored.some(u => u.email === email)) { alert('Já existe um usuário com este email.'); return; }
+  stored.push({ nome, email, senha, funcao, serventia, criadoEm: new Date().toISOString() });
+  localStorage.setItem('siscoaf_usuarios', JSON.stringify(stored));
+  alert('Usuário cadastrado com sucesso!');
+  fecharModalNovoUsuario();
+  location.reload();
+}
 </script>
 </body>
 </html>

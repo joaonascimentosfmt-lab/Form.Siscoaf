@@ -101,9 +101,20 @@ function fazerLogin() {
   const user = document.getElementById('username').value.trim();
   const pass = document.getElementById('password').value.trim();
   const errorEl = document.getElementById('errorMsg');
-  if ((user === 'João Nascimento' && pass === '123456') || (user === 'João Nascimento2' && pass === '123456')) {
-    const role = user === 'João Nascimento' ? 'admin' : 'restrito';
-    sessionStorage.setItem('siscoaf_user', JSON.stringify({ nome: user, login: user, role: role }));
+  const stored = JSON.parse(localStorage.getItem('siscoaf_usuarios') || '[]');
+  const registrado = stored.find(u => u.email === user && u.senha === pass);
+  if ((user === 'João Nascimento' && pass === '123456') || (user === 'João Nascimento2' && pass === '123456') || registrado) {
+    let nome, role, serventia;
+    if (registrado) {
+      nome = registrado.nome;
+      role = registrado.funcao === 'Admin' ? 'admin' : 'restrito';
+      serventia = registrado.serventia || 'Ambos';
+    } else {
+      role = user === 'João Nascimento' ? 'admin' : 'restrito';
+      nome = user;
+      serventia = 'Ambos';
+    }
+    sessionStorage.setItem('siscoaf_user', JSON.stringify({ nome, login: user, role, serventia }));
     if (role === 'restrito') {
       window.location.href = 'index.html';
     } else {
