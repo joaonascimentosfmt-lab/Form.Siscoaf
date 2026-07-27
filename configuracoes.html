@@ -178,7 +178,7 @@
 (function() {
   const userData = sessionStorage.getItem('siscoaf_user');
   if (!userData) { window.location.href = 'login.html?redirect=configuracoes.html'; return; }
-  try { window._user = JSON.parse(userData); } catch(e) { window.location.href = 'login.html?redirect=configuracoes.html'; }
+  try { window._user = JSON.parse(userData); if (window._user.role === 'restrito') { window.location.href = 'index.html'; return; } } catch(e) { window.location.href = 'login.html?redirect=configuracoes.html'; }
 })();
 // ===== CONFIGURAÇÃO PADRÃO =====
 const CONFIG_PADRAO = {

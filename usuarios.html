@@ -250,7 +250,7 @@
 (function() {
   const userData = sessionStorage.getItem('siscoaf_user');
   if (!userData) { window.location.href = 'login.html?redirect=usuarios.html'; return; }
-  try { window._user = JSON.parse(userData); } catch(e) { window.location.href = 'login.html?redirect=usuarios.html'; }
+  try { window._user = JSON.parse(userData); if (window._user.role === 'restrito') { window.location.href = 'index.html'; return; } } catch(e) { window.location.href = 'login.html?redirect=usuarios.html'; }
 })();
 const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const primeirosNomes = ['Ana','Carlos','Maria','João','Fernanda','Pedro','Lucas','Juliana','Rafaela','Gustavo','Camila','Bruno','Beatriz','Felipe','Aline','Ricardo','Larissa','Eduardo','Tatiane','Marcos'];

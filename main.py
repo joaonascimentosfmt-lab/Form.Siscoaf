@@ -11,13 +11,13 @@ def main():
     root = ctk.CTk()
     root.withdraw()
 
-    usuario = {"login": ""}
+    usuario = {"login": "", "role": ""}
 
-    def _iniciar_app(login: str):
+    def _iniciar_app(login: str, role: str = "admin"):
         usuario["login"] = login
+        usuario["role"] = role
         root.destroy()
-        app = AnalisadorSISCOAF()
-        app._usuario = login
+        app = AnalisadorSISCOAF(usuario=login, role=role)
         icon_path = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
         if os.path.exists(icon_path):
             try:

@@ -101,11 +101,15 @@ function fazerLogin() {
   const user = document.getElementById('username').value.trim();
   const pass = document.getElementById('password').value.trim();
   const errorEl = document.getElementById('errorMsg');
-  if ((user === 'admin' && pass === 'admin') || (user === 'operador' && pass === '123456')) {
-    const nome = user === 'admin' ? 'Admin' : 'Operador';
-    sessionStorage.setItem('siscoaf_user', JSON.stringify({ nome: nome, login: user }));
-    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'admin.html';
-    window.location.href = redirect;
+  if ((user === 'João Nascimento' && pass === '123456') || (user === 'João Nascimento2' && pass === '123456')) {
+    const role = user === 'João Nascimento' ? 'admin' : 'restrito';
+    sessionStorage.setItem('siscoaf_user', JSON.stringify({ nome: user, login: user, role: role }));
+    if (role === 'restrito') {
+      window.location.href = 'index.html';
+    } else {
+      const redirect = new URLSearchParams(window.location.search).get('redirect') || 'admin.html';
+      window.location.href = redirect;
+    }
   } else {
     errorEl.style.display = 'block';
   }

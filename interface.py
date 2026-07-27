@@ -39,7 +39,7 @@ def _aplicar_icon(widget):
 
 
 class AnalisadorSISCOAF(ctk.CTk):
-    def __init__(self):
+    def __init__(self, usuario="", role="admin"):
         super().__init__()
 
         self.title("Analisador SISCOAF")
@@ -47,6 +47,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         self.minsize(600, 650)
         self.configure(fg_color=COR_BG)
 
+        self._usuario = usuario
+        self._user_role = role
         self._carregando = False
         self._construir_tela()
         _aplicar_icon(self)
@@ -68,7 +70,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             text_color=COR_PRIMARIA,
         ).grid(row=0, column=0, sticky="w", padx=(16, 10), pady=10)
 
-        ctk.CTkButton(
+        self._btn_historico = ctk.CTkButton(
             toolbar,
             text="Histórico",
             font=("Segoe UI", 12),
@@ -77,7 +79,10 @@ class AnalisadorSISCOAF(ctk.CTk):
             height=32,
             corner_radius=8,
             command=self._abrir_historico,
-        ).grid(row=0, column=1, padx=4, pady=10)
+        )
+        self._btn_historico.grid(row=0, column=1, padx=4, pady=10)
+        if self._user_role == "restrito":
+            self._btn_historico.configure(state="disabled", fg_color="#AAAAAA", hover_color="#AAAAAA")
 
         ctk.CTkButton(
             toolbar,
@@ -1194,8 +1199,9 @@ class LoginWindow(ctk.CTkToplevel):
     def _login(self):
         user = self._username.get().strip()
         pwd = self._password.get().strip()
-        if (user == "admin" and pwd == "admin") or (user == "operador" and pwd == "123456"):
-            self._on_success(user)
+        if (user == "João Nascimento" and pwd == "123456") or (user == "João Nascimento2" and pwd == "123456"):
+            role = "admin" if user == "João Nascimento" else "restrito"
+            self._on_success(user, role)
             self.destroy()
         else:
             self._error_label.configure(text="Usuário ou senha inválidos.")

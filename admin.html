@@ -230,7 +230,7 @@
 (function() {
   const userData = sessionStorage.getItem('siscoaf_user');
   if (!userData) { window.location.href = 'login.html?redirect=admin.html'; return; }
-  try { window._user = JSON.parse(userData); } catch(e) { window.location.href = 'login.html?redirect=admin.html'; }
+  try { window._user = JSON.parse(userData); if (window._user.role === 'restrito') { window.location.href = 'index.html'; return; } } catch(e) { window.location.href = 'login.html?redirect=admin.html'; }
 })();
 const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const nomes = ['Ana Oliveira','Carlos Santos','Maria Souza','João Lima','Fernanda Rocha','Pedro Alves','Lucas Mendes','Juliana Costa','Rafaela Silva','Gustavo Pereira','Camila Barbosa','Bruno Martins'];
