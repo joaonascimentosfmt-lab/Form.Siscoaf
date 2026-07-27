@@ -551,10 +551,13 @@ let pontuacaoCorrente = 0;
 function $(id) { return document.getElementById(id); }
 
 function atualizarContadorSuspeitas() {
-  const total = SITUACOES.length;
-  const inputs = document.querySelectorAll('#suspeitasContainer input[type="radio"]:checked');
+  const inputs = document.querySelectorAll('#suspeitasContainer input[type="radio"]');
+  const nomes = new Set();
+  inputs.forEach(i => nomes.add(i.name));
+  const total = nomes.size;
+  const checks = document.querySelectorAll('#suspeitasContainer input[type="radio"]:checked');
   const respondidas = new Set();
-  inputs.forEach(i => respondidas.add(i.name));
+  checks.forEach(i => respondidas.add(i.name));
   const pendentes = total - respondidas.size;
   const el = $('suspeitasContador');
   if (pendentes > 0) {
