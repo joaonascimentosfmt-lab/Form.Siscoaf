@@ -184,6 +184,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         ctk.CTkLabel(frm, text="Protocolo do serviço:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=1, sticky="w")
         ctk.CTkLabel(frm, text="Ordem de serviço:", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=0, column=2, sticky="w")
         self._funcionario = ctk.CTkEntry(frm, placeholder_text="Nome do funcionário", width=180)
+        self._funcionario.insert(0, self._usuario)
         self._funcionario.grid(row=1, column=0, sticky="ew", padx=(0, 4))
         self._protocolo = ctk.CTkEntry(frm, placeholder_text="Nº protocolo", width=150)
         self._protocolo.grid(row=1, column=1, sticky="ew", padx=4)

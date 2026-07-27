@@ -609,6 +609,8 @@ function renderSuspeitas(categoria) {
 }
 
 function init() {
+  const userData = JSON.parse(sessionStorage.getItem('siscoaf_user') || '{}');
+  if (userData.nome) $('funcionario').value = userData.nome;
   renderSuspeitas($('tipo_ato_categoria').value);
   $('estado').value = 'SP';
   document.getElementById('tipo_ato_especifico').addEventListener('change', onTipoAtoChange);
