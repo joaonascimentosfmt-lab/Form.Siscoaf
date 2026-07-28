@@ -5,4 +5,5 @@ build/
 dist/
 *.spec
 *.db
+siscoaf_config.json
 202605_PEP.zip

@@ -84,6 +84,13 @@ def gerar_relatorio(
     if dados.get("tipo_ato_outro"):
         _adicionar_campo(elementos, "Descricao do ato", dados["tipo_ato_outro"], estilo_normal)
 
+    if dados.get("tipo_ato", "").startswith("Escritura"):
+        elementos.append(Paragraph("Tipos de Escritura", estilo_subtitulo))
+        partes_esc = dados.get("tipo_ato", "").replace("Escritura - ", "")
+        _adicionar_campo(elementos, "Tipos", partes_esc, estilo_normal)
+        if dados.get("escritura_outro"):
+            _adicionar_campo(elementos, "Descricao do tipo", dados["escritura_outro"], estilo_normal)
+
     if dados.get("tipo_ato") == "Procuração":
         elementos.append(Paragraph("Poderes da Procuração", estilo_subtitulo))
         poderes = dados.get("poderes", [])
@@ -167,6 +174,15 @@ def gerar_relatorio(
     if motivos:
         for motivo in motivos:
             elementos.append(Paragraph(f"• {motivo}", estilo_normal))
+            codigo_match = motivo.split(" — ")[0].strip() if " — " in motivo else None
+            if codigo_match:
+                for sit in situacoes:
+                    if sit.codigo == codigo_match:
+                        elementos.append(Paragraph(
+                            f"<i>Fundamentação legal: {sit.artigo} — {sit.texto}</i>",
+                            ParagraphStyle("Fundamentacao", parent=estilo_normal, fontSize=9, textColor="#555555", leftIndent=12)
+                        ))
+                        break
     else:
         elementos.append(Paragraph("Nenhum critério objetivo para comunicação foi identificado conforme as regras configuradas.", estilo_normal))
 

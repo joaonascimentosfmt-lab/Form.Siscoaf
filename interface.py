@@ -4,9 +4,8 @@ import os
 import customtkinter as ctk
 
 from config import (
-    obter_situacoes,
+    obter_situacoes, obter_tipos_servico,
     TIPO_ATO_CATEGORIAS,
-    ESCRITURA_OPCOES,
     FORMA_PAGAMENTO_OPCOES,
     ESTADOS,
     CATEGORIA_SETORES,
@@ -179,12 +178,19 @@ class AnalisadorSISCOAF(ctk.CTk):
         elif escolha == "Escritura":
             self._poderes_frame.grid_remove()
             self._escritura_frame.grid()
-            self._tipo_outro_frame.grid_remove() if self._tipo_ato_especifico.get() != "Outro" else self._tipo_outro_frame.grid()
+            self._tipo_outro_frame.grid_remove()
+            self._ao_escritura_check()
         else:
             self._poderes_frame.grid_remove()
             self._escritura_frame.grid_remove()
             self._tipo_outro_frame.grid()
         self._recriar_situacoes_suspeitas(escolha)
+
+    def _ao_escritura_check(self):
+        if self._escritura_vars.get("Outro", ctk.StringVar(value="")).get() == "Outro":
+            self._escritura_outro_frame.grid()
+        else:
+            self._escritura_outro_frame.grid_remove()
 
     def _secao_cabecalho(self, parent, linha: int) -> int:
         card = self._card(parent, "Identificação do atendimento", linha)
@@ -228,13 +234,25 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._tipo_ato_categoria.grid(row=r, column=0, columnspan=2, sticky="w", padx=16, pady=(0, 6))
         r += 1
 
-        # Subtipo para Escritura
+        # Tipos de Escritura (checkboxes como Poderes)
         self._escritura_frame = ctk.CTkFrame(card, fg_color="#f5faf5", corner_radius=8)
         self._escritura_frame.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 8))
-        ctk.CTkLabel(self._escritura_frame, text="Tipo de escritura:", font=("Segoe UI", 12, "bold"), text_color="#2E7D32").grid(row=0, column=0, sticky="w", padx=8, pady=(6, 4))
-        self._tipo_ato_especifico = ctk.CTkComboBox(self._escritura_frame, values=ESCRITURA_OPCOES, state="readonly", width=300, command=lambda _: self._ao_tipo_ato(self._tipo_ato_categoria.get()))
-        self._tipo_ato_especifico.set("Compra e venda")
-        self._tipo_ato_especifico.grid(row=1, column=0, sticky="w", padx=8, pady=(0, 6))
+        ctk.CTkLabel(self._escritura_frame, text="Tipo(s) de escritura (selecione um ou mais):", font=("Segoe UI", 12, "bold"), text_color="#2E7D32").grid(row=0, column=0, columnspan=2, sticky="w", padx=8, pady=(6, 4))
+        self._escritura_vars = {}
+        self._ESCRITURA_CHECK_OPCOES = obter_tipos_servico("Escritura") or ["Compra e venda", "Doação", "Permuta", "Constituição de garantia", "Alienação fiduciária", "Integralização de capital", "Ata Notarial"]
+        if "Outro" not in self._ESCRITURA_CHECK_OPCOES:
+            self._ESCRITURA_CHECK_OPCOES = self._ESCRITURA_CHECK_OPCOES + ["Outro"]
+        for i, p in enumerate(self._ESCRITURA_CHECK_OPCOES):
+            var = ctk.StringVar(value="")
+            cb = ctk.CTkCheckBox(self._escritura_frame, text=p, variable=var, onvalue=p, offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 11), command=self._ao_escritura_check)
+            cb.grid(row=i+1, column=0, sticky="w", padx=8, pady=1)
+            self._escritura_vars[p] = var
+        self._escritura_outro_frame = ctk.CTkFrame(self._escritura_frame, fg_color="transparent")
+        self._escritura_outro_frame.grid(row=len(self._ESCRITURA_CHECK_OPCOES)+1, column=0, sticky="ew", padx=8, pady=(2, 6))
+        ctk.CTkLabel(self._escritura_outro_frame, text="Descreva outro tipo:", font=("Segoe UI", 11), text_color=COR_TEXTO).grid(row=0, column=0, sticky="w")
+        self._escritura_outro_text = ctk.CTkTextbox(self._escritura_outro_frame, height=40, width=400, corner_radius=6)
+        self._escritura_outro_text.grid(row=1, column=0, sticky="ew", pady=(2, 0))
+        self._escritura_outro_frame.grid_remove()
         r += 1
 
         # Poderes (visivel apenas se "Procuração")
@@ -243,7 +261,7 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._poderes_frame.grid_remove()
         ctk.CTkLabel(self._poderes_frame, text="Poderes solicitados na procuração:", font=("Segoe UI", 12, "bold"), text_color="#2E7D32").grid(row=0, column=0, columnspan=2, sticky="w", padx=8, pady=(6, 4))
         self._poderes_vars = {}
-        self._PODERES_OPCOES = ["Amplos Poderes", "Gestão e Movimentação Bancária", "Compra, Venda e Administração de Imóveis", "Representação em Inventário e Partilha"]
+        self._PODERES_OPCOES = obter_tipos_servico("Procuração") or ["Amplos Poderes", "Gestão e Movimentação Bancária", "Compra, Venda e Administração de Imóveis", "Representação em Inventário e Partilha"]
         for i, p in enumerate(self._PODERES_OPCOES):
             var = ctk.StringVar(value="")
             cb = ctk.CTkCheckBox(self._poderes_frame, text=p, variable=var, onvalue=p, offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 11))
@@ -777,7 +795,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "folha": self._folha.get().strip(),
             "serventia": getattr(self, '_user_serventia', 'Ambos'),
             "tipo_ato_categoria": self._tipo_ato_categoria.get(),
-            "tipo_ato": self._tipo_ato_categoria.get() + (" - " + self._tipo_ato_especifico.get() if self._tipo_ato_categoria.get() == "Escritura" else ""),
+            "tipo_ato": self._tipo_ato_categoria.get() + (" - " + ", ".join(v.get() for v in self._escritura_vars.values() if v.get()) if self._tipo_ato_categoria.get() == "Escritura" else ""),
             "tipo_ato_outro": self._tipo_outro_text.get("1.0", "end-1c").strip(),
             "valor": validar_valor(self._valor.get()) or 0.0,
             "forma_pagamento": self._forma_pagamento_combo.get(),
@@ -820,12 +838,17 @@ class AnalisadorSISCOAF(ctk.CTk):
             stored = dados.get("tipo_ato", "")
             if stored.startswith("Escritura - "):
                 self._tipo_ato_categoria.set("Escritura")
-                self._tipo_ato_especifico.set(stored.replace("Escritura - ", ""))
+                tipos = [t.strip() for t in stored.replace("Escritura - ", "").split(",") if t.strip()]
+                for p in self._ESCRITURA_CHECK_OPCOES:
+                    self._escritura_vars[p].set(p if p in tipos else "")
+                self._ao_escritura_check()
             elif stored in ("Escritura", "Procuração", "Protesto", "Pessoa Jurídica"):
                 self._tipo_ato_categoria.set(stored)
             else:
                 self._tipo_ato_categoria.set("Escritura")
-                self._tipo_ato_especifico.set(stored or "Compra e venda")
+                for p in self._ESCRITURA_CHECK_OPCOES:
+                    self._escritura_vars[p].set("")
+                self._ao_escritura_check()
             self._ao_tipo_ato(self._tipo_ato_categoria.get())
         if "tipo_ato_outro" in dados:
             self._tipo_outro_text.delete("1.0", "end")
@@ -932,7 +955,9 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._livro.delete(0, "end")
         self._folha.delete(0, "end")
         self._tipo_ato_categoria.set("Escritura")
-        self._tipo_ato_especifico.set("Compra e venda")
+        for p in self._ESCRITURA_CHECK_OPCOES:
+            self._escritura_vars[p].set("")
+        self._escritura_outro_text.delete("1.0", "end")
         self._tipo_outro_text.delete("1.0", "end")
         self._ao_tipo_ato("Escritura")
         self._valor.delete(0, "end")

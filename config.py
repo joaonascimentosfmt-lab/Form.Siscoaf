@@ -1,5 +1,47 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+import json
+import os
+
+
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "siscoaf_config.json")
+
+
+def _carregar_config_json() -> dict:
+    padrao = {
+        "servicos": {
+            "Escritura": ["Compra e venda", "Doação", "Permuta", "Constituição de garantia", "Alienação fiduciária", "Integralização de capital", "Ata Notarial"],
+            "Procuração": ["Amplos Poderes", "Gestão e Movimentação Bancária", "Compra, Venda e Administração de Imóveis", "Representação em Inventário e Partilha"],
+            "Protesto": [],
+            "Pessoa Jurídica": [],
+        }
+    }
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                dados = json.load(f)
+                if "servicos" in dados:
+                    for cat in padrao["servicos"]:
+                        if cat in dados["servicos"]:
+                            padrao["servicos"][cat] = dados["servicos"][cat]
+    except Exception:
+        pass
+    return padrao
+
+
+def obter_tipos_servico(categoria: str) -> List[str]:
+    config = _carregar_config_json()
+    return config.get("servicos", {}).get(categoria, [])
+
+
+def salvar_tipos_servico(categoria: str, tipos: List[str]):
+    config = _carregar_config_json()
+    config["servicos"][categoria] = tipos
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
 
 SETOR_GERAL = "Disposições Gerais"

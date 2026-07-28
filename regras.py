@@ -45,11 +45,6 @@ def aplicar_regras(dados: Dict) -> Tuple[str, List[str], int]:
     if dados.get("pep", False):
         pontuacao_total += PONTOS.pep
 
-    comunicar, motivo, pontos = _regra_docs_partes(dados)
-    if comunicar:
-        motivos.append(motivo)
-    pontuacao_total += pontos
-
     if tem_atencao_especial:
         return "ANALISAR", motivos, pontuacao_total
 

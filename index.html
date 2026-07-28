@@ -325,12 +325,12 @@
       </select>
     </div>
     <div id="escrituraSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
-      <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Tipo de escritura:</label>
-      <select id="tipo_ato_especifico" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;">
-        <option>Compra e venda</option><option>Doação</option><option>Permuta</option>
-        <option>Constituição de garantia</option><option>Alienação fiduciária</option>
-        <option>Integralização de capital</option><option>Ata Notarial</option><option>Outro</option>
-      </select>
+      <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Tipo(s) de escritura (selecione um ou mais):</label>
+      <div id="escrituraCheckboxList"></div>
+      <div id="escrituraOutroSection" style="display:none;margin-top:8px;">
+        <label style="font-size:12px;font-weight:500;display:block;margin-bottom:2px;">Descreva outro tipo:</label>
+        <textarea id="escrituraOutroTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+      </div>
     </div>
     <div id="tipoOutroSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
       <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Descreva o tipo do ato:</label>
@@ -338,10 +338,7 @@
     </div>
     <div id="poderesSection" style="display:none;margin-top:10px;padding:12px;background:#f5faf5;border:1px solid #c8e6c9;border-radius:8px;">
       <label style="font-weight:600;font-size:14px;color:#2E7D32;display:block;margin-bottom:6px;">Poderes solicitados na procuração:</label>
-      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Amplos Poderes"> Amplos Poderes</label>
-      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Gestão e Movimentação Bancária"> Gestão e Movimentação Bancária</label>
-      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Compra, Venda e Administração de Imóveis"> Compra, Venda e Administração de Imóveis</label>
-      <label class="poder-check" style="display:block;margin:3px 0;"><input type="checkbox" class="poder-item" value="Representação em Inventário e Partilha"> Representação em Inventário e Partilha</label>
+      <div id="poderesCheckboxList"></div>
       <div style="margin-top:8px;">
         <label style="font-size:12px;font-weight:500;display:block;margin-bottom:2px;">Outros poderes (descreva):</label>
         <textarea id="poderesOutros" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
@@ -477,6 +474,18 @@ const SCORING = Object.assign({
   limite_comunicacao: _cfg.limite_comunicacao,
 }, _cfg.scoring);
 SCORING.limite_comunicacao = _cfg.limite_comunicacao;
+
+function _carregarServicos() {
+  try {
+    const saved = localStorage.getItem('siscoaf_config');
+    if (saved) {
+      const c = JSON.parse(saved);
+      return c.servicos || {};
+    }
+  } catch (e) {}
+  return {};
+}
+const SERVICOS_CONFIG = _carregarServicos();
 
 const SITUACOES_RAW = [
   { chave:'cod_1356', codigo:'1356', artigo:'Art. 155-A, I', texto:'Art. 155-A, I - aparentem não decorrer de atividades ou negócios usuais do cliente, de outros envolvidos ou do seu ramo de atuação;', pts:2, pergunta:'A operação foge do que seria esperado para o cliente ou seu ramo de atividade?', exemplo:'Ex: Advogado registrando compra de gado em seu nome' },
@@ -662,13 +671,52 @@ function onFormaPagChange() {
 
 function onTipoAtoChange() {
   const cat = document.getElementById('tipo_ato_categoria').value;
-  if (cat === 'Procuração') document.getElementById('forma_pagamento').value = 'Não especificado';
-  const escSub = document.getElementById('tipo_ato_especifico').value;
+  if (cat === 'Procuração') {
+    document.getElementById('forma_pagamento').value = 'Não especificado';
+    const poderes = SERVICOS_CONFIG.Procuração || ['Amplos Poderes', 'Gestão e Movimentação Bancária', 'Compra, Venda e Administração de Imóveis', 'Representação em Inventário e Partilha'];
+    var listaP = document.getElementById('poderesCheckboxList');
+    listaP.innerHTML = '';
+    poderes.forEach(function(p) {
+      var label = document.createElement('label');
+      label.className = 'poder-check';
+      label.style.display = 'block';
+      label.style.margin = '3px 0';
+      label.innerHTML = '<input type="checkbox" class="poder-item" value="' + p.replace(/"/g, '&quot;') + '"> ' + p;
+      listaP.appendChild(label);
+    });
+  }
   document.getElementById('escrituraSection').style.display = cat === 'Escritura' ? 'block' : 'none';
   document.getElementById('poderesSection').style.display = cat === 'Procuração' ? 'block' : 'none';
-  const precisaOutro = cat === 'Protesto' || cat === 'Pessoa Jurídica' || (cat === 'Escritura' && escSub === 'Outro');
+  const precisaOutro = cat === 'Protesto' || cat === 'Pessoa Jurídica';
   document.getElementById('tipoOutroSection').style.display = precisaOutro ? 'block' : 'none';
+  if (cat === 'Escritura') {
+    const tipos = SERVICOS_CONFIG.Escritura || ['Compra e venda', 'Doação', 'Permuta', 'Constituição de garantia', 'Alienação fiduciária', 'Integralização de capital', 'Ata Notarial'];
+    var lista = document.getElementById('escrituraCheckboxList');
+    lista.innerHTML = '';
+    tipos.forEach(function(t) {
+      var label = document.createElement('label');
+      label.className = 'poder-check';
+      label.style.display = 'block';
+      label.style.margin = '3px 0';
+      label.innerHTML = '<input type="checkbox" class="escritura-item" value="' + t.replace(/"/g, '&quot;') + '" onchange="onEscrituraCheck()"> ' + t;
+      lista.appendChild(label);
+    });
+    var labelOutro = document.createElement('label');
+    labelOutro.className = 'poder-check';
+    labelOutro.style.display = 'block';
+    labelOutro.style.margin = '3px 0';
+    labelOutro.innerHTML = '<input type="checkbox" class="escritura-item" value="Outro" onchange="onEscrituraCheck()"> Outro';
+    lista.appendChild(labelOutro);
+  }
   renderSuspeitas(cat);
+}
+
+function onEscrituraCheck() {
+  const checks = document.querySelectorAll('.escritura-item');
+  let outroCheckado = false;
+  checks.forEach(function(c) { if (c.checked && c.value === 'Outro') outroCheckado = true; });
+  const el = document.getElementById('escrituraOutroSection');
+  if (el) el.style.display = outroCheckado ? 'block' : 'none';
 }
 
 // Partes do ato
@@ -1030,7 +1078,14 @@ function coletarDados() {
     folha: $('folha').value.trim(),
     serventia: (function(){ try { var u = JSON.parse(sessionStorage.getItem('siscoaf_user')); return u && u.serventia ? u.serventia : 'Ambos'; } catch(e) { return 'Ambos'; } })(),
     tipo_ato_categoria: $('tipo_ato_categoria').value,
-    tipo_ato: $('tipo_ato_categoria').value === 'Escritura' ? 'Escritura - ' + $('tipo_ato_especifico').value : $('tipo_ato_categoria').value,
+    tipo_ato: (function(){
+      if ($('tipo_ato_categoria').value === 'Escritura') {
+        var checks = document.querySelectorAll('.escritura-item:checked');
+        var tipos = Array.from(checks).map(function(c){ return c.value; });
+        return 'Escritura - ' + tipos.join(', ');
+      }
+      return $('tipo_ato_categoria').value;
+    })(),
     tipo_ato_outro: $('tipoOutroTexto').value.trim(),
     valor: parseValor($('valor').value),
     cidade: $('cidade').value,
@@ -1095,19 +1150,6 @@ function aplicarRegras(d) {
   }
 
   if (d.pep) { pts += SCORING.pep; motivos.push('PEP identificado'); }
-
-  const partes = d.partes || [];
-  const chavesMap = {
-    PF: ['doc_oficial','cpf_regular','estado_civil','regime_bens','endereco','profissao','contato'],
-    PJ: ['pj_cnpj','pj_contrato_social','pj_alteracoes','pj_representante','pj_poderes','pj_objeto_social'],
-  };
-  const todasDocsCompletas = partes.length > 0 && partes.every(p =>
-    (chavesMap[p.tipo] || chavesMap.PF).every(ch => p.docs && p.docs[ch])
-  );
-  if (partes.length > 0 && !todasDocsCompletas) {
-    pts += SCORING.docs_incompletas || 2;
-    motivos.push('Documentação de parte(s) do ato incompleta');
-  }
 
   if (suspeitaMarcadas.length >= 2 || pts >= 4) {
     suspeitaMarcadas.forEach(s => motivos.push(s.codigo + ' — ' + (s.pergunta || s.texto)));
