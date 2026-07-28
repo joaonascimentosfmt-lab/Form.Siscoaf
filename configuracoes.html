@@ -159,6 +159,13 @@
   </div>
   <div class="content">
 
+    <!-- Formas de Pagamento -->
+    <div class="card">
+      <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-3.5l6-4.5-6-4.5v9z"/></svg> Formas de Pagamento</h3>
+      <p class="desc">Gerencie as formas de pagamento disponíveis. Aparecerão como checkboxes no formulário de análise.</p>
+      <div id="pagamentoContainer"></div>
+    </div>
+
     <!-- Tipos de Serviço -->
     <div class="card">
       <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:4px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Tipos de Serviço por Categoria</h3>
@@ -183,7 +190,7 @@
     <!-- Regras -->
     <div class="card">
       <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text)" style="vertical-align:middle;margin-right:4px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Regras de decisão</h3>
-      <p class="desc">Lista das regras aplicadas na análise. As regras não podem ser desabilitadas nesta versão, mas suas pontuações são ajustáveis acima.</p>
+      <p class="desc">Gerencie as regras de decisão aplicadas na análise. Você pode adicionar, editar ou remover regras livremente.</p>
       <div id="listaRegras"></div>
     </div>
 
@@ -219,6 +226,19 @@ const SERVICOS_PADRAO = {
 
 const CATEGORIAS_SERVICO = ["Escritura", "Procuração", "Protesto", "Pessoa Jurídica"];
 
+const FORMAS_PAG_PADRAO = ["Não especificado", "PIX", "TED", "Dinheiro", "Cheque", "Boleto bancário", "Mista"];
+
+const REGRAS_PADRAO = [
+  { nome: 'Regra 1', desc: 'Indícios de lavagem de dinheiro → COMUNICAR', cor: '#CC0000' },
+  { nome: 'Regra 2', desc: 'Pagamento em espécie acima do limite interno → COMUNICAR', cor: '#E65100' },
+  { nome: 'Regra 3', desc: 'PEP + inconsistência documental → COMUNICAR', cor: '#E65100' },
+  { nome: 'Regra 4', desc: '3 ou mais situações suspeitas → COMUNICAR', cor: '#1565C0' },
+  { nome: 'Regra 5', desc: 'Origem dos recursos não comprovada → COMUNICAR', cor: '#1565C0' },
+  { nome: 'Regra 6', desc: 'Operações fracionadas → COMUNICAR', cor: '#6A1B9A' },
+  { nome: 'Regra 7', desc: 'Operações relacionadas → COMUNICAR', cor: '#6A1B9A' },
+  { nome: 'Pontuação', desc: 'Pontuação total atinge limite configurado → COMUNICAR', cor: '#2E7D32' },
+];
+
 const CONFIG_PADRAO = {
   scoring: {
     pep: 3,
@@ -244,6 +264,17 @@ const CONFIG_PADRAO = {
     limite_comunicacao: 8,
     limite_situacoes_suspeitas: 3,
   },
+  formaspag: ["Não especificado", "PIX", "TED", "Dinheiro", "Cheque", "Boleto bancário", "Mista"],
+  regras: [
+    { nome: 'Regra 1', desc: 'Indícios de lavagem de dinheiro → COMUNICAR', cor: '#CC0000' },
+    { nome: 'Regra 2', desc: 'Pagamento em espécie acima do limite interno → COMUNICAR', cor: '#E65100' },
+    { nome: 'Regra 3', desc: 'PEP + inconsistência documental → COMUNICAR', cor: '#E65100' },
+    { nome: 'Regra 4', desc: '3 ou mais situações suspeitas → COMUNICAR', cor: '#1565C0' },
+    { nome: 'Regra 5', desc: 'Origem dos recursos não comprovada → COMUNICAR', cor: '#1565C0' },
+    { nome: 'Regra 6', desc: 'Operações fracionadas → COMUNICAR', cor: '#6A1B9A' },
+    { nome: 'Regra 7', desc: 'Operações relacionadas → COMUNICAR', cor: '#6A1B9A' },
+    { nome: 'Pontuação', desc: 'Pontuação total atinge limite configurado → COMUNICAR', cor: '#2E7D32' },
+  ],
 };
 
 const DESCRICOES_SCORING = {
@@ -272,16 +303,7 @@ const DESCRICOES_LIMITES = {
   limite_situacoes_suspeitas: { label: 'Qtd. mínima de situações suspeitas', hint: 'Número mínimo para acionar a regra 4' },
 };
 
-const REGRAS = [
-  { nome: 'Regra 1', desc: 'Indícios de lavagem de dinheiro → COMUNICAR', cor: '#CC0000' },
-  { nome: 'Regra 2', desc: 'Pagamento em espécie acima do limite interno → COMUNICAR', cor: '#E65100' },
-  { nome: 'Regra 3', desc: 'PEP + inconsistência documental → COMUNICAR', cor: '#E65100' },
-  { nome: 'Regra 4', desc: '3 ou mais situações suspeitas → COMUNICAR', cor: '#1565C0' },
-  { nome: 'Regra 5', desc: 'Origem dos recursos não comprovada → COMUNICAR', cor: '#1565C0' },
-  { nome: 'Regra 6', desc: 'Operações fracionadas → COMUNICAR', cor: '#6A1B9A' },
-  { nome: 'Regra 7', desc: 'Operações relacionadas → COMUNICAR', cor: '#6A1B9A' },
-  { nome: 'Pontuação', desc: 'Pontuação total atinge limite configurado → COMUNICAR', cor: var('--primary') },
-];
+const REGRAS = REGRAS_PADRAO;
 
 // ===== GERENCIAMENTO =====
 function carregarConfig() {
@@ -293,6 +315,8 @@ function carregarConfig() {
       if (parsed.scoring) Object.assign(config.scoring, parsed.scoring);
       if (parsed.limites) Object.assign(config.limites, parsed.limites);
       if (parsed.servicos) config.servicos = parsed.servicos;
+      if (parsed.formaspag) config.formaspag = parsed.formaspag;
+      if (parsed.regras) config.regras = parsed.regras;
       return config;
     }
   } catch (e) {}
@@ -302,6 +326,8 @@ function carregarConfig() {
 function salvarConfig() {
   const config = lerFormulario();
   config.servicos = lerServicos();
+  config.formaspag = lerPagamentos();
+  config.regras = lerRegras();
   localStorage.setItem('siscoaf_config', JSON.stringify(config));
   mostrarToast('Configurações salvas com sucesso!', 'success');
 }
@@ -323,6 +349,8 @@ function restaurarPadrao() {
   if (!confirm('Restaurar configurações padrão? Todas as alterações serão perdidas.')) return;
   const padrao = JSON.parse(JSON.stringify(CONFIG_PADRAO));
   padrao.servicos = JSON.parse(JSON.stringify(SERVICOS_PADRAO));
+  padrao.formaspag = JSON.parse(JSON.stringify(FORMAS_PAG_PADRAO));
+  padrao.regras = JSON.parse(JSON.stringify(REGRAS_PADRAO));
   localStorage.setItem('siscoaf_config', JSON.stringify(padrao));
   renderizar();
   mostrarToast('Configurações restauradas para o padrão.', 'info');
@@ -331,6 +359,8 @@ function restaurarPadrao() {
 function exportarConfig() {
   const config = lerFormulario();
   config.servicos = lerServicos();
+  config.formaspag = lerPagamentos();
+  config.regras = lerRegras();
   const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'siscoaf_config.json'; a.click();
@@ -397,6 +427,69 @@ function renderizarServicos(config) {
   });
 }
 
+function lerPagamentos() {
+  var items = document.querySelectorAll('#lista-pagamento .servico-item');
+  return Array.from(items).map(function(el) { return el.value.trim(); }).filter(function(v) { return v !== ''; });
+}
+
+function adicionarPagamento(valor) {
+  var container = document.getElementById('lista-pagamento');
+  var div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.gap = '6px';
+  div.style.marginBottom = '4px';
+  div.style.alignItems = 'center';
+  div.innerHTML = '<input type="text" class="servico-item" value="' + valor.replace(/"/g, '&quot;') + '" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;"> <button onclick="this.parentElement.remove()" style="padding:6px 10px;border:none;border-radius:6px;background:#FFCDD2;color:#CC0000;cursor:pointer;font-weight:700;font-size:13px;">X</button>';
+  container.appendChild(div);
+}
+
+function renderizarPagamento(config) {
+  var container = document.getElementById('pagamentoContainer');
+  container.innerHTML = '';
+  var pagamentos = config.formaspag || JSON.parse(JSON.stringify(FORMAS_PAG_PADRAO));
+  var card = document.createElement('div');
+  card.style.cssText = 'background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--primary);';
+  card.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:8px;">Formas de Pagamento</div><div id="lista-pagamento"></div><button onclick="adicionarPagamento(\'\')" style="margin-top:6px;padding:6px 14px;border:1px dashed var(--primary);border-radius:6px;background:transparent;color:var(--primary);cursor:pointer;font-size:12px;font-weight:600;">+ Adicionar forma de pagamento</button>';
+  container.appendChild(card);
+  pagamentos.forEach(function(v) { adicionarPagamento(v); });
+}
+
+function lerRegras() {
+  var items = document.querySelectorAll('#lista-regras .regra-edit-item');
+  var regras = [];
+  items.forEach(function(el) {
+    var nome = el.querySelector('.regra-nome-input').value.trim();
+    var desc = el.querySelector('.regra-desc-input').value.trim();
+    var cor = el.querySelector('.regra-cor-input').value.trim();
+    if (nome || desc) regras.push({ nome: nome || 'Regra', desc: desc, cor: cor || '#2E7D32' });
+  });
+  return regras;
+}
+
+function adicionarRegra(nome, desc, cor) {
+  var container = document.getElementById('lista-regras');
+  var div = document.createElement('div');
+  div.className = 'regra-edit-item';
+  div.style.cssText = 'background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ' + (cor || '#2E7D32') + ';';
+  div.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center;"><input class="regra-nome-input" value="' + nome.replace(/"/g, '&quot;') + '" style="flex:0 0 120px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;font-weight:700;" placeholder="Nome"><input class="regra-cor-input" value="' + (cor || '#2E7D32') + '" style="flex:0 0 80px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;" placeholder="Cor (ex: #CC0000)"><button onclick="this.parentElement.parentElement.remove()" style="padding:6px 10px;border:none;border-radius:6px;background:#FFCDD2;color:#CC0000;cursor:pointer;font-weight:700;font-size:13px;">X</button></div><input class="regra-desc-input" value="' + desc.replace(/"/g, '&quot;') + '" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;" placeholder="Descrição da regra">';
+  container.appendChild(div);
+}
+
+function renderizarRegras(config) {
+  var container = document.getElementById('listaRegras');
+  container.innerHTML = '';
+  var regras = config.regras || JSON.parse(JSON.stringify(REGRAS_PADRAO));
+  var wrap = document.createElement('div');
+  wrap.id = 'lista-regras';
+  container.appendChild(wrap);
+  regras.forEach(function(r) { adicionarRegra(r.nome, r.desc, r.cor); });
+  var btn = document.createElement('button');
+  btn.onclick = function() { adicionarRegra('', '', '#2E7D32'); };
+  btn.style.cssText = 'margin-top:8px;padding:6px 14px;border:1px dashed var(--primary);border-radius:6px;background:transparent;color:var(--primary);cursor:pointer;font-size:12px;font-weight:600;';
+  btn.textContent = '+ Adicionar regra';
+  container.appendChild(btn);
+}
+
 function renderizar() {
   const config = carregarConfig();
 
@@ -432,16 +525,13 @@ function renderizar() {
   });
 
   // Regras
-  const listaRegras = document.getElementById('listaRegras');
-  listaRegras.innerHTML = REGRAS.map(r => `
-    <div class="regra-card" style="border-left-color:${r.cor}">
-      <div class="regra-nome">${r.nome}</div>
-      <div class="regra-desc">${r.desc}</div>
-    </div>
-  `).join('');
+  renderizarRegras(config);
 
   // Servicos
   renderizarServicos(config);
+
+  // Pagamento
+  renderizarPagamento(config);
 }
 
 function $(id) { return document.getElementById(id); }

@@ -14,6 +14,7 @@ def _carregar_config_json() -> dict:
             "Procuração": ["Amplos Poderes", "Gestão e Movimentação Bancária", "Compra, Venda e Administração de Imóveis", "Representação em Inventário e Partilha"],
             "Protesto": [],
             "Pessoa Jurídica": [],
+            "FormaPagamento": ["Não especificado", "PIX", "TED", "Dinheiro", "Cheque", "Boleto bancário", "Mista"],
         }
     }
     try:

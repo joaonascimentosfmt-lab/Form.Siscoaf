@@ -576,11 +576,19 @@ class AnalisadorSISCOAF(ctk.CTk):
         card = self._card(parent, "Forma de pagamento", linha)
         r = 1
 
-        ctk.CTkLabel(card, text="Como sera realizado o pagamento?", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
+        ctk.CTkLabel(card, text="Como sera realizado o pagamento? (selecione uma ou mais):", font=("Segoe UI", 12), text_color=COR_TEXTO).grid(row=r, column=0, sticky="w", padx=16, pady=(0, 2))
         r += 1
-        self._forma_pagamento_combo = ctk.CTkComboBox(card, values=FORMA_PAGAMENTO_OPCOES, state="readonly", width=250, command=self._ao_forma_pag)
-        self._forma_pagamento_combo.set("PIX")
-        self._forma_pagamento_combo.grid(row=r, column=0, sticky="w", padx=16, pady=(0, 6))
+        self._pagamento_vars = {}
+        self._PAGAMENTO_CHECK_OPCOES = obter_tipos_servico("FormaPagamento") or ["Não especificado", "PIX", "TED", "Dinheiro", "Cheque", "Boleto bancário", "Mista"]
+        if "Outro" not in self._PAGAMENTO_CHECK_OPCOES:
+            self._PAGAMENTO_CHECK_OPCOES = self._PAGAMENTO_CHECK_OPCOES + ["Outro"]
+        pag_frm = ctk.CTkFrame(card, fg_color="transparent")
+        pag_frm.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 6))
+        for i, p in enumerate(self._PAGAMENTO_CHECK_OPCOES):
+            var = ctk.StringVar(value="")
+            cb = ctk.CTkCheckBox(pag_frm, text=p, variable=var, onvalue=p, offvalue="", fg_color=COR_PRIMARIA, font=("Segoe UI", 11), command=self._ao_pagamento_check)
+            cb.grid(row=i//3, column=i%3, sticky="w", padx=4, pady=1)
+            self._pagamento_vars[p] = var
         r += 1
 
         self._pag_outro_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -593,8 +601,8 @@ class AnalisadorSISCOAF(ctk.CTk):
 
         return linha + 1
 
-    def _ao_forma_pag(self, escolha: str):
-        if escolha == "Outro":
+    def _ao_pagamento_check(self):
+        if self._pagamento_vars.get("Outro", ctk.StringVar(value="")).get() == "Outro":
             self._pag_outro_frame.grid()
         else:
             self._pag_outro_frame.grid_remove()
@@ -798,7 +806,7 @@ class AnalisadorSISCOAF(ctk.CTk):
             "tipo_ato": self._tipo_ato_categoria.get() + (" - " + ", ".join(v.get() for v in self._escritura_vars.values() if v.get()) if self._tipo_ato_categoria.get() == "Escritura" else ""),
             "tipo_ato_outro": self._tipo_outro_text.get("1.0", "end-1c").strip(),
             "valor": validar_valor(self._valor.get()) or 0.0,
-            "forma_pagamento": self._forma_pagamento_combo.get(),
+            "forma_pagamento": ", ".join(v.get() for v in self._pagamento_vars.values() if v.get()),
             "pagamento_outro": self._pagamento_outro.get("1.0", "end-1c").strip(),
             "cidade": self._cidade.get(),
             "estado": self._estado.get(),
@@ -863,8 +871,10 @@ class AnalisadorSISCOAF(ctk.CTk):
             self._valor.delete(0, "end")
             self._valor.insert(0, f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if isinstance(val, float) else str(val))
         if "forma_pagamento" in dados:
-            self._forma_pagamento_combo.set(dados["forma_pagamento"])
-            self._ao_forma_pag(dados["forma_pagamento"])
+            stored_pag = dados["forma_pagamento"]
+            for p in self._PAGAMENTO_CHECK_OPCOES:
+                self._pagamento_vars[p].set(p if p in stored_pag else "")
+            self._ao_pagamento_check()
         if "cidade" in dados:
             self._cidade.delete(0, "end")
             self._cidade.insert(0, dados["cidade"])
@@ -961,7 +971,8 @@ class AnalisadorSISCOAF(ctk.CTk):
         self._tipo_outro_text.delete("1.0", "end")
         self._ao_tipo_ato("Escritura")
         self._valor.delete(0, "end")
-        self._forma_pagamento.set("TED")
+        for p in self._PAGAMENTO_CHECK_OPCOES:
+            self._pagamento_vars[p].set("")
         self._cidade.delete(0, "end")
         self._estado.set("SP")
         self._data.delete(0, "end")

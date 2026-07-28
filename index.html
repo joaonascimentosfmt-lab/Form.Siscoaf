@@ -369,11 +369,8 @@
   <div class="card">
     <h2>3. Forma de pagamento</h2>
     <div class="field">
-      <label>Como será realizado o pagamento?</label>
-      <select id="forma_pagamento" onchange="onFormaPagChange()">
-        <option>Não especificado</option><option>PIX</option><option>TED</option><option>Dinheiro</option>
-        <option>Cheque</option><option>Boleto bancário</option><option>Mista</option><option>Outro</option>
-      </select>
+      <label>Como será realizado o pagamento? (selecione uma ou mais)</label>
+      <div id="pagamentoCheckboxList"></div>
     </div>
     <div id="pagamentoOutroSection" style="display:none;margin-top:8px;">
       <div class="field"><label>Descreva a forma de pagamento:</label><textarea id="pagamentoOutroTexto" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;"></textarea></div>
@@ -480,7 +477,9 @@ function _carregarServicos() {
     const saved = localStorage.getItem('siscoaf_config');
     if (saved) {
       const c = JSON.parse(saved);
-      return c.servicos || {};
+      var result = c.servicos || {};
+      result.FormaPagamento = c.formaspag || ['Não especificado', 'PIX', 'TED', 'Dinheiro', 'Cheque', 'Boleto bancário', 'Mista'];
+      return result;
     }
   } catch (e) {}
   return {};
@@ -641,9 +640,9 @@ function renderSuspeitas(categoria) {
 function init() {
   const userData = JSON.parse(sessionStorage.getItem('siscoaf_user') || '{}');
   if (userData.nome) $('funcionario').value = userData.nome;
+  renderPagamento();
   renderSuspeitas($('tipo_ato_categoria').value);
   $('estado').value = 'SP';
-  document.getElementById('tipo_ato_especifico').addEventListener('change', onTipoAtoChange);
   adicionarParte();
   adicionarParte();
   carregarHistorico();
@@ -664,9 +663,28 @@ function precarregarBg() {
   img.src = 'Plano de Ofício 1.png';
 }
 
-function onFormaPagChange() {
+function onPagamentoCheck() {
+  const checks = document.querySelectorAll('.pagamento-item');
+  let outroCheckado = false;
+  checks.forEach(function(c) { if (c.checked && c.value === 'Outro') outroCheckado = true; });
   const el = document.getElementById('pagamentoOutroSection');
-  el.style.display = document.getElementById('forma_pagamento').value === 'Outro' ? 'block' : 'none';
+  if (el) el.style.display = outroCheckado ? 'block' : 'none';
+}
+
+function renderPagamento() {
+  const pagamentos = SERVICOS_CONFIG.FormaPagamento || ['Não especificado', 'PIX', 'TED', 'Dinheiro', 'Cheque', 'Boleto bancário', 'Mista'];
+  var lista = document.getElementById('pagamentoCheckboxList');
+  lista.innerHTML = '';
+  var todos = pagamentos.slice();
+  if (todos.indexOf('Outro') === -1) todos.push('Outro');
+  todos.forEach(function(p) {
+    var label = document.createElement('label');
+    label.style.display = 'inline-block';
+    label.style.margin = '4px 12px 4px 0';
+    label.style.fontSize = '14px';
+    label.innerHTML = '<input type="checkbox" class="pagamento-item" value="' + p.replace(/"/g, '&quot;') + '" onchange="onPagamentoCheck()"> ' + p;
+    lista.appendChild(label);
+  });
 }
 
 function onTipoAtoChange() {
@@ -1091,7 +1109,10 @@ function coletarDados() {
     cidade: $('cidade').value,
     estado: $('estado').value,
     data: $('data').value,
-    forma_pagamento: $('forma_pagamento').value,
+    forma_pagamento: (function(){
+      var checks = document.querySelectorAll('.pagamento-item:checked');
+      return Array.from(checks).map(function(c){ return c.value; }).join(', ');
+    })(),
     pagamento_outro: $('pagamentoOutroTexto').value.trim(),
     pep: r('pep'),
     pep_nome: $('pep_nome').value,
@@ -1374,7 +1395,15 @@ function preencherFormulario(d) {
   $('data').value = d.data || '';
   $('forma_pagamento').value = d.forma_pagamento || 'PIX';
   $('pagamentoOutroTexto').value = d.pagamento_outro || '';
-  onFormaPagChange();
+  renderPagamento();
+  // Restore payment checkboxes
+  if (d.forma_pagamento) {
+    d.forma_pagamento.split(', ').forEach(function(v) {
+      var cbs = document.querySelectorAll('.pagamento-item');
+      cbs.forEach(function(cb) { if (cb.value === v) cb.checked = true; });
+    });
+  }
+  onPagamentoCheck();
   setRadio('pep', d.pep);
   togglePep();
   $('pep_nome').value = d.pep_nome || '';
@@ -1423,7 +1452,8 @@ function limparFormulario() {
   $('data').value = '';
   $('forma_pagamento').value = 'PIX';
   $('pagamentoOutroTexto').value = '';
-  onFormaPagChange();
+  renderPagamento();
+  onPagamentoCheck();
   resetRadio('pep', 'Não');
   togglePep();
   $('pep_nome').value = '';
