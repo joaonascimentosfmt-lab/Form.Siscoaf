@@ -79,6 +79,14 @@ CODIGOS_POR_SETOR = {
     SETOR_IMOVEIS: {"1379","1380","1381","1382","1383","1384","1385"},
 }
 
+ORDEM_SETORES = {
+    SETOR_GERAL: 0,
+    SETOR_PROTESTO: 1,
+    SETOR_IMOVEIS: 2,
+    SETOR_RCPJ: 3,
+    SETOR_NOTAS: 4,
+}
+
 @dataclass
 class ScoringConfig:
     pep: int = 3
@@ -334,6 +342,7 @@ def obter_situacoes(categoria: Optional[str] = None) -> List[SituacaoItem]:
             "Ex: Declarado R$ 60 mil em escritura, valor venal R$ 400 mil",
             setor=SETOR_NOTAS),
     ]
+    todas.sort(key=lambda s: (ORDEM_SETORES.get(s.setor, 99), int(s.codigo)))
     if categoria:
         setores_permitidos = CATEGORIA_SETORES.get(categoria, [SETOR_GERAL])
         return [s for s in todas if s.setor in setores_permitidos]

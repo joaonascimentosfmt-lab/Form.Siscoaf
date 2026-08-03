@@ -570,7 +570,10 @@ const TIPO_DECISAO_POR_CODIGO = {
 };
 function _tipoDecisao(codigo) { return TIPO_DECISAO_POR_CODIGO[codigo] || DECISAO_SUSPEITA; }
 function _addSetor(s) { return Object.assign({}, s, { setor: obterSetorPorCodigo(s.codigo), tipo: _tipoDecisao(s.codigo), pergunta: s.pergunta || '', exemplo: s.exemplo || '' }); }
-const SITUACOES = SITUACOES_RAW.map(_addSetor);
+const ORDEM_SETORES = { [SETOR_GERAL]: 0, [SETOR_PROTESTO]: 1, [SETOR_IMOVEIS]: 2, [SETOR_RCPJ]: 3, [SETOR_NOTAS]: 4 };
+const SITUACOES = SITUACOES_RAW.map(_addSetor).sort((a, b) =>
+  (ORDEM_SETORES[a.setor] ?? 99) - (ORDEM_SETORES[b.setor] ?? 99) || Number(a.codigo) - Number(b.codigo)
+);
 
 let dadosCorrentes = null;
 let resultadoCorrente = null;
@@ -920,10 +923,9 @@ function atualizarStatusPEP(msg) {
 function consultarPEPLocal(nome, cpf) {
   if (!pepDB || pepDB.length === 0) return null;
   const cpfLimpo = cpf ? cpf.replace(/\D/g,'') : '';
-  const nomeUp = nome.toUpperCase().trim();
-  if (!nomeUp) return [];
+  const nomeUp = (nome || '').toUpperCase().trim();
   let results = pepDB.filter(r => {
-    if (!r.nome || r.nome.indexOf(nomeUp) === -1) return false;
+    if (nomeUp && (!r.nome || r.nome.indexOf(nomeUp) === -1)) return false;
     if (!r.cpfFull) return false;
     if (cpfLimpo.length >= 6) {
       if (r.cpfFull.length >= 9) return r.cpfFull === cpfLimpo;
