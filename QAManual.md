@@ -55,4 +55,32 @@ The client will operate in offline mode until it is able to successfully connect
 
 **Área suspeita:** Função `init()` (linhas 640-650 do `index.html`) não chama `onTipoAtoChange()`. A seção `escrituraSection` inicia com `display:none` no HTML (linha 327) e a lista de checkboxes só é populada dentro de `onTipoAtoChange()` (linhas 690-730), que só dispara via evento `onchange` do select.
 
+### Erro 5 — Erro ao carregar dados da organização (painel admin)
+
+**Data:** 04/08/2026
+
+**Fonte:** Console do navegador (`painel-admin.js:1431`)
+
+**Mensagem:**
+```
+ReferenceError: getAuth is not defined
+    at $ (painel-admin.js:1361:18)
+    at painel-admin.js:57:11
+loadOrganizationData @ painel-admin.js:1431
+```
+
+**Descrição:** Ao carregar o painel administrativo, a função `loadOrganizationData` falha pois chamada a `getAuth` (módulo de autenticação Firebase) sem o import necessário, quebrando o carregamento dos dados da organização.
+
+**Área suspeita:** `painel-admin.js:1361` (função `$`) invocada a partir de `painel-admin.js:57`; `loadOrganizationData` em `painel-admin.js:1431` depende de `getAuth` não importado.
+
+### Erro 6 — Botão do Analisador SISCOAF desativado no perfil de administrador
+
+**Data:** 04/08/2026
+
+**Plataforma:** Web (`painel-admin.js` / `admin.html`)
+
+**Descrição:** No perfil de administrador, o botão do Analisador SISCOAF (`<button class="nav-group-toggle" id="nav-siscoaf-toggle">`) aparece desativado, sem nenhuma interação/evento vinculado.
+
+**Área suspeita:** Elemento `#nav-siscoaf-toggle` no menu de navegação — sem listener de clique registrado no perfil de administrador por padrão.
+
 
